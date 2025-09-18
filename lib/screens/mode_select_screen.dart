@@ -84,12 +84,12 @@ class ModeSelectScreen extends ConsumerWidget {
                 
                 const SizedBox(height: 32),
                 
-                // Practice mode button
+                // Challenge mode button
                 SizedBox(
                   width: double.infinity,
                   height: 80,
                   child: ElevatedButton(
-                    onPressed: () => context.go('/practice'),
+                    onPressed: () => context.go('/challenge'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2ECC71),
                       foregroundColor: Colors.white,
@@ -97,9 +97,9 @@ class ModeSelectScreen extends ConsumerWidget {
                     child: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.school, size: 32),
+                        Icon(Icons.psychology, size: 32),
                         SizedBox(height: 4),
-                        Text('Practice Mode', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text('Math Challenge', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),

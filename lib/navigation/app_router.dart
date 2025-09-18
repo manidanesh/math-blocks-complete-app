@@ -7,6 +7,7 @@ import '../screens/profile_creation_screen.dart';
 import '../screens/mode_select_screen.dart';
 import '../screens/practice_screen.dart';
 import '../screens/profile_history_screen.dart';
+import '../screens/challenge_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final profileAsync = ref.watch(profileProvider);
@@ -51,6 +52,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/profile-history',
         name: 'profile-history',
         builder: (context, state) => const ProfileHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/challenge',
+        name: 'challenge',
+        builder: (context, state) => const ChallengeScreen(),
       ),
     ],
   );

@@ -387,9 +387,9 @@ class _ProfileHistoryScreenState extends ConsumerState<ProfileHistoryScreen> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: () => context.go('/practice'),
+            onPressed: () => context.go('/challenge'),
             icon: const Icon(Icons.play_arrow),
-            label: const Text('Continue Practice'),
+            label: const Text('Continue Challenge'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
