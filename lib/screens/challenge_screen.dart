@@ -8,7 +8,7 @@ import '../providers/profile_provider.dart';
 import '../services/adaptive_engine.dart';
 import '../services/problem_attempt_service.dart';
 import '../services/problem_generator.dart';
-import '../widgets/number_bond_widget.dart';
+import '../widgets/interactive_number_bond_widget.dart';
 
 class ChallengeScreen extends ConsumerStatefulWidget {
   const ChallengeScreen({super.key});
@@ -470,15 +470,25 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
         child: Column(
           children: [
             const Text(
-              'Number Bond Visualization',
+              'Interactive Number Bond',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            NumberBondWidget(
+            InteractiveNumberBondWidget(
               operand1: _currentProblem!.operand1,
               operand2: _currentProblem!.operand2,
               strategy: _currentProblem!.strategy,
               showSolution: _showExplanation,
+              onBondComplete: () {
+                // Give positive feedback when bond is completed
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('🎉 Great! You built the number bond correctly!'),
+                    backgroundColor: Colors.green,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
             ),
           ],
         ),
