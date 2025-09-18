@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/profile_provider.dart';
+import '../services/language_service.dart';
 
 class ModeSelectScreen extends ConsumerWidget {
   const ModeSelectScreen({super.key});
@@ -27,15 +28,25 @@ class ModeSelectScreen extends ConsumerWidget {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('Welcome ${profile.name}!'),
+            title: Text('${'welcome'.tr(profile.language)} ${profile.name}!'),
             backgroundColor: const Color(0xFF3498DB),
             foregroundColor: Colors.white,
             automaticallyImplyLeading: false, // Remove back button
             actions: [
+              // Language flag
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Center(
+                  child: Text(
+                    LanguageService.getFlag(profile.language),
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                ),
+              ),
               IconButton(
                 icon: const Icon(Icons.person),
                 onPressed: () => context.go('/profile-history'),
-                tooltip: 'View Profile & History',
+                tooltip: 'profile_history'.tr(profile.language),
               ),
             ],
           ),
@@ -72,7 +83,7 @@ class ModeSelectScreen extends ConsumerWidget {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              Text('Age: ${profile.age} • Language: ${profile.language.toUpperCase()}'),
+                              Text('Age: ${profile.age} • Language: ${LanguageService.getFlag(profile.language)} ${LanguageService.getLanguageName(profile.language)}'),
                               Text('⭐ ${profile.totalStars} stars • 📚 ${profile.totalProblemsCompleted} problems'),
                             ],
                           ),
@@ -94,12 +105,15 @@ class ModeSelectScreen extends ConsumerWidget {
                       backgroundColor: const Color(0xFF2ECC71),
                       foregroundColor: Colors.white,
                     ),
-                    child: const Column(
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.psychology, size: 32),
-                        SizedBox(height: 4),
-                        Text('Math Challenge', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const Icon(Icons.psychology, size: 32),
+                        const SizedBox(height: 4),
+                        Text(
+                          'math_challenge'.tr(profile.language), 
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
                       ],
                     ),
                   ),
@@ -117,12 +131,15 @@ class ModeSelectScreen extends ConsumerWidget {
                       backgroundColor: const Color(0xFF9B59B6),
                       foregroundColor: Colors.white,
                     ),
-                    child: const Column(
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.history, size: 32),
-                        SizedBox(height: 4),
-                        Text('View Progress & History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const Icon(Icons.history, size: 32),
+                        const SizedBox(height: 4),
+                        Text(
+                          'profile_history'.tr(profile.language), 
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
                       ],
                     ),
                   ),

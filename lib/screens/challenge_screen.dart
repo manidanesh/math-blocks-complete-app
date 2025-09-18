@@ -9,6 +9,7 @@ import '../services/adaptive_engine.dart';
 import '../services/problem_attempt_service.dart';
 import '../services/problem_generator.dart';
 import '../widgets/interactive_number_bond_widget.dart';
+import '../services/language_service.dart';
 
 class ChallengeScreen extends ConsumerStatefulWidget {
   const ChallengeScreen({super.key});
@@ -288,19 +289,29 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Math Challenge'),
+        title: Text('math_challenge'.tr(profileAsync.value?.language ?? 'en')),
         backgroundColor: Colors.green[600],
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/mode-select'),
-          tooltip: 'Back to Home',
+          tooltip: 'back_to_home'.tr(profileAsync.value?.language ?? 'en'),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.lightbulb_outline),
             onPressed: _showHint,
-            tooltip: 'Get a hint',
+            tooltip: 'get_hint'.tr(profileAsync.value?.language ?? 'en'),
+          ),
+          // Language flag in app bar
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Center(
+              child: Text(
+                LanguageService.getFlag(profileAsync.value?.language ?? 'en'),
+                style: const TextStyle(fontSize: 24),
+              ),
+            ),
           ),
         ],
       ),
@@ -401,7 +412,7 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Level $_currentLevel Challenge',
+                    'level_challenge'.tr(profile.language, params: {'level': _currentLevel.toString()}),
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   Text(
@@ -433,9 +444,9 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
         ),
         child: Column(
           children: [
-            const Text(
-              'Solve this problem:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            Text(
+              'solve_problem'.tr(profileAsync.value?.language ?? 'en'),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 16),
             AnimatedBuilder(

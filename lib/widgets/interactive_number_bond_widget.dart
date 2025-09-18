@@ -261,7 +261,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                 _getStrategyTitle(),
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue),
               ),
-              if (_selectedNumbers.isNotEmpty)
+              if (_circleNumbers.values.any((list) => list.isNotEmpty))
                 IconButton(
                   onPressed: _clearBond,
                   icon: const Icon(Icons.refresh, color: Colors.grey),
