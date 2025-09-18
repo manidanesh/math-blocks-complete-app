@@ -74,12 +74,13 @@ class ProblemGenerator {
     DifficultyLevel(
       level: 1,
       name: "Beginner",
-      description: "Single digit + single digit (no crossing 10)",
-      minOperand1: 1,
+      description: "Single digit + single digit (MUST cross 10)",
+      minOperand1: 4,
       maxOperand1: 9,
-      minOperand2: 1,
+      minOperand2: 4,
       maxOperand2: 9,
-      preferredStrategy: ProblemStrategy.basic,
+      mustCrossTen: true,
+      preferredStrategy: ProblemStrategy.makeTen,
     ),
     DifficultyLevel(
       level: 2,
@@ -95,11 +96,11 @@ class ProblemGenerator {
     DifficultyLevel(
       level: 3,
       name: "Teen Numbers",
-      description: "Two digit + single digit (crossing 20)",
-      minOperand1: 10,
+      description: "Two digit + single digit (MUST cross 20)",
+      minOperand1: 14,
       maxOperand1: 19,
-      minOperand2: 1,
-      maxOperand2: 9,
+      minOperand2: 6,
+      maxOperand2: 15,
       mustCrossTwenty: true,
       preferredStrategy: ProblemStrategy.crossing,
     ),
@@ -107,10 +108,10 @@ class ProblemGenerator {
       level: 4,
       name: "Advanced",
       description: "Two digit + single digit (advanced crossing)",
-      minOperand1: 15,
-      maxOperand1: 25,
-      minOperand2: 5,
-      maxOperand2: 15,
+      minOperand1: 25,
+      maxOperand1: 35,
+      minOperand2: 8,
+      maxOperand2: 18,
       preferredStrategy: ProblemStrategy.crossing,
     ),
     DifficultyLevel(
@@ -226,28 +227,39 @@ class ProblemGenerator {
   ) {
     final sum = operand1 + operand2;
     
+    // Always respect level requirements first
+    if (level.mustCrossTwenty && sum <= 20) {
+      return false; // MUST cross 20
+    }
+    
+    if (level.mustCrossTen && sum <= 10) {
+      return false; // MUST cross 10
+    }
+    
     switch (strategy) {
       case ProblemStrategy.makeTen:
-        // Must cross 10, and one operand should work well with make-ten strategy
-        return sum > 10 && sum <= 20 && (operand1 <= 10 || operand2 <= 10);
+        // Must cross 10 for make-ten strategy
+        return sum > 10 && sum <= 20;
         
       case ProblemStrategy.crossing:
         if (level.mustCrossTwenty) {
           return sum > 20; // Must cross 20
         } else if (level.mustCrossTen) {
-          return sum > 10 && sum <= 20; // Must cross 10 but not 20
+          return sum > 10; // Must cross 10
         }
         return sum > 10;
         
       case ProblemStrategy.basic:
-        // Should not cross major boundaries unless required by level
-        if (level.mustCrossTen || level.mustCrossTwenty) {
-          return true; // Level requirements take precedence
+        // For basic strategy, still respect level crossing requirements
+        if (level.mustCrossTwenty) {
+          return sum > 20;
+        } else if (level.mustCrossTen) {
+          return sum > 10;
         }
-        return sum <= 10; // Stay within 10 for basic strategy
+        return true; // Basic can be any valid combination
         
       case ProblemStrategy.review:
-        // Mixed problems, any valid combination
+        // Mixed problems, any valid combination that meets level requirements
         return true;
     }
   }
