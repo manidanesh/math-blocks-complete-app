@@ -1,6 +1,28 @@
 import 'package:flutter/material.dart';
 import '../services/problem_generator.dart';
 
+/// Custom painter for drawing lines between number bond circles
+class NumberBondLinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.blue
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke;
+
+    // Draw lines from top center to bottom left and right
+    final topCenter = Offset(size.width / 2, 0);
+    final bottomLeft = Offset(size.width * 0.25, size.height);
+    final bottomRight = Offset(size.width * 0.75, size.height);
+
+    canvas.drawLine(topCenter, bottomLeft, paint);
+    canvas.drawLine(topCenter, bottomRight, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
 class InteractiveNumberBondWidget extends StatefulWidget {
   final int operand1;
   final int operand2;
@@ -23,7 +45,11 @@ class InteractiveNumberBondWidget extends StatefulWidget {
 
 class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidget>
     with TickerProviderStateMixin {
-  List<int> _selectedNumbers = [];
+  Map<String, List<int>> _circleNumbers = {
+    'result': [],
+    'operand1': [],
+    'operand2': [],
+  };
   List<int> _availableNumbers = [];
   bool _bondComplete = false;
   late AnimationController _circleController;
@@ -123,8 +149,10 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
   }
 
   void _selectNumber(int number) {
+    // For now, add to result circle by default
+    // In a more advanced version, could have drag-and-drop
     setState(() {
-      _selectedNumbers.add(number);
+      _circleNumbers['result']!.add(number);
     });
     
     _circleController.forward().then((_) => _circleController.reverse());
@@ -133,13 +161,15 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
     _checkBondCompletion();
   }
 
-  void _removeNumber(int index) {
-    if (index < _selectedNumbers.length) {
-      setState(() {
-        _selectedNumbers.removeAt(index);
-        _bondComplete = false;
-      });
-    }
+  void _removeNumberFromCircle(String circleKey, int number) {
+    setState(() {
+      _circleNumbers[circleKey]!.remove(number);
+      _bondComplete = false;
+    });
+  }
+
+  List<int> _getNumbersInCircle(String circleKey) {
+    return _circleNumbers[circleKey] ?? [];
   }
 
   void _checkBondCompletion() {
@@ -158,39 +188,27 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
   }
 
   void _checkMakeTenCompletion() {
-    // Check if user has created the make-ten sequence
-    final target = widget.operand1 + widget.operand2;
+    // Check if result circle has the correct sum
+    final resultNumbers = _circleNumbers['result']!;
+    final expectedSum = widget.operand1 + widget.operand2;
+    final resultSum = resultNumbers.fold<int>(0, (sum, n) => sum + n);
     
-    // Look for pattern: operand1 + needed = 10, then 10 + remaining = target
-    if (_selectedNumbers.length >= 4) {
-      final needed = 10 - widget.operand1;
-      final remaining = widget.operand2 - needed;
-      
-      bool hasMakeTenSequence = _selectedNumbers.contains(widget.operand1) &&
-                               _selectedNumbers.contains(needed) &&
-                               _selectedNumbers.contains(10) &&
-                               _selectedNumbers.contains(remaining) &&
-                               _selectedNumbers.contains(target);
-      
-      if (hasMakeTenSequence && !_bondComplete) {
-        setState(() {
-          _bondComplete = true;
-        });
-        _successController.forward();
-        widget.onBondComplete?.call();
-      }
+    if (resultSum == expectedSum && !_bondComplete) {
+      setState(() {
+        _bondComplete = true;
+      });
+      _successController.forward();
+      widget.onBondComplete?.call();
     }
   }
 
   void _checkCrossingCompletion() {
-    // Check if user has the main components
-    final target = widget.operand1 + widget.operand2;
+    // Check if result circle has the correct sum
+    final resultNumbers = _circleNumbers['result']!;
+    final expectedSum = widget.operand1 + widget.operand2;
+    final resultSum = resultNumbers.fold<int>(0, (sum, n) => sum + n);
     
-    bool hasComponents = _selectedNumbers.contains(widget.operand1) &&
-                        _selectedNumbers.contains(widget.operand2) &&
-                        _selectedNumbers.contains(target);
-    
-    if (hasComponents && !_bondComplete) {
+    if (resultSum == expectedSum && !_bondComplete) {
       setState(() {
         _bondComplete = true;
       });
@@ -200,14 +218,12 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
   }
 
   void _checkBasicCompletion() {
-    // Check if user has both operands and the sum
-    final target = widget.operand1 + widget.operand2;
+    // Check if result circle has the correct sum
+    final resultNumbers = _circleNumbers['result']!;
+    final expectedSum = widget.operand1 + widget.operand2;
+    final resultSum = resultNumbers.fold<int>(0, (sum, n) => sum + n);
     
-    bool hasBasicComponents = _selectedNumbers.contains(widget.operand1) &&
-                             _selectedNumbers.contains(widget.operand2) &&
-                             _selectedNumbers.contains(target);
-    
-    if (hasBasicComponents && !_bondComplete) {
+    if (resultSum == expectedSum && !_bondComplete) {
       setState(() {
         _bondComplete = true;
       });
@@ -218,7 +234,9 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
 
   void _clearBond() {
     setState(() {
-      _selectedNumbers.clear();
+      _circleNumbers['result']!.clear();
+      _circleNumbers['operand1']!.clear();
+      _circleNumbers['operand2']!.clear();
       _bondComplete = false;
     });
     _successController.reset();
@@ -323,70 +341,177 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
       builder: (context, child) {
         return Transform.scale(
           scale: _circleAnimation.value,
-          child: Container(
-            width: 200,
-            height: 200,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: _bondComplete ? Colors.green[100] : Colors.blue[50],
-              border: Border.all(
-                color: _bondComplete ? Colors.green : Colors.blue,
-                width: 3,
+          child: Column(
+            children: [
+              // Top circle for the sum/result
+              _buildResultCircle(),
+              const SizedBox(height: 20),
+              
+              // Connection lines
+              CustomPaint(
+                size: const Size(200, 40),
+                painter: NumberBondLinePainter(),
               ),
-            ),
-            child: _selectedNumbers.isEmpty
-                ? const Center(
-                    child: Text(
-                      'Select numbers\nto build the\nnumber bond',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  )
-                : Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      runAlignment: WrapAlignment.center,
-                      spacing: 4,
-                      runSpacing: 4,
-                      children: _selectedNumbers.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final number = entry.value;
-                        return GestureDetector(
-                          onTap: () => _removeNumber(index),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: _getNumberColor(number),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              number.toString(),
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
+              
+              // Bottom row with two operand circles
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildOperandCircle(1, 'First\nNumber'),
+                  const SizedBox(width: 40),
+                  _buildOperandCircle(2, 'Second\nNumber'),
+                ],
+              ),
+            ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildResultCircle() {
+    final resultNumbers = _getNumbersInCircle('result');
+    final expectedSum = widget.operand1 + widget.operand2;
+    final isCorrect = resultNumbers.isNotEmpty && 
+                     resultNumbers.fold<int>(0, (sum, n) => sum + n) == expectedSum;
+    
+    return GestureDetector(
+      onTap: () {
+        // Allow dropping numbers here
+      },
+      child: Container(
+        width: 120,
+        height: 120,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isCorrect ? Colors.green[100] : Colors.blue[50],
+          border: Border.all(
+            color: isCorrect ? Colors.green : Colors.blue,
+            width: 3,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (resultNumbers.isEmpty)
+              const Text(
+                'Sum',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              )
+            else
+              Wrap(
+                alignment: WrapAlignment.center,
+                children: resultNumbers.map((number) => 
+                  GestureDetector(
+                    onTap: () => _removeNumberFromCircle('result', number),
+                    child: Container(
+                      margin: const EdgeInsets.all(2),
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        number.toString(),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ).toList(),
+              ),
+            if (isCorrect)
+              const Icon(Icons.check, color: Colors.green, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOperandCircle(int operandNumber, String label) {
+    final expectedValue = operandNumber == 1 ? widget.operand1 : widget.operand2;
+    final circleNumbers = _getNumbersInCircle('operand$operandNumber');
+    final isCorrect = circleNumbers.isNotEmpty && 
+                     circleNumbers.fold<int>(0, (sum, n) => sum + n) == expectedValue;
+    
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: () {
+            // Allow dropping numbers here
+          },
+          child: Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isCorrect ? Colors.orange[100] : Colors.grey[100],
+              border: Border.all(
+                color: isCorrect ? Colors.orange : Colors.grey,
+                width: 3,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (circleNumbers.isEmpty)
+                  Text(
+                    expectedValue.toString(),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[600],
+                    ),
+                  )
+                else
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    children: circleNumbers.map((number) => 
+                      GestureDetector(
+                        onTap: () => _removeNumberFromCircle('operand$operandNumber', number),
+                        child: Container(
+                          margin: const EdgeInsets.all(2),
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: operandNumber == 1 ? Colors.orange : Colors.purple,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            number.toString(),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ).toList(),
+                  ),
+                if (isCorrect)
+                  const Icon(Icons.check, color: Colors.green, size: 16),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey,
+          ),
+        ),
+      ],
     );
   }
 
@@ -409,8 +534,9 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
             spacing: 8,
             runSpacing: 8,
             children: _availableNumbers.map((number) {
-              final isSelected = _selectedNumbers.contains(number);
-              final selectionCount = _selectedNumbers.where((n) => n == number).length;
+              final allSelected = _circleNumbers.values.expand((list) => list).toList();
+              final isSelected = allSelected.contains(number);
+              final selectionCount = allSelected.where((n) => n == number).length;
               
               return GestureDetector(
                 onTap: () => _selectNumber(number),
