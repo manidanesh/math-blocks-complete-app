@@ -1,6 +1,36 @@
 import 'package:flutter/material.dart';
 import '../services/problem_generator.dart';
 
+/// Custom painter for drawing lines between number bond circles
+class NumberBondLinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.blue
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke;
+
+    // Calculate proper positions for 50px circles with 25px radius
+    final circleRadius = 25.0;
+    
+    // Top circle center (center horizontally, 25px from top)
+    final topCenter = Offset(size.width / 2, circleRadius);
+    
+    // Bottom left circle center (75px from left edge, 25px from bottom)
+    final bottomLeft = Offset(75.0, size.height - circleRadius);
+    
+    // Bottom right circle center (125px from left edge, 25px from bottom)
+    final bottomRight = Offset(125.0, size.height - circleRadius);
+
+    // Draw lines connecting the circle centers
+    canvas.drawLine(topCenter, bottomLeft, paint);
+    canvas.drawLine(topCenter, bottomRight, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
 class NumberBondWidget extends StatefulWidget {
   final int operand1;
   final int operand2;
@@ -71,10 +101,7 @@ class _NumberBondWidgetState extends State<NumberBondWidget>
   }
 
   Widget _buildMakeTenVisualization() {
-    // For make-ten strategy: show how to break numbers to make 10 first
     final sum = widget.operand1 + widget.operand2;
-    final needed = 10 - widget.operand1;
-    final remaining = widget.operand2 - needed;
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -86,23 +113,60 @@ class _NumberBondWidgetState extends State<NumberBondWidget>
       child: Column(
         children: [
           const Text(
-            'Make Ten Strategy',
+            'Number Bond',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           
-          // Original problem
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildNumberCircle(widget.operand1.toString(), Colors.orange),
-              const Text(' + ', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-              _buildNumberCircle(widget.operand2.toString(), Colors.purple),
-              const Text(' = ?', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            ],
+          // Three-circle number bond structure: Top circle with second number, two empty circles below
+          SizedBox(
+            width: 200,
+            height: 120,
+            child: Stack(
+              children: [
+                // Lines connecting the circles
+                CustomPaint(
+                  size: const Size(200, 120),
+                  painter: NumberBondLinePainter(),
+                ),
+                
+                // Top circle - SECOND NUMBER (given)
+                Positioned(
+                  top: 0,
+                  left: 75, // Center horizontally (200/2 - 25)
+                  child: _buildNumberCircle(
+                    widget.operand2.toString(), 
+                    Colors.purple,
+                    label: 'Second\nNumber'
+                  ),
+                ),
+                
+                // Bottom left circle - EMPTY for user selection
+                Positioned(
+                  bottom: 0,
+                  left: 50, // 75 - 25 (center - radius)
+                  child: _buildNumberCircle(
+                    widget.showSolution ? '4' : '?', // Example: 6 = 4 + 2
+                    widget.showSolution ? Colors.orange : Colors.grey[300]!,
+                    label: 'First\nPart'
+                  ),
+                ),
+                
+                // Bottom right circle - EMPTY for user selection
+                Positioned(
+                  bottom: 0,
+                  left: 100, // 125 - 25 (center - radius)
+                  child: _buildNumberCircle(
+                    widget.showSolution ? '2' : '?', // Example: 6 = 4 + 2
+                    widget.showSolution ? Colors.orange : Colors.grey[300]!,
+                    label: 'Second\nPart'
+                  ),
+                ),
+              ],
+            ),
           ),
           
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           
           if (widget.showSolution) ...[
             AnimatedBuilder(
@@ -113,7 +177,7 @@ class _NumberBondWidgetState extends State<NumberBondWidget>
                   child: Column(
                     children: [
                       const Text(
-                        'Step 1: Make 10 first',
+                        'Make Ten Strategy',
                         style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
@@ -124,7 +188,7 @@ class _NumberBondWidgetState extends State<NumberBondWidget>
                         children: [
                           _buildNumberCircle(widget.operand1.toString(), Colors.orange),
                           const Text(' + ', style: TextStyle(fontSize: 20)),
-                          _buildNumberCircle(needed.toString(), Colors.green),
+                              _buildNumberCircle((10 - widget.operand1).toString(), Colors.green),
                           const Text(' = ', style: TextStyle(fontSize: 20)),
                           _buildNumberCircle('10', Colors.red),
                         ],
@@ -143,7 +207,7 @@ class _NumberBondWidgetState extends State<NumberBondWidget>
                         children: [
                           _buildNumberCircle('10', Colors.red),
                           const Text(' + ', style: TextStyle(fontSize: 20)),
-                          _buildNumberCircle(remaining.toString(), Colors.purple),
+                              _buildNumberCircle((sum - 10).toString(), Colors.purple),
                           const Text(' = ', style: TextStyle(fontSize: 20)),
                           _buildNumberCircle(sum.toString(), Colors.green, isResult: true),
                         ],
@@ -188,19 +252,57 @@ class _NumberBondWidgetState extends State<NumberBondWidget>
       child: Column(
         children: [
           const Text(
-            'Crossing Strategy',
+            'Number Bond',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           
-          // Visual representation with blocks
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildNumberBlocks(widget.operand1, Colors.orange),
-              const Text(' + ', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-              _buildNumberBlocks(widget.operand2, Colors.purple),
-            ],
+          // Three-circle number bond structure: Top circle with second number, two empty circles below
+          SizedBox(
+            width: 200,
+            height: 120,
+            child: Stack(
+              children: [
+                // Lines connecting the circles
+                CustomPaint(
+                  size: const Size(200, 120),
+                  painter: NumberBondLinePainter(),
+                ),
+                
+                // Top circle - SECOND NUMBER (given)
+                Positioned(
+                  top: 0,
+                  left: 75, // Center horizontally (200/2 - 25)
+                  child: _buildNumberCircle(
+                    widget.operand2.toString(), 
+                    Colors.purple,
+                    label: 'Second\nNumber'
+                  ),
+                ),
+                
+                // Bottom left circle - EMPTY for user selection
+                Positioned(
+                  bottom: 0,
+                  left: 50, // 75 - 25 (center - radius)
+                  child: _buildNumberCircle(
+                    widget.showSolution ? '5' : '?', // Example breakdown
+                    widget.showSolution ? Colors.orange : Colors.grey[300]!,
+                    'First\nPart'
+                  ),
+                ),
+                
+                // Bottom right circle - EMPTY for user selection
+                Positioned(
+                  bottom: 0,
+                  left: 100, // 125 - 25 (center - radius)
+                  child: _buildNumberCircle(
+                    widget.showSolution ? '1' : '?', // Example breakdown
+                    widget.showSolution ? Colors.orange : Colors.grey[300]!,
+                    'Second\nPart'
+                  ),
+                ),
+              ],
+            ),
           ),
           
           if (widget.showSolution) ...[
@@ -213,11 +315,14 @@ class _NumberBondWidgetState extends State<NumberBondWidget>
                   child: Column(
                     children: [
                       const Text(
-                        'Solution:',
+                        'Crossing Strategy',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
-                      _buildNumberCircle(sum.toString(), Colors.green, isResult: true),
+                      Text(
+                        '${widget.operand2} = 5 + 1 (example)',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
                     ],
                   ),
                 );
@@ -243,21 +348,57 @@ class _NumberBondWidgetState extends State<NumberBondWidget>
       child: Column(
         children: [
           const Text(
-            'Counting Strategy',
+            'Number Bond',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           
-          // Show dots for counting
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildDots(widget.operand1, Colors.orange),
-              const SizedBox(width: 16),
-              const Text('+', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-              const SizedBox(width: 16),
-              _buildDots(widget.operand2, Colors.purple),
-            ],
+          // Three-circle number bond structure: Top circle with second number, two empty circles below
+          SizedBox(
+            width: 200,
+            height: 120,
+            child: Stack(
+              children: [
+                // Lines connecting the circles
+                CustomPaint(
+                  size: const Size(200, 120),
+                  painter: NumberBondLinePainter(),
+                ),
+                
+                // Top circle - SECOND NUMBER (given)
+                Positioned(
+                  top: 0,
+                  left: 75, // Center horizontally (200/2 - 25)
+                  child: _buildNumberCircle(
+                    widget.operand2.toString(), 
+                    Colors.purple,
+                    label: 'Second\nNumber'
+                  ),
+                ),
+                
+                // Bottom left circle - EMPTY for user selection
+                Positioned(
+                  bottom: 0,
+                  left: 50, // 75 - 25 (center - radius)
+                  child: _buildNumberCircle(
+                    widget.showSolution ? '3' : '?', // Example breakdown
+                    widget.showSolution ? Colors.orange : Colors.grey[300]!,
+                    'First\nPart'
+                  ),
+                ),
+                
+                // Bottom right circle - EMPTY for user selection
+                Positioned(
+                  bottom: 0,
+                  left: 100, // 125 - 25 (center - radius)
+                  child: _buildNumberCircle(
+                    widget.showSolution ? '3' : '?', // Example breakdown
+                    widget.showSolution ? Colors.orange : Colors.grey[300]!,
+                    'Second\nPart'
+                  ),
+                ),
+              ],
+            ),
           ),
           
           if (widget.showSolution) ...[
@@ -270,13 +411,14 @@ class _NumberBondWidgetState extends State<NumberBondWidget>
                   child: Column(
                     children: [
                       const Text(
-                        'Count them all:',
+                        'Basic Counting',
                         style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
-                      _buildDots(sum, Colors.green),
-                      const SizedBox(height: 8),
-                      _buildNumberCircle(sum.toString(), Colors.green, isResult: true),
+                      Text(
+                        '${widget.operand2} = 3 + 3 (example)',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
                     ],
                   ),
                 );
@@ -288,33 +430,50 @@ class _NumberBondWidgetState extends State<NumberBondWidget>
     );
   }
 
-  Widget _buildNumberCircle(String number, Color color, {bool isResult = false}) {
-    return Container(
-      width: isResult ? 60 : 50,
-      height: isResult ? 60 : 50,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        boxShadow: isResult
-            ? [
-                BoxShadow(
-                  color: color.withOpacity(0.4),
+  Widget _buildNumberCircle(String number, Color color, {bool isResult = false, String? label}) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: isResult ? 60 : 50,
+          height: isResult ? 60 : 50,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            boxShadow: isResult
+                ? [
+                    BoxShadow(
+                      color: color.withOpacity(0.4),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
               ]
             : null,
-      ),
-      child: Center(
-        child: Text(
-          number,
-          style: TextStyle(
-            fontSize: isResult ? 24 : 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+          ),
+          child: Center(
+            child: Text(
+              number,
+              style: TextStyle(
+                fontSize: isResult ? 24 : 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ),
         ),
-      ),
+        if (label != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ],
     );
   }
 
@@ -389,3 +548,4 @@ class _NumberBondWidgetState extends State<NumberBondWidget>
     );
   }
 }
+

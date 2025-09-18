@@ -28,7 +28,7 @@ class InteractiveNumberBondWidget extends StatefulWidget {
   final int operand2;
   final ProblemStrategy strategy;
   final bool showSolution;
-  final VoidCallback? onBondComplete;
+  final Function(bool isCorrect)? onBondComplete;
 
   const InteractiveNumberBondWidget({
     super.key,
@@ -52,40 +52,20 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
   };
   List<int> _availableNumbers = [];
   bool _bondComplete = false;
-  late AnimationController _circleController;
-  late AnimationController _successController;
-  late Animation<double> _circleAnimation;
-  late Animation<double> _successAnimation;
+  bool _isValidating = false;
+  bool? _isCorrectAnswer;
+  bool _showExplanation = false;
+  int _attemptCount = 0;
+  bool _showTryAgain = false;
 
   @override
   void initState() {
     super.initState();
-    
-    _circleController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    
-    _successController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-    
-    _circleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
-      CurvedAnimation(parent: _circleController, curve: Curves.elasticOut),
-    );
-    
-    _successAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _successController, curve: Curves.easeOut),
-    );
-    
     _initializeNumbers();
   }
 
   @override
   void dispose() {
-    _circleController.dispose();
-    _successController.dispose();
     super.dispose();
   }
 
@@ -149,22 +129,78 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
   }
 
   void _selectNumber(int number) {
-    // For now, add to result circle by default
-    // In a more advanced version, could have drag-and-drop
     setState(() {
-      _circleNumbers['result']!.add(number);
+      // Fill left circle first, then right circle
+      if (_circleNumbers['operand1']!.isEmpty) {
+        _circleNumbers['operand1']!.add(number);
+      } else if (_circleNumbers['operand2']!.isEmpty) {
+        _circleNumbers['operand2']!.add(number);
+        
+        // When both circles are filled, validate the answer
+        _validateAnswer();
+      }
     });
     
-    _circleController.forward().then((_) => _circleController.reverse());
+    // Animation removed - just change background color
     
     // Check if bond is complete
     _checkBondCompletion();
+  }
+
+  void _validateAnswer() {
+    if (_circleNumbers['operand1']!.isNotEmpty && _circleNumbers['operand2']!.isNotEmpty) {
+      _attemptCount++;
+      
+      // Check if the answer is correct using Make Ten strategy
+      final operand1 = _circleNumbers['operand1']!.first;
+      final operand2 = _circleNumbers['operand2']!.first;
+      
+      // For Make Ten strategy: the first part should make 10 with the original first operand
+      final shouldMakeTen = operand1 + widget.operand1 == 10;
+      final shouldAddToSecondOperand = operand1 + operand2 == widget.operand2;
+      
+      // Both conditions must be true for Make Ten strategy
+      final isCorrect = shouldMakeTen && shouldAddToSecondOperand;
+      
+      setState(() {
+        _isCorrectAnswer = isCorrect;
+        
+        if (isCorrect) {
+          // Correct answer - show explanation and notify parent
+          _showExplanation = true;
+          widget.onBondComplete?.call(true);
+        } else if (_attemptCount >= 3) {
+          // 3rd attempt failed - show failure with explanation
+          _showExplanation = true;
+          widget.onBondComplete?.call(false);
+        } else {
+          // Wrong answer but still have attempts - show try again message
+          _showTryAgain = true;
+        }
+      });
+    }
+  }
+  
+  void _refreshForRetry() {
+    // Clear the circles for retry
+    setState(() {
+      _circleNumbers['operand1']!.clear();
+      _circleNumbers['operand2']!.clear();
+      _isCorrectAnswer = null;
+      _showExplanation = false;
+      _showTryAgain = false;
+    });
   }
 
   void _removeNumberFromCircle(String circleKey, int number) {
     setState(() {
       _circleNumbers[circleKey]!.remove(number);
       _bondComplete = false;
+      _isValidating = false;
+      _isCorrectAnswer = null;
+      _showExplanation = false;
+      _attemptCount = 0;
+      _showTryAgain = false;
     });
   }
 
@@ -197,8 +233,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
       setState(() {
         _bondComplete = true;
       });
-      _successController.forward();
-      widget.onBondComplete?.call();
+      // Animation removed
     }
   }
 
@@ -212,8 +247,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
       setState(() {
         _bondComplete = true;
       });
-      _successController.forward();
-      widget.onBondComplete?.call();
+      // Animation removed
     }
   }
 
@@ -227,8 +261,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
       setState(() {
         _bondComplete = true;
       });
-      _successController.forward();
-      widget.onBondComplete?.call();
+      // Animation removed
     }
   }
 
@@ -239,7 +272,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
       _circleNumbers['operand2']!.clear();
       _bondComplete = false;
     });
-    _successController.reset();
+    // Animation removed
   }
 
   @override
@@ -271,20 +304,10 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
           ),
           const SizedBox(height: 16),
           
-          // Problem display
-          Text(
-            '${widget.operand1} + ${widget.operand2} = ?',
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 20),
-          
           // Interactive circle for selected numbers
           _buildInteractiveCircle(),
           const SizedBox(height: 20),
           
-          // Strategy hint
-          if (!_bondComplete && !widget.showSolution)
-            _buildStrategyHint(),
           
           const SizedBox(height: 16),
           
@@ -293,38 +316,30 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
           
           const SizedBox(height: 16),
           
-          // Success feedback
+          // Success feedback - animation removed
           if (_bondComplete)
-            AnimatedBuilder(
-              animation: _successAnimation,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: _successAnimation.value,
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.check_circle, color: Colors.green),
-                        SizedBox(width: 8),
-                        Text(
-                          'Great job! You built the number bond!',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
-                        ),
-                      ],
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green),
+                  SizedBox(width: 8),
+                  Text(
+                    'Great job! You built the number bond!',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
                     ),
                   ),
-                );
-              },
+                ],
+              ),
             ),
           
           // Solution display (after 3 failures)
@@ -336,36 +351,113 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
   }
 
   Widget _buildInteractiveCircle() {
-    return AnimatedBuilder(
-      animation: _circleAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _circleAnimation.value,
-          child: Column(
-            children: [
-              // Top circle for the sum/result
-              _buildResultCircle(),
-              const SizedBox(height: 20),
-              
-              // Connection lines
-              CustomPaint(
-                size: const Size(200, 40),
-                painter: NumberBondLinePainter(),
+    return Column(
+      children: [
+              // Three-circle number bond structure: Top circle with second number, two empty circles below
+              SizedBox(
+                width: 300,
+                height: 220,
+                child: Stack(
+                  children: [
+                    // Top circle - SECOND NUMBER (given) - centered
+                    Positioned(
+                      top: 30,
+                      left: 125, // Center horizontally (300/2 - 25)
+                      child: _buildNumberCircle(
+                        widget.operand2.toString(), 
+                        Colors.purple
+                      ),
+                    ),
+                    
+                    // Bottom left circle - EMPTY for user selection
+                    Positioned(
+                      bottom: 30,
+                      left: 75, // Aligned under the top circle
+                      child: _buildNumberCircle(
+                        _getNumbersInCircle('operand1').isNotEmpty 
+                          ? _getNumbersInCircle('operand1').first.toString()
+                          : '?',
+                        _getNumbersInCircle('operand1').isNotEmpty 
+                          ? (_isCorrectAnswer == true ? Colors.green : Colors.yellow)
+                          : Colors.grey[300]!
+                      ),
+                    ),
+                    
+                    // Bottom right circle - EMPTY for user selection
+                    Positioned(
+                      bottom: 30,
+                      left: 175, // Aligned under the top circle
+                      child: _buildNumberCircle(
+                        _getNumbersInCircle('operand2').isNotEmpty 
+                          ? _getNumbersInCircle('operand2').first.toString()
+                          : '?',
+                        _getNumbersInCircle('operand2').isNotEmpty 
+                          ? (_isCorrectAnswer == true ? Colors.green : Colors.yellow)
+                          : Colors.grey[300]!
+                      ),
+                    ),
+                  ],
+                ),
               ),
               
-              // Bottom row with two operand circles
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildOperandCircle(1, 'First\nNumber'),
-                  const SizedBox(width: 40),
-                  _buildOperandCircle(2, 'Second\nNumber'),
-                ],
+              
+              // Show try again message for wrong answers
+              if (_showTryAgain && _isCorrectAnswer == false) ...[
+                const SizedBox(height: 24),
+                _buildTryAgainMessage(),
+              ],
+              
+              // Show Make Ten strategy explanation when correct or after 3 attempts
+              if (_showExplanation) ...[
+                const SizedBox(height: 24),
+                _buildMakeTenExplanation(),
+              ],
+      ],
+    );
+  }
+
+  Widget _buildNumberCircle(String number, Color color, {String? label}) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.4),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-        );
-      },
+          child: Center(
+            child: Text(
+              number,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+        if (label != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ],
     );
   }
 
@@ -605,28 +697,6 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
     );
   }
 
-  Widget _buildStrategyHint() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.yellow[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.yellow[300]!),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.lightbulb, color: Colors.orange),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              _getStrategyHintText(),
-              style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSolutionDisplay() {
     return Container(
@@ -772,17 +842,288 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
     }
   }
 
-  String _getStrategyHintText() {
-    switch (widget.strategy) {
-      case ProblemStrategy.makeTen:
-        final needed = 10 - widget.operand1;
-        return 'Try: First select ${widget.operand1}, then $needed to make 10, then select 10, then the remaining numbers!';
-      case ProblemStrategy.crossing:
-        return 'Select the two numbers being added, then find their sum!';
-      case ProblemStrategy.basic:
-        return 'Select both numbers and count to find the total!';
-      default:
-        return 'Build the number bond step by step!';
-    }
+
+  Widget _buildMakeTenExplanation() {
+    // Calculate the correct answer for Make Ten strategy
+    final makeTenNumber = 10 - widget.operand1; // The number that makes 10 with operand1
+    final remainingNumber = widget.operand2 - makeTenNumber; // The remaining number
+    final tenPlusRemaining = 10 + remainingNumber;
+    
+    // Check if this is a failure case (after 3 attempts)
+    final isFailure = _attemptCount >= 3 && _isCorrectAnswer != true;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isFailure 
+            ? [Colors.orange[50]!, Colors.orange[100]!]
+            : [Colors.green[50]!, Colors.green[100]!],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isFailure ? Colors.orange[300]! : Colors.green[300]!, 
+          width: 2
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (isFailure ? Colors.orange : Colors.green).withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isFailure ? Icons.school : Icons.lightbulb, 
+                color: isFailure ? Colors.orange[600] : Colors.green[600], 
+                size: 24
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isFailure 
+                  ? 'Let\'s learn the Make Ten Strategy:'
+                  : 'Great! Here\'s the Make Ten Strategy:',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isFailure ? Colors.orange[700] : Colors.green[700],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          
+          // Step 1: Make Ten
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  'Step 1: Make Ten',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildExplanationNumber(widget.operand1.toString(), Colors.orange),
+                    const Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    _buildExplanationNumber(makeTenNumber.toString(), Colors.blue),
+                    const Text(' = ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    _buildExplanationNumber('10', Colors.green),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${widget.operand1} + $makeTenNumber = 10 ✓',
+                  style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Arrow
+          Icon(Icons.keyboard_arrow_down, color: Colors.green[600], size: 32),
+          
+          const SizedBox(height: 16),
+          
+          // Step 2: Add remaining
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.purple[200]!),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  'Step 2: Add the Remaining',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.purple,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildExplanationNumber('10', Colors.green),
+                    const Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    _buildExplanationNumber(remainingNumber.toString(), Colors.purple),
+                    const Text(' = ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    _buildExplanationNumber(tenPlusRemaining.toString(), Colors.red),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '10 + $remainingNumber = $tenPlusRemaining ✓',
+                  style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Final answer
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.red[50],
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(color: Colors.red[300]!, width: 2),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.star, color: Colors.red[600], size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Final Answer: ${widget.operand1} + ${widget.operand2} = $tenPlusRemaining',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red[700],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExplanationNumber(String number, Color color) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          number,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTryAgainMessage() {
+    final remainingAttempts = 3 - _attemptCount;
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.orange[50]!, Colors.orange[100]!],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.orange[300]!, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.orange.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.refresh, color: Colors.orange[600], size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'Not quite right!',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange[700],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          Text(
+            'You have $remainingAttempts more ${remainingAttempts == 1 ? 'try' : 'tries'}',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.orange[600],
+            ),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          ElevatedButton(
+            onPressed: _refreshForRetry,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange[600],
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(25),
+              ),
+              elevation: 4,
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.refresh, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Try Again',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

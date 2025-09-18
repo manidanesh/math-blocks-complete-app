@@ -10,6 +10,7 @@ class KidProfile {
   final int totalStars;
   final int totalProblemsCompleted;
   final double overallAccuracy;
+  final List<int> favoriteNumbers;
 
   const KidProfile({
     required this.id,
@@ -23,6 +24,7 @@ class KidProfile {
     this.totalStars = 0,
     this.totalProblemsCompleted = 0,
     this.overallAccuracy = 0.0,
+    this.favoriteNumbers = const [],
   });
 
   Map<String, dynamic> toJson() {
@@ -38,6 +40,7 @@ class KidProfile {
       'totalStars': totalStars,
       'totalProblemsCompleted': totalProblemsCompleted,
       'overallAccuracy': overallAccuracy,
+      'favoriteNumbers': favoriteNumbers,
     };
   }
 
@@ -54,6 +57,7 @@ class KidProfile {
       totalStars: json['totalStars'] as int? ?? 0,
       totalProblemsCompleted: json['totalProblemsCompleted'] as int? ?? 0,
       overallAccuracy: json['overallAccuracy'] as double? ?? 0.0,
+      favoriteNumbers: (json['favoriteNumbers'] as List<dynamic>?)?.map((e) => e as int).toList() ?? [],
     );
   }
 
@@ -69,6 +73,7 @@ class KidProfile {
     int? totalStars,
     int? totalProblemsCompleted,
     double? overallAccuracy,
+    List<int>? favoriteNumbers,
   }) {
     return KidProfile(
       id: id ?? this.id,
@@ -82,6 +87,7 @@ class KidProfile {
       totalStars: totalStars ?? this.totalStars,
       totalProblemsCompleted: totalProblemsCompleted ?? this.totalProblemsCompleted,
       overallAccuracy: overallAccuracy ?? this.overallAccuracy,
+      favoriteNumbers: favoriteNumbers ?? this.favoriteNumbers,
     );
   }
 
@@ -90,3 +96,4 @@ class KidProfile {
     return 'KidProfile(id: $id, name: $name, age: $age, language: $language, stars: $totalStars)';
   }
 }
+

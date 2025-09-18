@@ -6,6 +6,7 @@ import '../models/kid_profile.dart';
 import '../providers/profile_provider.dart';
 import '../widgets/language_selector.dart';
 import '../widgets/age_selector.dart';
+import '../widgets/favorite_numbers_selector.dart';
 
 class ProfileCreationScreen extends ConsumerStatefulWidget {
   const ProfileCreationScreen({super.key});
@@ -18,6 +19,7 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
   final TextEditingController _nameController = TextEditingController();
   int? selectedAge;
   String selectedLanguageCode = 'en';
+  List<int> favoriteNumbers = [];
   bool isLoading = false;
 
   @override
@@ -48,6 +50,7 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
         isCurrent: true,
         createdAt: DateTime.now(),
         lastPlayed: DateTime.now(),
+        favoriteNumbers: favoriteNumbers,
       );
 
       await ref.read(profileProvider.notifier).createProfile(profile);
@@ -228,6 +231,37 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                         onLanguageSelected: (languageCode) {
                           setState(() {
                             selectedLanguageCode = languageCode;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Favorite numbers selection
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '⭐ Choose Your Favorite Numbers',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2C3E50),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      FavoriteNumbersSelector(
+                        initialFavorites: favoriteNumbers,
+                        onChanged: (numbers) {
+                          setState(() {
+                            favoriteNumbers = numbers;
                           });
                         },
                       ),

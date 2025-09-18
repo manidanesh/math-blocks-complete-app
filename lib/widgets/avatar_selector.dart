@@ -94,3 +94,4 @@ class AvatarSelector extends StatelessWidget {
     );
   }
 }
+

@@ -4,11 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../models/kid_profile.dart';
 import '../models/problem_attempt.dart';
+import '../models/rewards_model.dart';
 import '../providers/profile_provider.dart';
 import '../services/adaptive_engine.dart';
 import '../services/problem_attempt_service.dart';
 import '../services/problem_generator.dart';
+import '../services/rewards_service.dart';
 import '../widgets/interactive_number_bond_widget.dart';
+import '../widgets/rewards_display.dart';
+import '../widgets/celebration_animations.dart';
 import '../services/language_service.dart';
 
 class ChallengeScreen extends ConsumerStatefulWidget {
@@ -22,14 +26,20 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
     with TickerProviderStateMixin {
   MathProblem? _currentProblem;
   int _currentAttempt = 1;
-  int _selectedAnswer = -1;
   bool _showFeedback = false;
   bool _showExplanation = false;
   bool _showNextButton = false;
   String _feedbackMessage = '';
   Color _feedbackColor = Colors.green;
+  
+  // Rewards system
+  ChildRewards? _currentRewards;
+  bool _showCelebration = false;
+  RewardResult? _lastRewardResult;
   int _currentLevel = 1;
   bool _isLoading = true;
+  bool _showNextChallenge = false;
+  bool _showRetryChallenge = false;
   
   // Animation controllers
   late AnimationController _feedbackController;
@@ -61,6 +71,7 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
     );
     
     _initializeChallenge();
+    _loadRewards();
   }
 
   @override
@@ -68,6 +79,79 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
     _feedbackController.dispose();
     _bounceController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadRewards() async {
+    final profileAsync = ref.read(profileProvider);
+    profileAsync.whenData((profile) async {
+      if (profile != null) {
+        final rewards = await RewardsService.getRewards(profile.id);
+        if (mounted) {
+          setState(() {
+            _currentRewards = rewards;
+          });
+        }
+      }
+    });
+  }
+
+  Future<void> _nextChallenge() async {
+    // Reset state for new challenge
+    setState(() {
+      _showNextChallenge = false;
+      _showRetryChallenge = false;
+      _currentAttempt = 1;
+    });
+    
+    // Generate new problem
+    _generateNewProblem();
+  }
+  
+  Future<void> _retryChallenge() async {
+    // Reset state for retry
+    setState(() {
+      _showNextChallenge = false;
+      _showRetryChallenge = false;
+      _currentAttempt = 1;
+    });
+    
+    // Keep the same problem but reset the number bond widget
+    // The InteractiveNumberBondWidget will reset itself when we rebuild
+  }
+
+  Future<void> _awardStar(String childId, String description) async {
+    final result = await RewardsService.addStar(
+      childId,
+      description: description,
+      metadata: {
+        'problem': _currentProblem?.problemText,
+        'attempt': _currentAttempt,
+        'level': _currentLevel,
+      },
+    );
+    
+    if (mounted && result.success && result.rewards != null) {
+      setState(() {
+        _currentRewards = result.rewards;
+        _lastRewardResult = result;
+        
+        // Show celebration if there's a new badge, sticker, or level up
+        if (result.newBadge != null || result.newSticker != null || result.levelUp) {
+          _showCelebration = true;
+        }
+      });
+      
+      // Hide celebration after delay
+      if (_showCelebration) {
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted) {
+            setState(() {
+              _showCelebration = false;
+            });
+          }
+        });
+      }
+    }
   }
 
   Future<void> _initializeChallenge() async {
@@ -105,11 +189,15 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
   }
 
   void _generateNewProblem() {
-    final problem = ProblemGenerator.generateProblem(level: _currentLevel);
+    final profile = ref.read(profileProvider).value;
+    final favoriteNumbers = profile?.favoriteNumbers ?? [];
+    final problem = ProblemGenerator.generateProblem(
+      level: _currentLevel,
+      favoriteNumbers: favoriteNumbers,
+    );
     setState(() {
       _currentProblem = problem;
       _currentAttempt = 1;
-      _selectedAnswer = -1;
       _showFeedback = false;
       _showExplanation = false;
       _showNextButton = false;
@@ -118,57 +206,6 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
     print('🧮 New challenge: ${problem.problemText} (Level ${problem.level})');
   }
 
-  Future<void> _submitAnswer() async {
-    if (_selectedAnswer == -1 || _currentProblem == null) return;
-
-    final profileAsync = ref.read(profileProvider);
-    final profile = profileAsync.value;
-    if (profile == null) return;
-
-    final isCorrect = _selectedAnswer == _currentProblem!.correctAnswer;
-    final timeSpent = 5.0 + Random().nextDouble() * 10.0; // Simulated time
-    
-    // Record the attempt
-    final attempt = ProblemAttempt(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      childId: profile.id,
-      problemText: _currentProblem!.problemText,
-      operand1: _currentProblem!.operand1,
-      operand2: _currentProblem!.operand2,
-      operator: _currentProblem!.operator,
-      correctAnswer: _currentProblem!.correctAnswer,
-      userAnswer: _selectedAnswer,
-      isCorrect: isCorrect,
-      timestamp: DateTime.now(),
-      attemptNumber: _currentAttempt,
-      timeSpentSeconds: timeSpent,
-      strategy: _currentProblem!.strategy.toString(),
-      difficultyLevel: _currentProblem!.level,
-      skillArea: 'addition_level_${_currentProblem!.level}',
-      usedHint: false, // TODO: Implement hint system
-      explanation: isCorrect ? null : _currentProblem!.explanation,
-    );
-    
-    await ProblemAttemptService.recordAttempt(attempt);
-
-    if (isCorrect) {
-      // Correct answer!
-      _showSuccessFeedback();
-      _updateProfileProgress(profile);
-    } else {
-      // Wrong answer
-      if (_currentAttempt >= 3) {
-        // 3rd attempt failed - show explanation and next button
-        _showFailureExplanation();
-      } else {
-        // Still have attempts left
-        _showRetryFeedback();
-        setState(() {
-          _currentAttempt++;
-        });
-      }
-    }
-  }
 
   void _showSuccessFeedback() {
     setState(() {
@@ -187,7 +224,7 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
       _feedbackMessage = _getRetryMessage();
       _feedbackColor = Colors.orange;
       _showFeedback = true;
-      _selectedAnswer = -1; // Clear selection
+ // Clear selection
     });
     
     _feedbackController.forward();
@@ -247,10 +284,6 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
     ref.read(profileProvider.notifier).updateProfile(updatedProfile);
   }
 
-  void _nextChallenge() {
-    _feedbackController.reset();
-    _generateNewProblem();
-  }
 
   void _showHint() {
     showDialog(
@@ -286,29 +319,30 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(profileProvider);
+    final currentLanguage = profileAsync.value?.language ?? 'en';
     
     return Scaffold(
       appBar: AppBar(
-        title: Text('math_challenge'.tr(profileAsync.value?.language ?? 'en')),
+        title: Text('math_challenge'.tr(currentLanguage)),
         backgroundColor: Colors.green[600],
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/mode-select'),
-          tooltip: 'back_to_home'.tr(profileAsync.value?.language ?? 'en'),
+          tooltip: 'back_to_home'.tr(currentLanguage),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.lightbulb_outline),
             onPressed: _showHint,
-            tooltip: 'get_hint'.tr(profileAsync.value?.language ?? 'en'),
+            tooltip: 'get_hint'.tr(currentLanguage),
           ),
           // Language flag in app bar
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: Center(
               child: Text(
-                LanguageService.getFlag(profileAsync.value?.language ?? 'en'),
+                LanguageService.getFlag(currentLanguage),
                 style: const TextStyle(fontSize: 24),
               ),
             ),
@@ -354,24 +388,22 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
                 // Header with profile info
                 _buildHeader(profile),
                 const SizedBox(height: 24),
                 
                 // Current problem display
                 if (_currentProblem != null) ...[
-                  _buildProblemCard(),
+                  _buildProblemCard(currentLanguage),
                   const SizedBox(height: 24),
                   
                   // Number bond visualization
                   _buildNumberBondVisualization(),
                   const SizedBox(height: 24),
                   
-                  // Answer options
-                  if (!_showExplanation) _buildAnswerOptions(),
                   const SizedBox(height: 24),
                   
                   // Explanation section (after 3 failures)
@@ -380,8 +412,11 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
                   // Feedback section
                   if (_showFeedback) _buildFeedbackSection(),
                   
-                  // Action buttons
-                  _buildActionButtons(),
+                  // Challenge completion buttons
+                  if (_showNextChallenge || _showRetryChallenge) ...[
+                    const SizedBox(height: 24),
+                    _buildChallengeCompletionButtons(),
+                  ],
                 ],
               ],
             ),
@@ -416,9 +451,13 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    '${profile.name} • ${profile.totalStars} ⭐ • Attempt $_currentAttempt/3',
+                    '${profile.name} • Attempt $_currentAttempt/3',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
+                  if (_currentRewards != null) ...[
+                    const SizedBox(height: 4),
+                    CompactRewardsDisplay(rewards: _currentRewards!),
+                  ],
                 ],
               ),
             ),
@@ -428,7 +467,7 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
     );
   }
 
-  Widget _buildProblemCard() {
+  Widget _buildProblemCard(String language) {
     return Card(
       elevation: 6,
       child: Container(
@@ -445,7 +484,7 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
         child: Column(
           children: [
             Text(
-              'solve_problem'.tr(profileAsync.value?.language ?? 'en'),
+              'Solve this problem:',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 16),
@@ -455,7 +494,7 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
                 return Transform.scale(
                   scale: _bounceAnimation.value,
                   child: Text(
-                    _currentProblem!.problemText,
+                    '${_currentProblem!.operand1} + ${_currentProblem!.operand2} = ?',
                     style: const TextStyle(
                       fontSize: 36,
                       fontWeight: FontWeight.bold,
@@ -486,19 +525,47 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
             ),
             const SizedBox(height: 16),
             InteractiveNumberBondWidget(
+              key: ValueKey('${_currentProblem!.operand1}_${_currentProblem!.operand2}_$_currentAttempt'),
               operand1: _currentProblem!.operand1,
               operand2: _currentProblem!.operand2,
               strategy: _currentProblem!.strategy,
               showSolution: _showExplanation,
-              onBondComplete: () {
-                // Give positive feedback when bond is completed
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('🎉 Great! You built the number bond correctly!'),
-                    backgroundColor: Colors.green,
-                    duration: Duration(seconds: 2),
-                  ),
-                );
+              onBondComplete: (bool isCorrect) async {
+                if (isCorrect) {
+                  // Award star for correct answer
+                  final profile = ref.read(profileProvider).value;
+                  if (profile != null) {
+                    await _awardStar(profile.id, 'Correct number bond completion');
+                    
+                    // Show positive feedback
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('🎉 Great! You built the number bond correctly! +1 Star ⭐'),
+                        backgroundColor: Colors.green,
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                  
+                  // Show next challenge button after success
+                  setState(() {
+                    _showNextChallenge = true;
+                  });
+                } else {
+                  // Show feedback for incorrect after 3 attempts
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('💪 Keep trying! You can do it!'),
+                      backgroundColor: Colors.orange,
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                  
+                  // Show retry challenge button after failure
+                  setState(() {
+                    _showRetryChallenge = true;
+                  });
+                }
               },
             ),
           ],
@@ -507,76 +574,6 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
     );
   }
 
-  Widget _buildAnswerOptions() {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            const Text(
-              'Choose your answer:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: _currentProblem!.options.length,
-              itemBuilder: (context, index) {
-                final option = _currentProblem!.options[index];
-                final isSelected = _selectedAnswer == option;
-                
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedAnswer = option;
-                    });
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.blue[600] : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected ? Colors.blue[600]! : Colors.grey[300]!,
-                        width: 2,
-                      ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: Colors.blue.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Center(
-                      child: Text(
-                        option.toString(),
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: isSelected ? Colors.white : Colors.black87,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildExplanationSection() {
     return Card(
@@ -701,25 +698,6 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
   Widget _buildActionButtons() {
     return Column(
       children: [
-        if (!_showNextButton && !_showExplanation)
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _selectedAnswer != -1 ? _submitAnswer : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                _selectedAnswer != -1 ? 'Submit Answer' : 'Select an answer first',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
         
         if (_showNextButton)
           SizedBox(
@@ -759,6 +737,68 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildChallengeCompletionButtons() {
+    return Column(
+      children: [
+        if (_showNextChallenge) ...[
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _nextChallenge,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.arrow_forward, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Next Challenge',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+        
+        if (_showRetryChallenge) ...[
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _retryChallenge,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.refresh, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Try This Challenge Again',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

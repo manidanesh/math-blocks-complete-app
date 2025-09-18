@@ -354,3 +354,4 @@ extension TranslationExtension on String {
     return LanguageService.translate(this, languageCode, params: params);
   }
 }
+

@@ -121,6 +121,32 @@ class ModeSelectScreen extends ConsumerWidget {
                 
                 const SizedBox(height: 16),
                 
+                // Profile Management button
+                SizedBox(
+                  width: double.infinity,
+                  height: 80,
+                  child: ElevatedButton(
+                    onPressed: () => context.go('/profile-management'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3498DB),
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.person, size: 32),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Profile Settings',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
                 // Profile & History button
                 SizedBox(
                   width: double.infinity,

@@ -130,6 +130,7 @@ class ProblemGenerator {
   static MathProblem generateProblem({
     required int level,
     ProblemStrategy? strategy,
+    List<int> favoriteNumbers = const [],
   }) {
     try {
       // Clamp level to valid range
@@ -139,8 +140,8 @@ class ProblemGenerator {
       // Use provided strategy or level's preferred strategy
       final problemStrategy = strategy ?? difficultyLevel.preferredStrategy;
       
-      // Generate operands based on level and strategy
-      final operands = _generateOperands(difficultyLevel, problemStrategy);
+      // Generate operands based on level and strategy, using favorite numbers
+      final operands = _generateOperands(difficultyLevel, problemStrategy, favoriteNumbers);
       final operand1 = operands['operand1']!;
       final operand2 = operands['operand2']!;
       
@@ -197,14 +198,22 @@ class ProblemGenerator {
   static Map<String, int> _generateOperands(
     DifficultyLevel level, 
     ProblemStrategy strategy,
+    List<int> favoriteNumbers,
   ) {
     int operand1, operand2;
     int attempts = 0;
     const maxAttempts = 50;
     
     do {
-      operand1 = _random.nextInt(level.maxOperand1 - level.minOperand1 + 1) + level.minOperand1;
-      operand2 = _random.nextInt(level.maxOperand2 - level.minOperand2 + 1) + level.minOperand2;
+      // Use favorite numbers if available and appropriate for level
+      if (favoriteNumbers.isNotEmpty && _shouldUseFavoriteNumbers(level)) {
+        operand1 = _selectFavoriteNumber(favoriteNumbers, level);
+        operand2 = _generateComplementaryOperand(operand1, level, strategy);
+      } else {
+        // Fallback to random generation
+        operand1 = _random.nextInt(level.maxOperand1 - level.minOperand1 + 1) + level.minOperand1;
+        operand2 = _random.nextInt(level.maxOperand2 - level.minOperand2 + 1) + level.minOperand2;
+      }
       attempts++;
       
       if (attempts > maxAttempts) {
@@ -227,13 +236,15 @@ class ProblemGenerator {
   ) {
     final sum = operand1 + operand2;
     
-    // Always respect level requirements first
-    if (level.mustCrossTwenty && sum <= 20) {
-      return false; // MUST cross 20
+    // CRITICAL: Always ensure sum is greater than 10 (never equal to 10)
+    // This is a core requirement - all math challenges must exceed 10
+    if (sum <= 10) {
+      return false; // Sum must ALWAYS exceed 10 (e.g., 13+8=21, not 12+8=20)
     }
     
-    if (level.mustCrossTen && sum <= 10) {
-      return false; // MUST cross 10
+    // Always respect level requirements
+    if (level.mustCrossTwenty && sum <= 20) {
+      return false; // MUST cross 20
     }
     
     switch (strategy) {
@@ -411,6 +422,55 @@ class ProblemGenerator {
         return 3;
       default:
         return 2;
+    }
+  }
+
+  /// Check if we should use favorite numbers for this level
+  static bool _shouldUseFavoriteNumbers(DifficultyLevel level) {
+    // Use favorite numbers for levels 1-3 (up to 100)
+    return level.level <= 3;
+  }
+
+  /// Select a favorite number appropriate for the level
+  static int _selectFavoriteNumber(List<int> favoriteNumbers, DifficultyLevel level) {
+    // Filter favorite numbers that fit within the level constraints
+    final validFavorites = favoriteNumbers.where((num) => 
+      num >= level.minOperand1 && num <= level.maxOperand1
+    ).toList();
+    
+    if (validFavorites.isNotEmpty) {
+      return validFavorites[_random.nextInt(validFavorites.length)];
+    }
+    
+    // Fallback to any favorite number if none fit perfectly
+    return favoriteNumbers[_random.nextInt(favoriteNumbers.length)];
+  }
+
+  /// Generate a complementary operand that works with the favorite number
+  static int _generateComplementaryOperand(int favoriteNumber, DifficultyLevel level, ProblemStrategy strategy) {
+    switch (strategy) {
+      case ProblemStrategy.makeTen:
+        // For make ten, ensure sum is ALWAYS greater than 10
+        final targetSum = 11 + _random.nextInt(9); // 11-19 (always > 10)
+        return targetSum - favoriteNumber;
+        
+      case ProblemStrategy.crossing:
+        // For crossing, ensure we cross the appropriate boundary
+        if (level.mustCrossTwenty) {
+          final targetSum = 21 + _random.nextInt(10); // 21-30 (always > 20)
+          return targetSum - favoriteNumber;
+        } else {
+          final targetSum = 11 + _random.nextInt(10); // 11-20 (always > 10)
+          return targetSum - favoriteNumber;
+        }
+        
+      case ProblemStrategy.basic:
+        // For basic, keep it simple
+        return _random.nextInt(level.maxOperand2 - level.minOperand2 + 1) + level.minOperand2;
+        
+      case ProblemStrategy.review:
+        // For review, use a mix
+        return _random.nextInt(level.maxOperand2 - level.minOperand2 + 1) + level.minOperand2;
     }
   }
 }
