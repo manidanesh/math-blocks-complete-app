@@ -109,11 +109,11 @@ class AdaptiveEngine {
     final accuracy = correctCount / attempts.length;
 
     // Calculate average time
-    final totalTime = attempts.fold<double>(0.0, (sum, a) => sum + a.timeSpent);
+    final totalTime = attempts.fold<double>(0.0, (sum, a) => sum + a.timeSpentSeconds);
     final averageTime = totalTime / attempts.length;
 
     // Calculate hint usage rate
-    final hintCount = attempts.where((a) => a.hintUsed).length;
+    final hintCount = attempts.where((a) => a.usedHint).length;
     final hintRate = hintCount / attempts.length;
 
     // Calculate average score (accuracy weighted by time efficiency)

@@ -200,8 +200,8 @@ class _ProfileHistoryScreenState extends ConsumerState<ProfileHistoryScreen> {
             ),
             const SizedBox(height: 12),
             LanguageSelector(
-              selectedLanguage: profile.language,
-              onLanguageChanged: (newLanguage) async {
+              selectedLanguageCode: profile.language,
+              onLanguageSelected: (newLanguage) async {
                 // Update profile language
                 final updatedProfile = profile.copyWith(language: newLanguage);
                 await ref.read(profileProvider.notifier).updateProfile(updatedProfile);
@@ -344,17 +344,17 @@ class _ProfileHistoryScreenState extends ConsumerState<ProfileHistoryScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Time Spent: ${attempt.timeSpent.toStringAsFixed(1)} seconds',
+                  'Time Spent: ${attempt.timeSpentSeconds.toStringAsFixed(1)} seconds',
                   style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 8),
-                if (attempt.hintUsed)
+                if (attempt.usedHint)
                   const Text(
                     'Hint was used',
                     style: TextStyle(fontSize: 14, color: Colors.orange),
                   ),
                 const SizedBox(height: 12),
-                if (attempt.explanation.isNotEmpty) ...[
+                if (attempt.explanation?.isNotEmpty == true) ...[
                   const Text(
                     'Explanation:',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -368,7 +368,7 @@ class _ProfileHistoryScreenState extends ConsumerState<ProfileHistoryScreen> {
                       border: Border.all(color: Colors.blue[200]!),
                     ),
                     child: Text(
-                      attempt.explanation,
+                      attempt.explanation ?? '',
                       style: const TextStyle(fontSize: 14),
                     ),
                   ),

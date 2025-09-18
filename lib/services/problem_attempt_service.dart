@@ -25,7 +25,7 @@ class ProblemAttemptService {
       await prefs.setString(_attemptsKey, jsonEncode(attemptsJson));
       
       print('📊 Recorded attempt: ${attempt.problemText} = ${attempt.userAnswer} '
-            '(${attempt.isCorrect ? "✓" : "✗"}) in ${attempt.timeSpent.toStringAsFixed(1)}s');
+            '(${attempt.isCorrect ? "✓" : "✗"}) in ${attempt.timeSpentSeconds.toStringAsFixed(1)}s');
     } catch (e) {
       print('❌ Error recording attempt: $e');
     }
@@ -231,7 +231,7 @@ class ProblemAttemptService {
       final correctCount = recentAttempts.where((a) => a.isCorrect).length;
       final accuracy = correctCount / recentAttempts.length;
       
-      final totalTime = recentAttempts.fold<double>(0.0, (sum, a) => sum + a.timeSpent);
+      final totalTime = recentAttempts.fold<double>(0.0, (sum, a) => sum + a.timeSpentSeconds);
       final averageTime = totalTime / recentAttempts.length;
       
       // Calculate current streak
