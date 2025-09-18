@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../providers/profile_provider.dart';
 
@@ -22,6 +23,11 @@ class PracticeScreen extends ConsumerWidget {
           title: Text('Practice - ${profile?.name ?? "Unknown"}'),
           backgroundColor: const Color(0xFF3498DB),
           foregroundColor: Colors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.go('/mode-select'),
+            tooltip: 'Back to Home',
+          ),
         ),
         body: const Center(
           child: Column(

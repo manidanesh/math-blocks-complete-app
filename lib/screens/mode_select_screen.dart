@@ -30,6 +30,11 @@ class ModeSelectScreen extends ConsumerWidget {
             title: Text('Welcome ${profile.name}!'),
             backgroundColor: const Color(0xFF3498DB),
             foregroundColor: Colors.white,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => context.go('/profile-creation'),
+              tooltip: 'Back to Profile Creation',
+            ),
             actions: [
               IconButton(
                 icon: const Icon(Icons.person),
