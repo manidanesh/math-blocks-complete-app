@@ -170,9 +170,15 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
       final operand1 = _circleNumbers['operand1']!.first;
       final operand2 = _circleNumbers['operand2']!.first;
       
-      // For Make Ten strategy: the first part should make 10 with the original first operand
-      final shouldMakeTen = operand1 + widget.operand1 == 10;
+      // For Make Ten strategy: check if the breakdown is correct
+      // The two parts should add up to the second operand
       final shouldAddToSecondOperand = operand1 + operand2 == widget.operand2;
+      
+      // For Make Ten strategy, the first part should help cross the next 10
+      // This means operand1 + widget.operand1 should reach the next multiple of 10
+      final firstNumberOnes = widget.operand1 % 10;
+      final nextTen = widget.operand1 - firstNumberOnes + 10;
+      final shouldMakeTen = operand1 + widget.operand1 >= nextTen;
       
       // Both conditions must be true for Make Ten strategy
       final isCorrect = shouldMakeTen && shouldAddToSecondOperand;
