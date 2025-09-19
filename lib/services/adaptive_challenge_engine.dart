@@ -570,13 +570,23 @@ class AdaptiveChallengeEngine {
 
   /// Generate make-a-ten bond steps
   static String _generateMakeTenBondSteps(int firstNumber, int secondNumber) {
-    // CORRECT LOGIC: For problems like 43 + 8, break 8 into 7 + 1
-    // For 47 + 6, break 6 into 3 + 3
-    // Always break into (n-1) + 1 for odd numbers, equal parts for even
-    if (secondNumber % 2 == 0) {
+    // CORRECT LOGIC: For addition number bonds, break the second number to make calculation easier
+    // Example: 89 + 2 → break 2 into 1 + 1
+    // Example: 47 + 6 → break 6 into 3 + 3  
+    // Example: 43 + 8 → break 8 into 7 + 1
+    
+    if (secondNumber <= 1) {
+      // For very small numbers, just return as is
+      return '$secondNumber → $secondNumber';
+    } else if (secondNumber == 2) {
+      // For 2, always break into 1 + 1
+      return '$secondNumber → 1 + 1';
+    } else if (secondNumber % 2 == 0) {
+      // For even numbers, break into equal parts
       final half = secondNumber ~/ 2;
       return '$secondNumber → $half + $half';
     } else {
+      // For odd numbers, break into (n-1) + 1
       final firstPart = secondNumber - 1;
       return '$secondNumber → $firstPart + 1';
     }
