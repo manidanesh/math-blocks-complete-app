@@ -78,47 +78,6 @@ class AdaptiveChallengeDisplay extends StatelessWidget {
               ),
             ),
             
-            const SizedBox(height: 16),
-            
-            // Bond steps explanation
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue[200]!),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.lightbulb_outline, color: Colors.blue[600], size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Number Bond Strategy:',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue[700],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    challenge.bondSteps,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.blue[800],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
             // Motivational message
             if (challenge.motivationalMessage != null) ...[
               const SizedBox(height: 16),
