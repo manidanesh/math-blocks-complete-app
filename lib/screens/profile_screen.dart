@@ -4,10 +4,13 @@ import 'package:go_router/go_router.dart';
 
 import '../models/kid_profile.dart';
 import '../models/problem_attempt.dart';
+import '../models/adaptive_challenge.dart';
 import '../providers/profile_provider.dart';
 import '../services/problem_attempt_service.dart';
+import '../services/adaptive_problem_service.dart';
 import '../widgets/favorite_numbers_selector.dart';
 import '../widgets/language_selector.dart';
+import '../widgets/adaptive_challenge_display.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -23,6 +26,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _isLoading = true;
   bool _isEditing = false;
   String _tempLanguage = '';
+  PerformanceMetrics? _performanceMetrics;
 
   @override
   void initState() {
@@ -35,6 +39,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final profileAsync = ref.read(profileProvider);
       if (profileAsync.value != null) {
         await _loadPerformanceData(profileAsync.value!.id);
+        await _loadAdaptiveMetrics(profileAsync.value!.id);
         setState(() {
           _tempFavoriteNumbers = List.from(profileAsync.value!.favoriteNumbers);
           _tempLanguage = profileAsync.value!.language;
@@ -64,6 +69,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _performanceSummary = _calculatePerformanceSummary(attempts);
     } catch (e) {
       print('Error loading performance data: $e');
+    }
+  }
+
+  Future<void> _loadAdaptiveMetrics(String profileId) async {
+    try {
+      final metrics = await AdaptiveProblemService.getPerformanceMetrics(profileId);
+      setState(() {
+        _performanceMetrics = metrics;
+      });
+    } catch (e) {
+      print('Error loading adaptive metrics: $e');
     }
   }
 
@@ -458,6 +474,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             
             const SizedBox(height: 24),
+            
+            // Performance Overview (Adaptive Challenge Metrics)
+            if (_performanceMetrics != null) ...[
+              Card(
+                elevation: 4,
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '🎯 Adaptive Challenge Performance',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      PerformanceMetricsDisplay(metrics: _performanceMetrics!),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
             
             // Failed Challenges Section
             Card(

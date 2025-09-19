@@ -306,11 +306,6 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
                   const SizedBox(height: 16),
                 ],
                 
-                // Performance metrics (if available)
-                if (_performanceMetrics != null) ...[
-                  PerformanceMetricsDisplay(metrics: _performanceMetrics!),
-                  const SizedBox(height: 16),
-                ],
                 
                 // Motivational message
                 if (_motivationalMessage != null) ...[

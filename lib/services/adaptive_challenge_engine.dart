@@ -461,9 +461,20 @@ class AdaptiveChallengeEngine {
 
   /// Generate make-a-ten bond steps
   static String _generateMakeTenBondSteps(int firstNumber, int secondNumber) {
-    final needed = 10 - firstNumber;
-    final remaining = secondNumber - needed;
-    return '$secondNumber → $needed + $remaining';
+    // For make-ten strategy, break the second number into equal parts when possible
+    // Example: 47 + 6 = 47 + 3 + 3 = 50 + 3 = 53
+    // Break 6 into 3 + 3, not 0 + 6
+    
+    if (secondNumber % 2 == 0) {
+      // If even, split into two equal parts
+      final half = secondNumber ~/ 2;
+      return '$secondNumber → $half + $half';
+    } else {
+      // If odd, split into two parts that are as equal as possible
+      final firstPart = secondNumber ~/ 2;
+      final secondPart = secondNumber - firstPart;
+      return '$secondNumber → $firstPart + $secondPart';
+    }
   }
 
   /// Generate addition bond steps
