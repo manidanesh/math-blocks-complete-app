@@ -6,7 +6,6 @@ import '../providers/profile_provider.dart';
 import '../screens/profile_creation_screen.dart';
 import '../screens/mode_select_screen.dart';
 import '../screens/practice_screen.dart';
-import '../screens/challenge_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/adaptive_challenge_screen.dart';
 
@@ -57,11 +56,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/challenge',
         name: 'challenge',
-        builder: (context, state) => const ChallengeScreen(),
-      ),
-      GoRoute(
-        path: '/adaptive-challenge',
-        name: 'adaptive-challenge',
         builder: (context, state) => const AdaptiveChallengeScreen(),
       ),
     ],

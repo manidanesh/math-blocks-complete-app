@@ -63,8 +63,8 @@ class AdaptiveProblemService {
   }
 
   /// Get the next adaptive challenge
-  static Future<AdaptiveChallenge> getNextChallenge(String childId, String childName) async {
-    return await AdaptiveChallengeEngine.getNextProblem(childId, childName);
+  static Future<AdaptiveChallenge> getNextChallenge(String childId, String childName, {List<int> favoriteNumbers = const []}) async {
+    return await AdaptiveChallengeEngine.getNextProblem(childId, childName, favoriteNumbers: favoriteNumbers);
   }
 
   /// Convert AdaptiveChallenge to MathProblem format for existing widgets

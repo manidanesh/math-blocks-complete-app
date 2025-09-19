@@ -166,7 +166,7 @@ class AdaptiveChallengeEngine {
   }
 
   /// Generate a review problem from past mistakes
-  static Future<AdaptiveChallenge?> generateReviewProblem(String childId) async {
+  static Future<AdaptiveChallenge?> generateReviewProblem(String childId, List<int> favoriteNumbers) async {
     final mistakes = await getPastMistakes(childId);
     
     if (mistakes.isEmpty) return null;
@@ -179,7 +179,7 @@ class AdaptiveChallengeEngine {
     final reviewLevel = (selectedMistake.level - 1).clamp(1, 4);
     final levelDef = ChallengeLevel.getByLevel(reviewLevel);
     
-    final problem = _generateProblemForLevel(levelDef);
+    final problem = _generateProblemForLevel(levelDef, favoriteNumbers);
     return AdaptiveChallenge(
       problemId: 'review_${DateTime.now().millisecondsSinceEpoch}',
       problemText: problem['problemText'] as String,
@@ -224,10 +224,10 @@ class AdaptiveChallengeEngine {
   }
 
   /// Main method to get the next problem
-  static Future<AdaptiveChallenge> getNextProblem(String childId, String childName, {int? currentLevel}) async {
+  static Future<AdaptiveChallenge> getNextProblem(String childId, String childName, {int? currentLevel, List<int> favoriteNumbers = const []}) async {
     // Check if we should inject a review problem
     if (await shouldInjectReviewProblem(childId)) {
-      final reviewProblem = await generateReviewProblem(childId);
+      final reviewProblem = await generateReviewProblem(childId, favoriteNumbers);
       if (reviewProblem != null) {
         return reviewProblem;
       }
@@ -242,7 +242,7 @@ class AdaptiveChallengeEngine {
     
     // Generate problem for the determined level
     final levelDef = ChallengeLevel.getByLevel(nextLevel);
-    final problem = _generateProblemForLevel(levelDef);
+    final problem = _generateProblemForLevel(levelDef, favoriteNumbers);
     
     return AdaptiveChallenge(
       problemId: 'challenge_${DateTime.now().millisecondsSinceEpoch}',
@@ -259,30 +259,38 @@ class AdaptiveChallengeEngine {
   }
 
   /// Generate a problem for a specific level
-  static Map<String, dynamic> _generateProblemForLevel(ChallengeLevel levelDef) {
+  static Map<String, dynamic> _generateProblemForLevel(ChallengeLevel levelDef, List<int> favoriteNumbers) {
     final random = Random();
     
     switch (levelDef.level) {
       case 1:
-        return _generateLevel1Problem();
+        return _generateLevel1Problem(favoriteNumbers);
       case 2:
-        return _generateLevel2Problem();
+        return _generateLevel2Problem(favoriteNumbers);
       case 3:
-        return _generateLevel3Problem();
+        return _generateLevel3Problem(favoriteNumbers);
       case 4:
-        return _generateLevel4Problem();
+        return _generateLevel4Problem(favoriteNumbers);
       default:
-        return _generateLevel1Problem();
+        return _generateLevel1Problem(favoriteNumbers);
     }
   }
 
   /// Generate Level 1: Single-digit addition (make-a-ten)
-  static Map<String, dynamic> _generateLevel1Problem() {
+  static Map<String, dynamic> _generateLevel1Problem(List<int> favoriteNumbers) {
     final random = Random();
     
-    // Generate numbers that work well with make-a-ten strategy
-    final firstNumber = random.nextInt(9) + 1; // 1-9
-    final secondNumber = random.nextInt(9) + 1; // 1-9
+    // Use favorite numbers if available, otherwise generate random
+    int firstNumber, secondNumber;
+    if (favoriteNumbers.isNotEmpty && random.nextBool()) {
+      firstNumber = favoriteNumbers[random.nextInt(favoriteNumbers.length)];
+      // Generate second number that works well with make-a-ten strategy
+      secondNumber = random.nextInt(9) + 1; // 1-9
+    } else {
+      // Generate numbers that work well with make-a-ten strategy
+      firstNumber = random.nextInt(9) + 1; // 1-9
+      secondNumber = random.nextInt(9) + 1; // 1-9
+    }
     
     final answer = firstNumber + secondNumber;
     final bondSteps = _generateMakeTenBondSteps(firstNumber, secondNumber);
@@ -298,13 +306,18 @@ class AdaptiveChallengeEngine {
   }
 
   /// Generate Level 2: 2-digit + 1-digit addition/subtraction
-  static Map<String, dynamic> _generateLevel2Problem() {
+  static Map<String, dynamic> _generateLevel2Problem(List<int> favoriteNumbers) {
     final random = Random();
     final isSubtraction = random.nextBool();
     
     if (isSubtraction) {
       final firstNumber = random.nextInt(90) + 10; // 10-99
-      final secondNumber = random.nextInt(9) + 1; // 1-9
+      int secondNumber;
+      if (favoriteNumbers.isNotEmpty && random.nextBool()) {
+        secondNumber = favoriteNumbers[random.nextInt(favoriteNumbers.length)];
+      } else {
+        secondNumber = random.nextInt(9) + 1; // 1-9
+      }
       final answer = firstNumber - secondNumber;
       final bondSteps = _generateSubtractionBondSteps(firstNumber, secondNumber);
       
@@ -325,8 +338,19 @@ class AdaptiveChallengeEngine {
       final nextTen = firstNumber - firstNumberOnes + 10;
       final minSecondNumber = nextTen - firstNumber + 1; // +1 to ensure it crosses
       
-      // Ensure second number is at least the minimum needed and at most 9
-      final secondNumber = random.nextInt(10 - minSecondNumber) + minSecondNumber;
+      // Try to use favorite numbers if they work with the crossing logic
+      int secondNumber;
+      if (favoriteNumbers.isNotEmpty) {
+        final validFavoriteNumbers = favoriteNumbers.where((num) => 
+          num >= minSecondNumber && num <= 9).toList();
+        if (validFavoriteNumbers.isNotEmpty && random.nextBool()) {
+          secondNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
+        } else {
+          secondNumber = random.nextInt(10 - minSecondNumber) + minSecondNumber;
+        }
+      } else {
+        secondNumber = random.nextInt(10 - minSecondNumber) + minSecondNumber;
+      }
       
       final answer = firstNumber + secondNumber;
       final bondSteps = _generateAdditionBondSteps(firstNumber, secondNumber);
@@ -343,7 +367,7 @@ class AdaptiveChallengeEngine {
   }
 
   /// Generate Level 3: 2-digit + 2-digit with regrouping
-  static Map<String, dynamic> _generateLevel3Problem() {
+  static Map<String, dynamic> _generateLevel3Problem(List<int> favoriteNumbers) {
     final random = Random();
     final isSubtraction = random.nextBool();
     
@@ -389,7 +413,7 @@ class AdaptiveChallengeEngine {
   }
 
   /// Generate Level 4: Up to 3-digit problems (≤1000)
-  static Map<String, dynamic> _generateLevel4Problem() {
+  static Map<String, dynamic> _generateLevel4Problem(List<int> favoriteNumbers) {
     final random = Random();
     final isSubtraction = random.nextBool();
     

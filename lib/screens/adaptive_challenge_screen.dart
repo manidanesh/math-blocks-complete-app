@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../models/adaptive_challenge.dart';
 import '../models/kid_profile.dart';
+import '../models/rewards_model.dart';
 import '../providers/profile_provider.dart';
 import '../services/adaptive_problem_service.dart';
 import '../services/problem_generator.dart';
+import '../services/rewards_service.dart';
 import '../widgets/adaptive_challenge_display.dart';
 import '../widgets/interactive_number_bond_widget.dart';
-import '../services/language_service.dart';
+import '../widgets/rewards_display.dart';
 
 class AdaptiveChallengeScreen extends ConsumerStatefulWidget {
   const AdaptiveChallengeScreen({super.key});
@@ -29,6 +31,7 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
   int _currentAttempt = 1;
   String? _motivationalMessage;
   PerformanceMetrics? _performanceMetrics;
+  ChildRewards? _currentRewards;
 
   // Animation controllers
   late AnimationController _successController;
@@ -49,6 +52,7 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
     );
     
     _loadNextChallenge();
+    _loadRewards();
   }
 
   @override
@@ -72,7 +76,11 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
       final profile = ref.read(profileProvider).value;
       if (profile != null) {
         // Get next adaptive challenge
-        final challenge = await AdaptiveProblemService.getNextChallenge(profile.id, profile.name);
+        final challenge = await AdaptiveProblemService.getNextChallenge(
+          profile.id, 
+          profile.name, 
+          favoriteNumbers: profile.favoriteNumbers,
+        );
         
         // Convert to MathProblem for existing widgets
         final problem = AdaptiveProblemService.convertToMathProblem(challenge);
@@ -98,6 +106,18 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
     }
   }
 
+  Future<void> _loadRewards() async {
+    final profile = ref.read(profileProvider).value;
+    if (profile != null) {
+      final rewards = await RewardsService.getRewards(profile.id);
+      if (mounted) {
+        setState(() {
+          _currentRewards = rewards;
+        });
+      }
+    }
+  }
+
   Future<void> _onBondComplete(bool isCorrect) async {
     final profile = ref.read(profileProvider).value;
     if (profile == null || _currentChallenge == null || _currentProblem == null) return;
@@ -118,6 +138,11 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
     );
 
     if (isCorrect) {
+      // Award star for correct answer
+      if (profile != null) {
+        await _awardStar(profile.id, 'Correct adaptive challenge completion');
+      }
+      
       // Show success message
       setState(() {
         _showSuccessMessage = true;
@@ -151,6 +176,24 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
           _currentAttempt++;
         });
       }
+    }
+  }
+
+  Future<void> _awardStar(String childId, String description) async {
+    final result = await RewardsService.addStar(
+      childId,
+      description: description,
+      metadata: {
+        'problem': _currentProblem?.problemText,
+        'attempt': _currentAttempt,
+        'level': _currentChallenge?.level,
+      },
+    );
+    
+    if (mounted && result.success && result.rewards != null) {
+      setState(() {
+        _currentRewards = result.rewards;
+      });
     }
   }
 
@@ -256,6 +299,12 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
                 // Profile info
                 _buildProfileHeader(profile),
                 const SizedBox(height: 16),
+                
+                // Rewards display
+                if (_currentRewards != null) ...[
+                  RewardsDisplay(rewards: _currentRewards!, childName: profile.name),
+                  const SizedBox(height: 16),
+                ],
                 
                 // Performance metrics (if available)
                 if (_performanceMetrics != null) ...[
@@ -552,6 +601,67 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
                       ),
                       textAlign: TextAlign.center,
                     ),
+                    const SizedBox(height: 16),
+                    
+                    // Star reward
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.yellow[100],
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.yellow[300]!),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.star, color: Colors.orange, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            '+1 Star',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Current rewards display
+                    if (_currentRewards != null) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.blue[200]!),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '⭐ ${_currentRewards!.totalStars}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[700],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Text(
+                              '🏅 ${_currentRewards!.totalBadges}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

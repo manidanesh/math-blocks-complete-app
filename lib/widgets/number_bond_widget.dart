@@ -287,7 +287,7 @@ class _NumberBondWidgetState extends State<NumberBondWidget>
                   child: _buildNumberCircle(
                     widget.showSolution ? '5' : '?', // Example breakdown
                     widget.showSolution ? Colors.orange : Colors.grey[300]!,
-                    'First\nPart'
+                    label: 'First\nPart'
                   ),
                 ),
                 
@@ -298,7 +298,7 @@ class _NumberBondWidgetState extends State<NumberBondWidget>
                   child: _buildNumberCircle(
                     widget.showSolution ? '1' : '?', // Example breakdown
                     widget.showSolution ? Colors.orange : Colors.grey[300]!,
-                    'Second\nPart'
+                    label: 'Second\nPart'
                   ),
                 ),
               ],
@@ -383,7 +383,7 @@ class _NumberBondWidgetState extends State<NumberBondWidget>
                   child: _buildNumberCircle(
                     widget.showSolution ? '3' : '?', // Example breakdown
                     widget.showSolution ? Colors.orange : Colors.grey[300]!,
-                    'First\nPart'
+                    label: 'First\nPart'
                   ),
                 ),
                 
@@ -394,7 +394,7 @@ class _NumberBondWidgetState extends State<NumberBondWidget>
                   child: _buildNumberCircle(
                     widget.showSolution ? '3' : '?', // Example breakdown
                     widget.showSolution ? Colors.orange : Colors.grey[300]!,
-                    'Second\nPart'
+                    label: 'Second\nPart'
                   ),
                 ),
               ],

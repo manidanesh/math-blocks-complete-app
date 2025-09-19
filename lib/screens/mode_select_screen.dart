@@ -95,12 +95,12 @@ class ModeSelectScreen extends ConsumerWidget {
                 
                 const SizedBox(height: 32),
                 
-                // Adaptive Challenge mode button
+                // Intelligent Math Challenge mode button
                 SizedBox(
                   width: double.infinity,
                   height: 80,
                   child: ElevatedButton(
-                    onPressed: () => context.go('/adaptive-challenge'),
+                    onPressed: () => context.go('/challenge'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF9B59B6),
                       foregroundColor: Colors.white,
@@ -110,35 +110,14 @@ class ModeSelectScreen extends ConsumerWidget {
                       children: [
                         const Icon(Icons.auto_awesome, size: 32),
                         const SizedBox(height: 4),
-                        const Text(
-                          'Adaptive Challenge', 
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // Regular Challenge mode button
-                SizedBox(
-                  width: double.infinity,
-                  height: 80,
-                  child: ElevatedButton(
-                    onPressed: () => context.go('/challenge'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2ECC71),
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.psychology, size: 32),
-                        const SizedBox(height: 4),
                         Text(
-                          'math_challenge'.tr(profile.language), 
+                          'Intelligent Math Challenge', 
                           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Adapts to your skill level',
+                          style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.8)),
                         ),
                       ],
                     ),
