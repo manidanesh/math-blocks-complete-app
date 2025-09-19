@@ -111,6 +111,13 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Check if profile already exists and redirect to mode select
+    ref.listen(profileProvider, (previous, next) {
+      if (next.value != null && mounted) {
+        context.go('/mode-select');
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_getWelcomeMessage().split('\n')[0]),

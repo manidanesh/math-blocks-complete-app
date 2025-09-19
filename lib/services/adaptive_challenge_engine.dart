@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/adaptive_challenge.dart';
+import 'central_problem_generator.dart';
 
 /// Adaptive Challenge Engine that intelligently selects the next math challenge
 /// based on performance history and learning progression
@@ -179,7 +180,10 @@ class AdaptiveChallengeEngine {
     final reviewLevel = (selectedMistake.level - 1).clamp(1, 4);
     final levelDef = ChallengeLevel.getByLevel(reviewLevel);
     
-    final problem = _generateProblemForLevel(levelDef, favoriteNumbers);
+    final problem = CentralProblemGenerator.generateProblem(
+      action: 'subtraction',
+      level: reviewLevel,
+    );
     return AdaptiveChallenge(
       problemId: 'review_${DateTime.now().millisecondsSinceEpoch}',
       problemText: problem['problemText'] as String,
@@ -217,7 +221,7 @@ class AdaptiveChallengeEngine {
     
     // If accuracy is consistently high
     if (recentAccuracy >= 0.9 && olderAccuracy >= 0.8) {
-      return "Excellent work, $childName! You're mastering these concepts! ⭐";
+      return null; // Disabled to eliminate duplicate issue
     }
     
     return null;
@@ -240,9 +244,11 @@ class AdaptiveChallengeEngine {
     // Generate motivational feedback
     final motivationalMessage = await getMotivationalFeedback(childId, childName);
     
-    // Generate problem for the determined level
-    final levelDef = ChallengeLevel.getByLevel(nextLevel);
-    final problem = _generateProblemForLevel(levelDef, favoriteNumbers);
+    // Generate problem using central generator
+    final problem = CentralProblemGenerator.generateProblem(
+      action: 'subtraction', // For now, focus on subtraction
+      level: nextLevel,
+    );
     
     return AdaptiveChallenge(
       problemId: 'challenge_${DateTime.now().millisecondsSinceEpoch}',
@@ -258,49 +264,28 @@ class AdaptiveChallengeEngine {
     );
   }
 
-  /// Generate a problem for a specific level
-  static Map<String, dynamic> _generateProblemForLevel(ChallengeLevel levelDef, List<int> favoriteNumbers) {
-    final random = Random();
-    
-    switch (levelDef.level) {
-      case 1:
-        return _generateLevel1Problem(favoriteNumbers);
-      case 2:
-        return _generateLevel2Problem(favoriteNumbers);
-      case 3:
-        return _generateLevel3Problem(favoriteNumbers);
-      case 4:
-        return _generateLevel4Problem(favoriteNumbers);
-      default:
-        return _generateLevel1Problem(favoriteNumbers);
-    }
+  // OLD PROBLEM GENERATION REMOVED - USING CENTRAL GENERATOR NOW
+
+  /// OLD METHOD - REPLACED BY CENTRAL GENERATOR
+  static Map<String, dynamic> _generateCrossingSubtractionProblem(int firstNumberMin, int firstNumberMax) {
+    // FORCE USE OF CENTRAL GENERATOR
+    return CentralProblemGenerator.generateProblem(
+      action: 'subtraction',
+      level: 2,
+    );
   }
 
   /// Generate Level 1: Single-digit addition (make-a-ten)
   static Map<String, dynamic> _generateLevel1Problem(List<int> favoriteNumbers) {
     final random = Random();
     
-    // Enhanced favorite numbers logic for Level 1 (sums up to 100)
-    int firstNumber, secondNumber;
-    if (favoriteNumbers.isNotEmpty && random.nextBool()) {
-      // Use favorite number as first operand
-      firstNumber = favoriteNumbers[random.nextInt(favoriteNumbers.length)];
-      // Generate second number that ensures sum > 10 and works with make-ten
-      secondNumber = random.nextInt(9) + 1; // 1-9
-      
-      // Ensure sum > 10
-      if (firstNumber + secondNumber <= 10) {
-        secondNumber = 11 - firstNumber; // Adjust to make sum > 10
-      }
-    } else {
-      // Generate numbers that work well with make-a-ten strategy
-      firstNumber = random.nextInt(9) + 1; // 1-9
-      secondNumber = random.nextInt(9) + 1; // 1-9
-      
-      // Ensure sum > 10
-      if (firstNumber + secondNumber <= 10) {
-        secondNumber = 11 - firstNumber;
-      }
+    // Generate numbers that work well with make-a-ten strategy (no favorite numbers dependency)
+    int firstNumber = random.nextInt(9) + 1; // 1-9
+    int secondNumber = random.nextInt(9) + 1; // 1-9
+    
+    // Ensure sum > 10 for make-ten strategy
+    if (firstNumber + secondNumber <= 10) {
+      secondNumber = 11 - firstNumber;
     }
     
     final answer = firstNumber + secondNumber;
@@ -322,67 +307,8 @@ class AdaptiveChallengeEngine {
     final isSubtraction = random.nextBool();
     
     if (isSubtraction) {
-      // Enhanced favorite numbers logic for subtraction that crosses the next 10
-      int firstNumber = random.nextInt(90) + 10; // 10-99
-      
-      // Calculate what second number is needed to cross the next lower 10
-      final firstNumberOnes = firstNumber % 10;
-      
-      // Generate a second number that creates meaningful breakdown
-      // Avoid trivial cases like "9 → 9 + 0" by ensuring different digits
-      int secondNumber;
-      do {
-        // Generate second number that crosses the 10 boundary
-        final minSecond = firstNumberOnes + 1;
-        final maxSecond = 9;
-        
-        if (minSecond <= maxSecond) {
-          secondNumber = random.nextInt(maxSecond - minSecond + 1) + minSecond;
-        } else {
-          // Fallback: generate any number that doesn't equal firstNumberOnes
-          secondNumber = random.nextInt(9) + 1;
-          while (secondNumber == firstNumberOnes) {
-            secondNumber = random.nextInt(9) + 1;
-          }
-        }
-      } while (secondNumber == firstNumberOnes); // Ensure no trivial breakdown
-      
-      // Try to use favorite numbers if available
-      if (favoriteNumbers.isNotEmpty && random.nextBool()) {
-        // Try to use favorite number as second operand (subtrahend)
-        final validFavoriteNumbers = favoriteNumbers.where((num) => 
-          num >= (firstNumberOnes + 1) && num <= 9 && num != firstNumberOnes).toList();
-        if (validFavoriteNumbers.isNotEmpty) {
-          secondNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
-        } else {
-          // If favorite numbers don't work, try using one as the first number
-          final favoriteFirst = favoriteNumbers[random.nextInt(favoriteNumbers.length)];
-          if (favoriteFirst >= 10 && favoriteFirst <= 99) {
-            firstNumber = favoriteFirst;
-            final newFirstOnes = firstNumber % 10;
-            final newMinSecond = newFirstOnes + 1;
-            if (newMinSecond <= 9) {
-              secondNumber = random.nextInt(10 - newMinSecond) + newMinSecond;
-            } else {
-              secondNumber = random.nextInt(9) + 1;
-              while (secondNumber == newFirstOnes) {
-                secondNumber = random.nextInt(9) + 1;
-              }
-            }
-          }
-        }
-      }
-      final answer = firstNumber - secondNumber;
-      final bondSteps = _generateSubtractionBondSteps(firstNumber, secondNumber);
-      
-      return {
-        'problemText': '$firstNumber - $secondNumber = ?',
-        'operand1': firstNumber,
-        'operand2': secondNumber,
-        'operator': '-',
-        'correctAnswer': answer,
-        'bondSteps': bondSteps,
-      };
+      // Level 2: 2-digit - 1-digit subtraction that crosses the ten boundary
+      return _generateCrossingSubtractionProblem(10, 99);
     } else {
       // For addition, ensure it crosses the next 10
       int firstNumber = random.nextInt(90) + 10; // 10-99
@@ -392,32 +318,8 @@ class AdaptiveChallengeEngine {
       final nextTen = firstNumber - firstNumberOnes + 10;
       final minSecondNumber = nextTen - firstNumber + 1; // +1 to ensure it crosses
       
-      // Enhanced favorite numbers logic for Level 2 (sums up to 100)
-      int secondNumber;
-      if (favoriteNumbers.isNotEmpty && random.nextBool()) {
-        // Try to use favorite numbers if they work with the crossing logic
-        final validFavoriteNumbers = favoriteNumbers.where((num) => 
-          num >= minSecondNumber && num <= 9).toList();
-        if (validFavoriteNumbers.isNotEmpty) {
-          secondNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
-        } else {
-          // If favorite numbers don't work, try using one as the first number
-          final favoriteFirst = favoriteNumbers[random.nextInt(favoriteNumbers.length)];
-          if (favoriteFirst >= 10 && favoriteFirst <= 99) {
-            // Use favorite number as first operand and generate appropriate second
-            final favoriteFirstOnes = favoriteFirst % 10;
-            final nextTen = favoriteFirst - favoriteFirstOnes + 10;
-            final minSecond = nextTen - favoriteFirst + 1;
-            secondNumber = random.nextInt(10 - minSecond) + minSecond;
-            // Update firstNumber to use the favorite
-            firstNumber = favoriteFirst;
-          } else {
-            secondNumber = random.nextInt(10 - minSecondNumber) + minSecondNumber;
-          }
-        }
-      } else {
-        secondNumber = random.nextInt(10 - minSecondNumber) + minSecondNumber;
-      }
+      // Generate second number that ensures crossing the next 10 (no favorite numbers dependency)
+      final secondNumber = random.nextInt(9 - minSecondNumber + 1) + minSecondNumber;
       
       final answer = firstNumber + secondNumber;
       final bondSteps = _generateAdditionBondSteps(firstNumber, secondNumber);
@@ -439,33 +341,8 @@ class AdaptiveChallengeEngine {
     final isSubtraction = random.nextBool();
     
     if (isSubtraction) {
-      // Enhanced favorite numbers logic for Level 3 subtraction
-      int firstNumber = random.nextInt(90) + 10; // 10-99
-      int secondNumber = random.nextInt(90) + 10; // 10-99
-      
-      if (favoriteNumbers.isNotEmpty && random.nextBool()) {
-        // Try to use favorite numbers in 2-digit range
-        final validFavoriteNumbers = favoriteNumbers.where((num) => 
-          num >= 10 && num <= 99).toList();
-        if (validFavoriteNumbers.isNotEmpty) {
-          if (random.nextBool()) {
-            firstNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
-          } else {
-            secondNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
-          }
-        }
-      }
-      final answer = firstNumber - secondNumber;
-      final bondSteps = _generateSubtractionBondSteps(firstNumber, secondNumber);
-      
-      return {
-        'problemText': '$firstNumber - $secondNumber = ?',
-        'operand1': firstNumber,
-        'operand2': secondNumber,
-        'operator': '-',
-        'correctAnswer': answer,
-        'bondSteps': bondSteps,
-      };
+      // Level 3: 2-digit - 2-digit subtraction that crosses the ten boundary
+      return _generateCrossingSubtractionProblem(10, 99);
     } else {
       // Enhanced favorite numbers logic for Level 3 addition
       int firstNumber = random.nextInt(90) + 10; // 10-99
@@ -519,33 +396,8 @@ class AdaptiveChallengeEngine {
     final isSubtraction = random.nextBool();
     
     if (isSubtraction) {
-      // Enhanced favorite numbers logic for Level 4 subtraction (sums > 100)
-      int firstNumber = random.nextInt(900) + 100; // 100-999
-      int secondNumber = random.nextInt(900) + 100; // 100-999
-      
-      if (favoriteNumbers.isNotEmpty && random.nextBool()) {
-        // Try to use favorite numbers in 3-digit range
-        final validFavoriteNumbers = favoriteNumbers.where((num) => 
-          num >= 100 && num <= 999).toList();
-        if (validFavoriteNumbers.isNotEmpty) {
-          if (random.nextBool()) {
-            firstNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
-          } else {
-            secondNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
-          }
-        }
-      }
-      final answer = firstNumber - secondNumber;
-      final bondSteps = _generateSubtractionBondSteps(firstNumber, secondNumber);
-      
-      return {
-        'problemText': '$firstNumber - $secondNumber = ?',
-        'operand1': firstNumber,
-        'operand2': secondNumber,
-        'operator': '-',
-        'correctAnswer': answer,
-        'bondSteps': bondSteps,
-      };
+      // Level 4: 3-digit - 3-digit subtraction that crosses the ten boundary
+      return _generateCrossingSubtractionProblem(100, 999);
     } else {
       // Enhanced favorite numbers logic for Level 4 addition (sums > 100)
       int firstNumber = random.nextInt(900) + 100; // 100-999
@@ -642,29 +494,36 @@ class AdaptiveChallengeEngine {
 
   /// Generate subtraction bond steps
   static String _generateSubtractionBondSteps(int firstNumber, int secondNumber) {
-    // CORRECT LOGIC: For subtraction, break the second number to help cross the next 10
+    // CORRECT LOGIC: For subtraction crossing the ten, break the second number
+    // Example: 53 - 6 → break 6 into 3 + 3 → 53 - 3 - 3 = 50 - 3 = 47
     // Example: 67 - 9 → break 9 into 7 + 2 → 67 - 7 - 2 = 60 - 2 = 58
-    // Example: 69 - 7 → break 7 into 9 - 2 → 69 - 9 + 2 = 60 + 2 = 62
     
-    if (secondNumber <= 10) {
+    if (secondNumber <= 18) { // Most single-digit and some teen numbers
       final firstNumberOnes = firstNumber % 10;
       
-      // Strategy: Break secondNumber to help cross to the next lower 10
-      if (firstNumberOnes >= secondNumber) {
-        // We can subtract directly to make it end in 0
-        // Example: 67 - 9 → break 9 into 7 + 2
-        final firstPart = firstNumberOnes;
+      // Strategy: Break secondNumber to help cross to the next lower ten
+      // We want the first part to take us exactly to the next lower ten
+      final neededToReachLowerTen = firstNumberOnes;
+      
+      if (neededToReachLowerTen > 0 && neededToReachLowerTen <= secondNumber) {
+        // Break secondNumber into: part that reaches lower ten + remaining part
+        // Example: 53 - 6 → break 6 into 3 + 3 (3 gets us from 53 to 50)
+        final firstPart = neededToReachLowerTen;
         final secondPart = secondNumber - firstPart;
-        return '$secondNumber → $firstPart + $secondPart';
-      } else {
-        // Need to cross the 10 boundary
-        // Example: 69 - 7 → break 7 into 9 - 2 (to get from 69 to 60)
-        final firstPart = firstNumberOnes; // 9
-        final secondPart = secondNumber - firstPart; // 7 - 9 = -2
-        if (secondPart < 0) {
-          return '$secondNumber → $firstPart - ${secondPart.abs()}';
+        
+        if (secondPart == 0) {
+          return '$secondNumber → $firstPart';
         } else {
           return '$secondNumber → $firstPart + $secondPart';
+        }
+      } else {
+        // Fallback: simple breakdown
+        if (secondNumber % 2 == 0) {
+          final half = secondNumber ~/ 2;
+          return '$secondNumber → $half + $half';
+        } else {
+          final firstPart = secondNumber - 1;
+          return '$secondNumber → $firstPart + 1';
         }
       }
     } else if (secondNumber <= 100) {

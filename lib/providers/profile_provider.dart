@@ -71,6 +71,42 @@ class ProfileNotifier extends AsyncNotifier<KidProfile?> {
     }
   }
 
+  Future<void> resetProgress() async {
+    final currentProfile = state.value;
+    if (currentProfile != null) {
+      try {
+        // Reset all progress data while keeping profile information
+        final resetProfile = currentProfile.copyWith(
+          totalStars: 0,
+          totalProblemsCompleted: 0,
+          overallAccuracy: 0.0,
+          lastPlayed: DateTime.now(),
+        );
+        
+        // Clear all historical data from SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        
+        // Clear problem attempts
+        await prefs.remove('problem_attempts');
+        
+        // Clear adaptive challenge results and count
+        await prefs.remove('adaptive_challenge_results_${currentProfile.id}');
+        await prefs.remove('challenge_count_${currentProfile.id}');
+        
+        // Clear any session data
+        await prefs.remove('current_session');
+        
+        // Update the profile with reset data
+        await updateProfile(resetProfile);
+        
+        print('🔄 Progress reset for ${currentProfile.name} - all historical data cleared');
+      } catch (e, stack) {
+        print('❌ Error resetting progress: $e');
+        state = AsyncValue.error(e, stack);
+      }
+    }
+  }
+
   Future<void> clearProfile() async {
     try {
       final prefs = await SharedPreferences.getInstance();

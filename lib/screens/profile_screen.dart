@@ -21,11 +21,11 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   List<ProblemAttempt> _failedAttempts = [];
-  Map<String, dynamic> _performanceSummary = {};
   List<int> _tempFavoriteNumbers = [];
   bool _isLoading = true;
   bool _isEditing = false;
   String _tempLanguage = '';
+  String _tempPreferredOperation = 'both';
   PerformanceMetrics? _performanceMetrics;
 
   @override
@@ -43,6 +43,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         setState(() {
           _tempFavoriteNumbers = List.from(profileAsync.value!.favoriteNumbers);
           _tempLanguage = profileAsync.value!.language;
+          _tempPreferredOperation = profileAsync.value!.preferredOperation;
         });
       }
     } catch (e) {
@@ -59,14 +60,35 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final attempts = await ProblemAttemptService.getAttemptsForChild(profileId);
       _failedAttempts = await ProblemAttemptService.getUniqueFailedAttempts(profileId);
       
+      final correctAttempts = attempts.where((a) => a.isCorrect).length;
+      final totalAttempts = attempts.length;
+      final accuracy = totalAttempts > 0 ? correctAttempts / totalAttempts : 0.0;
+      
       // Debug information
       print('🔍 Profile Data Debug:');
-      print('  Total attempts: ${attempts.length}');
+      print('  Total attempts: $totalAttempts');
       print('  Failed attempts: ${_failedAttempts.length}');
-      print('  Correct attempts: ${attempts.where((a) => a.isCorrect).length}');
+      print('  Correct attempts: $correctAttempts');
+      print('  Calculated accuracy: ${(accuracy * 100).toInt()}%');
       
-      // Calculate performance summary
-      _performanceSummary = _calculatePerformanceSummary(attempts);
+      // Update profile stats to match actual data
+      final currentProfile = ref.read(profileProvider).value;
+      if (currentProfile != null) {
+        // Check if profile stats need updating
+        if (currentProfile.totalProblemsCompleted != totalAttempts || 
+            (currentProfile.overallAccuracy - accuracy).abs() > 0.01) {
+          
+          print('🔄 Updating profile stats to match actual data');
+          final updatedProfile = currentProfile.copyWith(
+            totalProblemsCompleted: totalAttempts,
+            totalStars: correctAttempts, // 1 star per correct problem
+            overallAccuracy: accuracy,
+            lastPlayed: DateTime.now(),
+          );
+          
+          await ref.read(profileProvider.notifier).updateProfile(updatedProfile);
+        }
+      }
     } catch (e) {
       print('Error loading performance data: $e');
     }
@@ -83,60 +105,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
-  Map<String, dynamic> _calculatePerformanceSummary(List<ProblemAttempt> attempts) {
-    if (attempts.isEmpty) {
-      return {
-        'totalAttempts': 0,
-        'correctAttempts': 0,
-        'accuracy': 0.0,
-        'averageTime': 0.0,
-        'mostStruggledStrategy': 'None',
-        'strengths': <String>[],
-        'improvements': <String>[],
-      };
-    }
-
-    final correctAttempts = attempts.where((a) => a.isCorrect).length;
-    final accuracy = correctAttempts / attempts.length;
-    final averageTime = attempts.map((a) => a.timeSpentSeconds).reduce((a, b) => a + b) / attempts.length;
-
-    // Analyze by strategy
-    final strategyPerformance = <String, List<ProblemAttempt>>{};
-    for (final attempt in attempts) {
-      strategyPerformance.putIfAbsent(attempt.strategy.toString(), () => []).add(attempt);
-    }
-
-    String mostStruggledStrategy = 'None';
-    double lowestAccuracy = 1.0;
-    final strengths = <String>[];
-    final improvements = <String>[];
-
-    for (final entry in strategyPerformance.entries) {
-      final strategyAttempts = entry.value;
-      final strategyAccuracy = strategyAttempts.where((a) => a.isCorrect).length / strategyAttempts.length;
-      
-      if (strategyAccuracy < lowestAccuracy) {
-        lowestAccuracy = strategyAccuracy;
-        mostStruggledStrategy = entry.key;
-      }
-
-      if (strategyAccuracy >= 0.8) {
-        strengths.add(entry.key);
-      } else if (strategyAccuracy < 0.6) {
-        improvements.add(entry.key);
-      }
-    }
-
-    return {
-      'totalAttempts': attempts.length,
-      'correctAttempts': correctAttempts,
-      'accuracy': accuracy,
-      'averageTime': averageTime,
-      'mostStruggledStrategy': mostStruggledStrategy,
-      'strengths': strengths,
-      'improvements': improvements,
-    };
-  }
 
   void _startEditing() {
     setState(() {
@@ -269,7 +237,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       children: [
                         Expanded(
                           child: _buildStatCard(
-                            '⭐ Stars',
+                            _getText('stars'),
                             profile.totalStars.toString(),
                             Colors.amber,
                           ),
@@ -277,7 +245,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: _buildStatCard(
-                            '🎯 Problems',
+                            _getText('problems'),
                             profile.totalProblemsCompleted.toString(),
                             Colors.green,
                           ),
@@ -285,7 +253,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: _buildStatCard(
-                            '📊 Accuracy',
+                            _getText('accuracy'),
                             '${(profile.overallAccuracy * 100).toInt()}%',
                             Colors.blue,
                           ),
@@ -307,13 +275,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '🌍 Language Settings',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                      Text(
+                        _getText('language_settings'),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
                     const SizedBox(height: 16),
                     
                     LanguageSelector(
@@ -347,134 +315,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             
             const SizedBox(height: 24),
             
-            // Performance Summary Card
-            Card(
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '📈 Performance Summary',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    if (_performanceSummary['totalAttempts'] > 0) ...[
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildStatCard(
-                              'Total Attempts',
-                              _performanceSummary['totalAttempts'].toString(),
-                              Colors.purple,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildStatCard(
-                              'Correct',
-                              _performanceSummary['correctAttempts'].toString(),
-                              Colors.green,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildStatCard(
-                              'Accuracy',
-                              '${(_performanceSummary['accuracy'] * 100).toInt()}%',
-                              Colors.blue,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildStatCard(
-                              'Avg Time',
-                              '${_performanceSummary['averageTime'].toStringAsFixed(1)}s',
-                              Colors.orange,
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // Strengths and Improvements
-                      if (_performanceSummary['strengths'].isNotEmpty) ...[
-                        _buildPerformanceSection(
-                          '🌟 Strengths',
-                          _performanceSummary['strengths'],
-                          Colors.green,
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      
-                      if (_performanceSummary['improvements'].isNotEmpty) ...[
-                        _buildPerformanceSection(
-                          '💪 Areas to Improve',
-                          _performanceSummary['improvements'],
-                          Colors.orange,
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      
-                      if (_performanceSummary['mostStruggledStrategy'] != 'None') ...[
-                        _buildPerformanceSection(
-                          '🎯 Focus Area',
-                          [_performanceSummary['mostStruggledStrategy']],
-                          Colors.red,
-                        ),
-                      ],
-                    ] else ...[
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey[300]!),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.analytics_outlined,
-                              size: 48,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'No performance data yet',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Start solving math problems to see your progress!',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 24),
-            
             // Performance Overview (Adaptive Challenge Metrics)
             if (_performanceMetrics != null) ...[
               Card(
@@ -484,9 +324,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        '🎯 Adaptive Challenge Performance',
-                        style: TextStyle(
+                      Text(
+                        _getText('adaptive_performance'),
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -508,9 +348,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '🤔 You want to try one more time?',
-                      style: TextStyle(
+                    Text(
+                      _getText('try_again'),
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -519,7 +359,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     
                     if (_failedAttempts.isNotEmpty) ...[
                       Text(
-                        'Review these challenges to improve your skills:',
+                        _getText('review_challenges'),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
@@ -568,7 +408,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Great job! Keep up the excellent work!',
+                              _getText('no_failed_attempts'),
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.green[500],
@@ -596,8 +436,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          '⭐ Favorite Numbers',
+                        Text(
+                          _getText('favorite_numbers'),
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -607,7 +447,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           TextButton.icon(
                             onPressed: _startEditing,
                             icon: const Icon(Icons.edit, size: 18),
-                            label: const Text('Edit'),
+                            label: Text(_getText('edit')),
                           ),
                       ],
                     ),
@@ -677,7 +517,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'These numbers will appear more often in your math problems! 🎯',
+                          _getText('favorite_numbers_description'),
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[600],
@@ -709,7 +549,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Tap Edit to choose your favorite numbers!',
+                                _getText('tap_edit_to_choose'),
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey[500],
@@ -727,6 +567,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             
             const SizedBox(height: 24),
             
+            // Reset Progress Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _showResetProgressDialog(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange[600],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                icon: const Icon(Icons.refresh),
+                label: Text(_getResetButtonText()),
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
             // Back to Home Button
             SizedBox(
               width: double.infinity,
@@ -742,7 +603,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
                 icon: const Icon(Icons.home),
-                label: const Text('Back to Home'),
+                label: Text(_getText('back_to_home')),
               ),
             ),
           ],
@@ -782,64 +643,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildPerformanceSection(String title, List<String> items, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: items.map((item) {
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  item,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: color,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildFailedChallengeItem(ProblemAttempt attempt) {
     final timeAgo = DateTime.now().difference(attempt.timestamp);
     String timeString;
     
     if (timeAgo.inDays > 0) {
-      timeString = '${timeAgo.inDays} day${timeAgo.inDays == 1 ? '' : 's'} ago';
+      final unit = timeAgo.inDays == 1 ? _getText('day') : _getText('days');
+      timeString = _tempLanguage == 'es' || _tempLanguage == 'fr' 
+          ? '${_getText('time_ago')} ${timeAgo.inDays} $unit'
+          : '${timeAgo.inDays} $unit ${_getText('time_ago')}';
     } else if (timeAgo.inHours > 0) {
-      timeString = '${timeAgo.inHours} hour${timeAgo.inHours == 1 ? '' : 's'} ago';
+      final unit = timeAgo.inHours == 1 ? _getText('hour') : _getText('hours');
+      timeString = _tempLanguage == 'es' || _tempLanguage == 'fr' 
+          ? '${_getText('time_ago')} ${timeAgo.inHours} $unit'
+          : '${timeAgo.inHours} $unit ${_getText('time_ago')}';
     } else if (timeAgo.inMinutes > 0) {
-      timeString = '${timeAgo.inMinutes} minute${timeAgo.inMinutes == 1 ? '' : 's'} ago';
+      final unit = timeAgo.inMinutes == 1 ? _getText('minute') : _getText('minutes');
+      timeString = _tempLanguage == 'es' || _tempLanguage == 'fr' 
+          ? '${_getText('time_ago')} ${timeAgo.inMinutes} $unit'
+          : '${timeAgo.inMinutes} $unit ${_getText('time_ago')}';
     } else {
-      timeString = 'Just now';
+      timeString = _getText('just_now');
     }
 
     return GestureDetector(
@@ -888,7 +713,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Row(
                     children: [
                       Text(
-                        'Your answer: ${attempt.userAnswer ?? 'No answer'}',
+                        '${_getText('your_answer')} ${attempt.userAnswer ?? _getText('no_answer')}',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.red[600],
@@ -921,5 +746,268 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  // Translation methods for all profile screen text
+  String _getText(String key) {
+    final translations = {
+      'en': {
+        'profile_title': 'Profile',
+        'language_settings': '🌍 Language Settings',
+        'language_instruction': 'Select your preferred language:',
+        'stars': '⭐ Stars',
+        'problems': '🎯 Problems',
+        'accuracy': '📊 Accuracy',
+        'adaptive_performance': '🎯 Adaptive Challenge Performance',
+        'try_again': '🤔 You want to try one more time?',
+        'no_failed_attempts': 'Great job! 🎉 No failed attempts yet.',
+        'back_to_home': 'Back to Home',
+        'reset_progress': 'Reset Progress',
+        'reset_dialog_title': 'Reset Progress',
+        'reset_dialog_content': 'Are you sure you want to reset all progress?',
+        'reset_dialog_delete': 'This will permanently delete:',
+        'reset_item_history': '• All challenge history',
+        'reset_item_stats': '• Performance statistics',
+        'reset_item_stars': '• Stars and completed problems',
+        'reset_item_attempts': '• Failed attempts records',
+        'reset_dialog_note': 'Your profile information (name, age, language) will be kept.',
+        'cancel': 'Cancel',
+        'resetting': 'Resetting progress...',
+        'reset_success': '✅ Progress reset successfully! Starting fresh!',
+        'your_answer': 'Your answer:',
+        'no_answer': 'No answer',
+        'time_ago': 'ago',
+        'just_now': 'just now',
+        'minutes_ago': 'minutes ago',
+        'hours_ago': 'hours ago',
+        'days_ago': 'days ago',
+        'review_challenges': 'Review these challenges to improve your skills:',
+        'minute': 'minute',
+        'minutes': 'minutes',
+        'hour': 'hour',
+        'hours': 'hours',
+        'day': 'day',
+        'days': 'days',
+        'favorite_numbers': '⭐ Favorite Numbers',
+        'edit': 'Edit',
+        'favorite_numbers_description': 'These numbers will appear more often in your math problems! 🎯',
+        'tap_edit_to_choose': 'Tap Edit to choose your favorite numbers!',
+      },
+      'es': {
+        'profile_title': 'Perfil',
+        'language_settings': '🌍 Configuración de Idioma',
+        'language_instruction': 'Selecciona tu idioma preferido:',
+        'stars': '⭐ Estrellas',
+        'problems': '🎯 Problemas',
+        'accuracy': '📊 Precisión',
+        'adaptive_performance': '🎯 Rendimiento de Desafío Adaptativo',
+        'try_again': '🤔 ¿Quieres intentarlo una vez más?',
+        'no_failed_attempts': '¡Buen trabajo! 🎉 Aún no hay intentos fallidos.',
+        'back_to_home': 'Volver al Inicio',
+        'reset_progress': 'Reiniciar Progreso',
+        'reset_dialog_title': 'Reiniciar Progreso',
+        'reset_dialog_content': '¿Estás seguro de que quieres reiniciar todo el progreso?',
+        'reset_dialog_delete': 'Esto eliminará permanentemente:',
+        'reset_item_history': '• Todo el historial de desafíos',
+        'reset_item_stats': '• Estadísticas de rendimiento',
+        'reset_item_stars': '• Estrellas y problemas completados',
+        'reset_item_attempts': '• Registros de intentos fallidos',
+        'reset_dialog_note': 'Tu información de perfil (nombre, edad, idioma) se mantendrá.',
+        'cancel': 'Cancelar',
+        'resetting': 'Reiniciando progreso...',
+        'reset_success': '✅ ¡Progreso reiniciado exitosamente! ¡Empezando de nuevo!',
+        'your_answer': 'Tu respuesta:',
+        'no_answer': 'Sin respuesta',
+        'time_ago': 'hace',
+        'just_now': 'ahora mismo',
+        'minutes_ago': 'minutos',
+        'hours_ago': 'horas',
+        'days_ago': 'días',
+        'review_challenges': 'Revisa estos desafíos para mejorar tus habilidades:',
+        'minute': 'minuto',
+        'minutes': 'minutos',
+        'hour': 'hora',
+        'hours': 'horas',
+        'day': 'día',
+        'days': 'días',
+        'favorite_numbers': '⭐ Números Favoritos',
+        'edit': 'Editar',
+        'favorite_numbers_description': '¡Estos números aparecerán más a menudo en tus problemas de matemáticas! 🎯',
+        'tap_edit_to_choose': '¡Toca Editar para elegir tus números favoritos!',
+      },
+      'fr': {
+        'profile_title': 'Profil',
+        'language_settings': '🌍 Paramètres de Langue',
+        'language_instruction': 'Sélectionnez votre langue préférée:',
+        'stars': '⭐ Étoiles',
+        'problems': '🎯 Problèmes',
+        'accuracy': '📊 Précision',
+        'adaptive_performance': '🎯 Performance de Défi Adaptatif',
+        'try_again': '🤔 Voulez-vous essayer encore une fois?',
+        'no_failed_attempts': 'Excellent travail! 🎉 Aucune tentative échouée pour le moment.',
+        'back_to_home': 'Retour à l\'Accueil',
+        'reset_progress': 'Réinitialiser le Progrès',
+        'reset_dialog_title': 'Réinitialiser le Progrès',
+        'reset_dialog_content': 'Êtes-vous sûr de vouloir réinitialiser tous les progrès?',
+        'reset_dialog_delete': 'Ceci supprimera définitivement:',
+        'reset_item_history': '• Tout l\'historique des défis',
+        'reset_item_stats': '• Statistiques de performance',
+        'reset_item_stars': '• Étoiles et problèmes complétés',
+        'reset_item_attempts': '• Enregistrements des tentatives échouées',
+        'reset_dialog_note': 'Vos informations de profil (nom, âge, langue) seront conservées.',
+        'cancel': 'Annuler',
+        'resetting': 'Réinitialisation du progrès...',
+        'reset_success': '✅ Progrès réinitialisé avec succès! Nouveau départ!',
+        'your_answer': 'Votre réponse:',
+        'no_answer': 'Aucune réponse',
+        'time_ago': 'il y a',
+        'just_now': 'à l\'instant',
+        'minutes_ago': 'minutes',
+        'hours_ago': 'heures',
+        'days_ago': 'jours',
+        'review_challenges': 'Révisez ces défis pour améliorer vos compétences:',
+        'minute': 'minute',
+        'minutes': 'minutes',
+        'hour': 'heure',
+        'hours': 'heures',
+        'day': 'jour',
+        'days': 'jours',
+        'favorite_numbers': '⭐ Nombres Favoris',
+        'edit': 'Modifier',
+        'favorite_numbers_description': 'Ces nombres apparaîtront plus souvent dans vos problèmes de mathématiques! 🎯',
+        'tap_edit_to_choose': 'Appuyez sur Modifier pour choisir vos nombres favoris!',
+      },
+    };
+    
+    return translations[_tempLanguage]?[key] ?? translations['en']![key]!;
+  }
+
+  String _getResetButtonText() {
+    return _getText('reset_progress');
+  }
+
+
+  void _showResetProgressDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.warning, color: Colors.orange),
+              const SizedBox(width: 12),
+              Text(_getText('reset_dialog_title')),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _getText('reset_dialog_content'),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(_getText('reset_dialog_delete')),
+              const SizedBox(height: 8),
+              Text(_getText('reset_item_history')),
+              Text(_getText('reset_item_stats')),
+              Text(_getText('reset_item_stars')),
+              Text(_getText('reset_item_attempts')),
+              const SizedBox(height: 12),
+              Text(
+                _getText('reset_dialog_note'),
+                style: const TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(_getText('cancel')),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _resetProgress(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange[600],
+                foregroundColor: Colors.white,
+              ),
+              child: Text(_getResetButtonText()),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _resetProgress(BuildContext context) async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(_getText('resetting')),
+            ],
+          ),
+        ),
+      );
+
+      // Reset the progress
+      await ref.read(profileProvider.notifier).resetProgress();
+
+      // Close loading dialog
+      if (mounted) Navigator.of(context).pop();
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check, color: Colors.white),
+                const SizedBox(width: 12),
+                Text(_getText('reset_success')),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+
+      // Refresh the page data
+      setState(() {
+        _isLoading = true;
+      });
+      await _loadProfileData();
+    } catch (e) {
+      // Close loading dialog if open
+      if (mounted) Navigator.of(context).pop();
+      
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error resetting progress: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

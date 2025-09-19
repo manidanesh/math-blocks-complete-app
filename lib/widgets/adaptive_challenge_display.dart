@@ -78,35 +78,7 @@ class AdaptiveChallengeDisplay extends StatelessWidget {
               ),
             ),
             
-            // Motivational message
-            if (challenge.motivationalMessage != null) ...[
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.green[200]!),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.celebration, color: Colors.green[600], size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        challenge.motivationalMessage!,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.green[700],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            // Motivational message - REMOVED TO ELIMINATE DUPLICATE
           ],
         ),
       ),
@@ -147,11 +119,44 @@ class AdaptiveChallengeDisplay extends StatelessWidget {
 /// Widget to display performance metrics
 class PerformanceMetricsDisplay extends StatelessWidget {
   final PerformanceMetrics metrics;
+  final String language;
 
   const PerformanceMetricsDisplay({
     super.key,
     required this.metrics,
+    this.language = 'en',
   });
+
+  String _getText(String key) {
+    final translations = {
+      'en': {
+        'performance_overview': 'Performance Overview',
+        'accuracy_last_5': 'Accuracy (Last 5 problems)',
+        'average_time': 'Average Time',
+        'consecutive_incorrect': 'Consecutive Incorrect',
+        'level_performance': 'Level Performance:',
+        'level': 'Level',
+      },
+      'es': {
+        'performance_overview': 'Resumen de Rendimiento',
+        'accuracy_last_5': 'Precisión (Últimos 5 problemas)',
+        'average_time': 'Tiempo Promedio',
+        'consecutive_incorrect': 'Incorrectos Consecutivos',
+        'level_performance': 'Rendimiento por Nivel:',
+        'level': 'Nivel',
+      },
+      'fr': {
+        'performance_overview': 'Aperçu des Performances',
+        'accuracy_last_5': 'Précision (5 derniers problèmes)',
+        'average_time': 'Temps Moyen',
+        'consecutive_incorrect': 'Incorrects Consécutifs',
+        'level_performance': 'Performance par Niveau:',
+        'level': 'Niveau',
+      },
+    };
+    
+    return translations[language]?[key] ?? translations['en']![key]!;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -163,9 +168,9 @@ class PerformanceMetricsDisplay extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Performance Overview',
-              style: TextStyle(
+            Text(
+              _getText('performance_overview'),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),

@@ -9,29 +9,10 @@ import '../screens/practice_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/adaptive_challenge_screen.dart';
 
+// Create a router that only redirects for initial navigation
 final routerProvider = Provider<GoRouter>((ref) {
-  final profileAsync = ref.watch(profileProvider);
-
   return GoRouter(
     initialLocation: '/profile-creation',
-    redirect: (context, state) {
-      // If profile is loading, stay where we are
-      if (profileAsync.isLoading) {
-        return null;
-      }
-      
-      // If no profile exists, go to profile creation
-      if (profileAsync.value == null && state.fullPath != '/profile-creation') {
-        return '/profile-creation';
-      }
-      
-      // If profile exists and we're on profile creation, go to mode select
-      if (profileAsync.value != null && state.fullPath == '/profile-creation') {
-        return '/mode-select';
-      }
-      
-      return null;
-    },
     routes: [
       GoRoute(
         path: '/profile-creation',

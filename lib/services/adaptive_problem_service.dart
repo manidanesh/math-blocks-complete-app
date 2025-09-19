@@ -101,8 +101,16 @@ class AdaptiveProblemService {
 
   /// Get strategy enum for level
   static ProblemStrategy _getStrategyForLevel(int level) {
-    // Use basic strategy for all levels - no specific number bond strategy required
-    return ProblemStrategy.basic;
+    switch (level) {
+      case 1:
+        return ProblemStrategy.makeTen;
+      case 2:
+      case 3:
+      case 4:
+        return ProblemStrategy.crossing; // Use crossing strategy for 2-digit problems
+      default:
+        return ProblemStrategy.basic;
+    }
   }
 
   /// Generate options for the problem

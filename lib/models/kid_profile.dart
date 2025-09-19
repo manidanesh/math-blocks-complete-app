@@ -11,6 +11,7 @@ class KidProfile {
   final int totalProblemsCompleted;
   final double overallAccuracy;
   final List<int> favoriteNumbers;
+  final String preferredOperation; // 'addition', 'subtraction', 'both'
 
   const KidProfile({
     required this.id,
@@ -25,6 +26,7 @@ class KidProfile {
     this.totalProblemsCompleted = 0,
     this.overallAccuracy = 0.0,
     this.favoriteNumbers = const [],
+    this.preferredOperation = 'both',
   });
 
   Map<String, dynamic> toJson() {
@@ -41,6 +43,7 @@ class KidProfile {
       'totalProblemsCompleted': totalProblemsCompleted,
       'overallAccuracy': overallAccuracy,
       'favoriteNumbers': favoriteNumbers,
+      'preferredOperation': preferredOperation,
     };
   }
 
@@ -58,6 +61,7 @@ class KidProfile {
       totalProblemsCompleted: json['totalProblemsCompleted'] as int? ?? 0,
       overallAccuracy: json['overallAccuracy'] as double? ?? 0.0,
       favoriteNumbers: (json['favoriteNumbers'] as List<dynamic>?)?.map((e) => e as int).toList() ?? [],
+      preferredOperation: json['preferredOperation'] as String? ?? 'both',
     );
   }
 
@@ -74,6 +78,7 @@ class KidProfile {
     int? totalProblemsCompleted,
     double? overallAccuracy,
     List<int>? favoriteNumbers,
+    String? preferredOperation,
   }) {
     return KidProfile(
       id: id ?? this.id,
@@ -88,6 +93,7 @@ class KidProfile {
       totalProblemsCompleted: totalProblemsCompleted ?? this.totalProblemsCompleted,
       overallAccuracy: overallAccuracy ?? this.overallAccuracy,
       favoriteNumbers: favoriteNumbers ?? this.favoriteNumbers,
+      preferredOperation: preferredOperation ?? this.preferredOperation,
     );
   }
 

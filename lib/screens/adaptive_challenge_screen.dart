@@ -28,7 +28,7 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
   bool _showSuccessMessage = false;
   bool _showNextChallenge = false;
   bool _showRetryChallenge = false;
-  String? _motivationalMessage;
+  // Motivational message is now displayed within AdaptiveChallengeDisplay widget
   PerformanceMetrics? _performanceMetrics;
   ChildRewards? _currentRewards;
 
@@ -67,7 +67,6 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
       _showSuccessMessage = false;
       _showNextChallenge = false;
       _showRetryChallenge = false;
-      _motivationalMessage = null;
     });
 
     try {
@@ -90,7 +89,6 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
           _currentChallenge = challenge;
           _currentProblem = problem;
           _performanceMetrics = metrics;
-          _motivationalMessage = challenge.motivationalMessage;
           _isLoading = false;
         });
         
@@ -160,8 +158,7 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
         }
       });
     } else {
-      // Handle incorrect answer - the InteractiveNumberBondWidget handles attempt counting
-      // We only need to show buttons when the widget calls us after 3 attempts
+      // Handle incorrect answer - show explanation and buttons after 3 attempts
       setState(() {
         _showExplanation = true;
         _showRetryChallenge = true;
@@ -294,36 +291,10 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
                   const SizedBox(height: 16),
                 ],
                 
+                // Motivational message completely removed
                 
-                // Motivational message
-                if (_motivationalMessage != null) ...[
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green[200]!),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.celebration, color: Colors.green[600]),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _motivationalMessage!,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.green[700],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                
+                // Motivational message removed to eliminate duplicate
                 
                 // Challenge display
                 if (_currentChallenge != null) ...[
@@ -350,6 +321,7 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
                               strategy: _currentProblem!.strategy,
                               showSolution: _showExplanation,
                               onBondComplete: _onBondComplete,
+                              operation: _currentProblem!.operator == '+' ? 'addition' : 'subtraction',
                             ),
                           ],
                         ),
