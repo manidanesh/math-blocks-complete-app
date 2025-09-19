@@ -322,28 +322,44 @@ class AdaptiveChallengeEngine {
     final isSubtraction = random.nextBool();
     
     if (isSubtraction) {
-      // Enhanced favorite numbers logic for subtraction
+      // Enhanced favorite numbers logic for subtraction that crosses the next 10
       int firstNumber = random.nextInt(90) + 10; // 10-99
       int secondNumber;
+      
+      // Calculate what second number is needed to cross the next lower 10
+      final firstNumberOnes = firstNumber % 10;
+      int minSecondNumber = firstNumberOnes + 1; // +1 to ensure it crosses below the 10
+      
+      // Ensure minSecondNumber doesn't exceed 9
+      if (minSecondNumber > 9) {
+        minSecondNumber = 9;
+      }
+      
+      // Ensure the range is valid
+      if (minSecondNumber >= 10) {
+        minSecondNumber = 9;
+      }
       
       if (favoriteNumbers.isNotEmpty && random.nextBool()) {
         // Try to use favorite number as second operand (subtrahend)
         final validFavoriteNumbers = favoriteNumbers.where((num) => 
-          num >= 1 && num <= 9).toList();
+          num >= minSecondNumber && num <= 9).toList();
         if (validFavoriteNumbers.isNotEmpty) {
           secondNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
         } else {
-          // If favorite numbers don't work as second operand, try as first
+          // If favorite numbers don't work, try using one as the first number
           final favoriteFirst = favoriteNumbers[random.nextInt(favoriteNumbers.length)];
           if (favoriteFirst >= 10 && favoriteFirst <= 99) {
             firstNumber = favoriteFirst;
-            secondNumber = random.nextInt(9) + 1; // 1-9
+            final newFirstOnes = firstNumber % 10;
+            final newMinSecond = newFirstOnes + 1;
+            secondNumber = random.nextInt(10 - newMinSecond) + newMinSecond;
           } else {
-            secondNumber = random.nextInt(9) + 1; // 1-9
+            secondNumber = random.nextInt(10 - minSecondNumber) + minSecondNumber;
           }
         }
       } else {
-        secondNumber = random.nextInt(9) + 1; // 1-9
+        secondNumber = random.nextInt(10 - minSecondNumber) + minSecondNumber;
       }
       final answer = firstNumber - secondNumber;
       final bondSteps = _generateSubtractionBondSteps(firstNumber, secondNumber);
