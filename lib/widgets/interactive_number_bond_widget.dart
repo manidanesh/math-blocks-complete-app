@@ -61,7 +61,22 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
   @override
   void initState() {
     super.initState();
+    _attemptCount = 0;
     _initializeNumbers();
+  }
+
+  @override
+  void didUpdateWidget(InteractiveNumberBondWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // Reset attempt count when operands change
+    if (oldWidget.operand1 != widget.operand1 || oldWidget.operand2 != widget.operand2) {
+      _attemptCount = 0;
+      _isCorrectAnswer = null;
+      _showExplanation = false;
+      _showTryAgain = false;
+      _initializeNumbers();
+    }
   }
 
   @override
