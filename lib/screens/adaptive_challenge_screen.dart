@@ -28,7 +28,6 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
   bool _showSuccessMessage = false;
   bool _showNextChallenge = false;
   bool _showRetryChallenge = false;
-  int _currentAttempt = 1;
   String? _motivationalMessage;
   PerformanceMetrics? _performanceMetrics;
   ChildRewards? _currentRewards;
@@ -68,7 +67,6 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
       _showSuccessMessage = false;
       _showNextChallenge = false;
       _showRetryChallenge = false;
-      _currentAttempt = 1;
       _motivationalMessage = null;
     });
 
@@ -162,20 +160,13 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
         }
       });
     } else {
-      // Handle incorrect answer
-      if (_currentAttempt >= 3) {
-        // Show explanation after 3 attempts
-        setState(() {
-          _showExplanation = true;
-          _showRetryChallenge = true;
-          _showNextChallenge = true;
-        });
-      } else {
-        // Increment attempt count
-        setState(() {
-          _currentAttempt++;
-        });
-      }
+      // Handle incorrect answer - the InteractiveNumberBondWidget handles attempt counting
+      // We only need to show buttons when the widget calls us after 3 attempts
+      setState(() {
+        _showExplanation = true;
+        _showRetryChallenge = true;
+        _showNextChallenge = true;
+      });
     }
   }
 
@@ -185,7 +176,6 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
       description: description,
       metadata: {
         'problem': _currentProblem?.problemText,
-        'attempt': _currentAttempt,
         'level': _currentChallenge?.level,
       },
     );
@@ -202,7 +192,6 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
       _showNextChallenge = false;
       _showRetryChallenge = false;
       _showSuccessMessage = false;
-      _currentAttempt = 1;
     });
     
     await _loadNextChallenge();
@@ -213,7 +202,6 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
       _showNextChallenge = false;
       _showRetryChallenge = false;
       _showSuccessMessage = false;
-      _currentAttempt = 1;
       _showExplanation = false;
     });
   }
@@ -356,7 +344,7 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
                             ),
                             const SizedBox(height: 16),
                             InteractiveNumberBondWidget(
-                              key: ValueKey('${_currentProblem!.operand1}_${_currentProblem!.operand2}_$_currentAttempt'),
+                              key: ValueKey('${_currentProblem!.operand1}_${_currentProblem!.operand2}'),
                               operand1: _currentProblem!.operand1,
                               operand2: _currentProblem!.operand2,
                               strategy: _currentProblem!.strategy,

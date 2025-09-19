@@ -592,25 +592,30 @@ class AdaptiveChallengeEngine {
 
   /// Generate subtraction bond steps
   static String _generateSubtractionBondSteps(int firstNumber, int secondNumber) {
-    // For subtraction, break the second number into parts that make calculation easier
-    // Example: 45 - 6 = 45 - 5 - 1 = 40 - 1 = 39
-    // Break 6 into 5 + 1 (or similar strategy)
+    // CORRECT LOGIC: For subtraction, break the second number to help cross the next 10
+    // Example: 67 - 9 → break 9 into 7 + 2 → 67 - 7 - 2 = 60 - 2 = 58
+    // Example: 69 - 7 → break 7 into 9 - 2 → 69 - 9 + 2 = 60 + 2 = 62
     
     if (secondNumber <= 10) {
-      // For single digits, break into a number that makes the first number end in 0
-      // and the remainder
       final firstNumberOnes = firstNumber % 10;
       
+      // Strategy: Break secondNumber to help cross to the next lower 10
       if (firstNumberOnes >= secondNumber) {
         // We can subtract directly to make it end in 0
+        // Example: 67 - 9 → break 9 into 7 + 2
         final firstPart = firstNumberOnes;
         final secondPart = secondNumber - firstPart;
         return '$secondNumber → $firstPart + $secondPart';
       } else {
-        // Need to break it differently
-        final firstPart = secondNumber - 1;
-        final secondPart = 1;
-        return '$secondNumber → $firstPart + $secondPart';
+        // Need to cross the 10 boundary
+        // Example: 69 - 7 → break 7 into 9 - 2 (to get from 69 to 60)
+        final firstPart = firstNumberOnes; // 9
+        final secondPart = secondNumber - firstPart; // 7 - 9 = -2
+        if (secondPart < 0) {
+          return '$secondNumber → $firstPart - ${secondPart.abs()}';
+        } else {
+          return '$secondNumber → $firstPart + $secondPart';
+        }
       }
     } else if (secondNumber <= 100) {
       // For 2-digit numbers, break into tens and ones
