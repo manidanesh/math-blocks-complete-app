@@ -280,16 +280,27 @@ class AdaptiveChallengeEngine {
   static Map<String, dynamic> _generateLevel1Problem(List<int> favoriteNumbers) {
     final random = Random();
     
-    // Use favorite numbers if available, otherwise generate random
+    // Enhanced favorite numbers logic for Level 1 (sums up to 100)
     int firstNumber, secondNumber;
     if (favoriteNumbers.isNotEmpty && random.nextBool()) {
+      // Use favorite number as first operand
       firstNumber = favoriteNumbers[random.nextInt(favoriteNumbers.length)];
-      // Generate second number that works well with make-a-ten strategy
+      // Generate second number that ensures sum > 10 and works with make-ten
       secondNumber = random.nextInt(9) + 1; // 1-9
+      
+      // Ensure sum > 10
+      if (firstNumber + secondNumber <= 10) {
+        secondNumber = 11 - firstNumber; // Adjust to make sum > 10
+      }
     } else {
       // Generate numbers that work well with make-a-ten strategy
       firstNumber = random.nextInt(9) + 1; // 1-9
       secondNumber = random.nextInt(9) + 1; // 1-9
+      
+      // Ensure sum > 10
+      if (firstNumber + secondNumber <= 10) {
+        secondNumber = 11 - firstNumber;
+      }
     }
     
     final answer = firstNumber + secondNumber;
@@ -311,10 +322,26 @@ class AdaptiveChallengeEngine {
     final isSubtraction = random.nextBool();
     
     if (isSubtraction) {
-      final firstNumber = random.nextInt(90) + 10; // 10-99
+      // Enhanced favorite numbers logic for subtraction
+      int firstNumber = random.nextInt(90) + 10; // 10-99
       int secondNumber;
+      
       if (favoriteNumbers.isNotEmpty && random.nextBool()) {
-        secondNumber = favoriteNumbers[random.nextInt(favoriteNumbers.length)];
+        // Try to use favorite number as second operand (subtrahend)
+        final validFavoriteNumbers = favoriteNumbers.where((num) => 
+          num >= 1 && num <= 9).toList();
+        if (validFavoriteNumbers.isNotEmpty) {
+          secondNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
+        } else {
+          // If favorite numbers don't work as second operand, try as first
+          final favoriteFirst = favoriteNumbers[random.nextInt(favoriteNumbers.length)];
+          if (favoriteFirst >= 10 && favoriteFirst <= 99) {
+            firstNumber = favoriteFirst;
+            secondNumber = random.nextInt(9) + 1; // 1-9
+          } else {
+            secondNumber = random.nextInt(9) + 1; // 1-9
+          }
+        }
       } else {
         secondNumber = random.nextInt(9) + 1; // 1-9
       }
@@ -331,22 +358,35 @@ class AdaptiveChallengeEngine {
       };
     } else {
       // For addition, ensure it crosses the next 10
-      final firstNumber = random.nextInt(90) + 10; // 10-99
+      int firstNumber = random.nextInt(90) + 10; // 10-99
       
       // Calculate what second number is needed to cross the next 10
       final firstNumberOnes = firstNumber % 10;
       final nextTen = firstNumber - firstNumberOnes + 10;
       final minSecondNumber = nextTen - firstNumber + 1; // +1 to ensure it crosses
       
-      // Try to use favorite numbers if they work with the crossing logic
+      // Enhanced favorite numbers logic for Level 2 (sums up to 100)
       int secondNumber;
-      if (favoriteNumbers.isNotEmpty) {
+      if (favoriteNumbers.isNotEmpty && random.nextBool()) {
+        // Try to use favorite numbers if they work with the crossing logic
         final validFavoriteNumbers = favoriteNumbers.where((num) => 
           num >= minSecondNumber && num <= 9).toList();
-        if (validFavoriteNumbers.isNotEmpty && random.nextBool()) {
+        if (validFavoriteNumbers.isNotEmpty) {
           secondNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
         } else {
-          secondNumber = random.nextInt(10 - minSecondNumber) + minSecondNumber;
+          // If favorite numbers don't work, try using one as the first number
+          final favoriteFirst = favoriteNumbers[random.nextInt(favoriteNumbers.length)];
+          if (favoriteFirst >= 10 && favoriteFirst <= 99) {
+            // Use favorite number as first operand and generate appropriate second
+            final favoriteFirstOnes = favoriteFirst % 10;
+            final nextTen = favoriteFirst - favoriteFirstOnes + 10;
+            final minSecond = nextTen - favoriteFirst + 1;
+            secondNumber = random.nextInt(10 - minSecond) + minSecond;
+            // Update firstNumber to use the favorite
+            firstNumber = favoriteFirst;
+          } else {
+            secondNumber = random.nextInt(10 - minSecondNumber) + minSecondNumber;
+          }
         }
       } else {
         secondNumber = random.nextInt(10 - minSecondNumber) + minSecondNumber;
@@ -372,8 +412,22 @@ class AdaptiveChallengeEngine {
     final isSubtraction = random.nextBool();
     
     if (isSubtraction) {
-      final firstNumber = random.nextInt(90) + 10; // 10-99
-      final secondNumber = random.nextInt(90) + 10; // 10-99
+      // Enhanced favorite numbers logic for Level 3 subtraction
+      int firstNumber = random.nextInt(90) + 10; // 10-99
+      int secondNumber = random.nextInt(90) + 10; // 10-99
+      
+      if (favoriteNumbers.isNotEmpty && random.nextBool()) {
+        // Try to use favorite numbers in 2-digit range
+        final validFavoriteNumbers = favoriteNumbers.where((num) => 
+          num >= 10 && num <= 99).toList();
+        if (validFavoriteNumbers.isNotEmpty) {
+          if (random.nextBool()) {
+            firstNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
+          } else {
+            secondNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
+          }
+        }
+      }
       final answer = firstNumber - secondNumber;
       final bondSteps = _generateSubtractionBondSteps(firstNumber, secondNumber);
       
@@ -386,8 +440,8 @@ class AdaptiveChallengeEngine {
         'bondSteps': bondSteps,
       };
     } else {
-      // For addition, ensure it crosses the next 10
-      final firstNumber = random.nextInt(90) + 10; // 10-99
+      // Enhanced favorite numbers logic for Level 3 addition
+      int firstNumber = random.nextInt(90) + 10; // 10-99
       
       // Calculate what second number is needed to cross the next 10
       final firstNumberOnes = firstNumber % 10;
@@ -396,7 +450,27 @@ class AdaptiveChallengeEngine {
       
       // For 2-digit + 2-digit, ensure the second number is at least 2 digits
       final minTwoDigit = minSecondNumber > 9 ? minSecondNumber : 10;
-      final secondNumber = random.nextInt(90 - minTwoDigit + 1) + minTwoDigit;
+      int secondNumber = random.nextInt(90 - minTwoDigit + 1) + minTwoDigit;
+      
+      // Try to use favorite numbers
+      if (favoriteNumbers.isNotEmpty && random.nextBool()) {
+        final validFavoriteNumbers = favoriteNumbers.where((num) => 
+          num >= minTwoDigit && num <= 99).toList();
+        if (validFavoriteNumbers.isNotEmpty) {
+          secondNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
+        } else {
+          // Try using favorite number as first operand
+          final favoriteFirst = favoriteNumbers[random.nextInt(favoriteNumbers.length)];
+          if (favoriteFirst >= 10 && favoriteFirst <= 99) {
+            firstNumber = favoriteFirst;
+            final newFirstOnes = firstNumber % 10;
+            final newNextTen = firstNumber - newFirstOnes + 10;
+            final newMinSecond = newNextTen - firstNumber + 1;
+            final newMinTwoDigit = newMinSecond > 9 ? newMinSecond : 10;
+            secondNumber = random.nextInt(90 - newMinTwoDigit + 1) + newMinTwoDigit;
+          }
+        }
+      }
       
       final answer = firstNumber + secondNumber;
       final bondSteps = _generateAdditionBondSteps(firstNumber, secondNumber);
@@ -418,8 +492,22 @@ class AdaptiveChallengeEngine {
     final isSubtraction = random.nextBool();
     
     if (isSubtraction) {
-      final firstNumber = random.nextInt(900) + 100; // 100-999
-      final secondNumber = random.nextInt(900) + 100; // 100-999
+      // Enhanced favorite numbers logic for Level 4 subtraction (sums > 100)
+      int firstNumber = random.nextInt(900) + 100; // 100-999
+      int secondNumber = random.nextInt(900) + 100; // 100-999
+      
+      if (favoriteNumbers.isNotEmpty && random.nextBool()) {
+        // Try to use favorite numbers in 3-digit range
+        final validFavoriteNumbers = favoriteNumbers.where((num) => 
+          num >= 100 && num <= 999).toList();
+        if (validFavoriteNumbers.isNotEmpty) {
+          if (random.nextBool()) {
+            firstNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
+          } else {
+            secondNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
+          }
+        }
+      }
       final answer = firstNumber - secondNumber;
       final bondSteps = _generateSubtractionBondSteps(firstNumber, secondNumber);
       
@@ -432,8 +520,8 @@ class AdaptiveChallengeEngine {
         'bondSteps': bondSteps,
       };
     } else {
-      // For addition, ensure it crosses the next 10
-      final firstNumber = random.nextInt(900) + 100; // 100-999
+      // Enhanced favorite numbers logic for Level 4 addition (sums > 100)
+      int firstNumber = random.nextInt(900) + 100; // 100-999
       
       // Calculate what second number is needed to cross the next 10
       final firstNumberOnes = firstNumber % 10;
@@ -443,7 +531,28 @@ class AdaptiveChallengeEngine {
       // For 3-digit problems, ensure the second number is reasonable
       final minThreeDigit = minSecondNumber > 99 ? minSecondNumber : 100;
       final maxSecondNumber = 999 - firstNumber; // Ensure sum doesn't exceed 1000
-      final secondNumber = random.nextInt(maxSecondNumber - minThreeDigit + 1) + minThreeDigit;
+      int secondNumber = random.nextInt(maxSecondNumber - minThreeDigit + 1) + minThreeDigit;
+      
+      // Try to use favorite numbers
+      if (favoriteNumbers.isNotEmpty && random.nextBool()) {
+        final validFavoriteNumbers = favoriteNumbers.where((num) => 
+          num >= minThreeDigit && num <= maxSecondNumber).toList();
+        if (validFavoriteNumbers.isNotEmpty) {
+          secondNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
+        } else {
+          // Try using favorite number as first operand
+          final favoriteFirst = favoriteNumbers[random.nextInt(favoriteNumbers.length)];
+          if (favoriteFirst >= 100 && favoriteFirst <= 999) {
+            firstNumber = favoriteFirst;
+            final newFirstOnes = firstNumber % 10;
+            final newNextTen = firstNumber - newFirstOnes + 10;
+            final newMinSecond = newNextTen - firstNumber + 1;
+            final newMinThreeDigit = newMinSecond > 99 ? newMinSecond : 100;
+            final newMaxSecond = 999 - firstNumber;
+            secondNumber = random.nextInt(newMaxSecond - newMinThreeDigit + 1) + newMinThreeDigit;
+          }
+        }
+      }
       
       final answer = firstNumber + secondNumber;
       final bondSteps = _generateAdditionBondSteps(firstNumber, secondNumber);
