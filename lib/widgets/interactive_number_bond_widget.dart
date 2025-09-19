@@ -319,27 +319,27 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
           // Success feedback - animation removed
           if (_bondComplete)
             Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.green[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green),
-                  SizedBox(width: 8),
-                  Text(
-                    'Great job! You built the number bond!',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.green),
                     ),
-                  ),
-                ],
-              ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green),
+                        SizedBox(width: 8),
+                        Text(
+                          'Great job! You built the number bond!',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
             ),
           
           // Solution display (after 3 failures)
@@ -352,7 +352,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
 
   Widget _buildInteractiveCircle() {
     return Column(
-      children: [
+            children: [
               // Three-circle number bond structure: Top circle with second number, two empty circles below
               SizedBox(
                 width: 300,
@@ -901,7 +901,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
           ),
           const SizedBox(height: 20),
           
-          // Step 1: Make Ten
+          // Step 1: Number Bond Breakdown
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -912,7 +912,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
             child: Column(
               children: [
                 const Text(
-                  'Step 1: Make Ten',
+                  'Step 1: Break Down the Number Bond',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -920,20 +920,65 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                   ),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                // Show the number bond breakdown
+                Column(
                   children: [
-                    _buildExplanationNumber(widget.operand1.toString(), Colors.orange),
-                    const Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                    _buildExplanationNumber(makeTenNumber.toString(), Colors.blue),
-                    const Text(' = ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                    _buildExplanationNumber('10', Colors.green),
+                    Text(
+                      'We break ${widget.operand2} into two parts:',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // Visual number bond representation
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: Column(
+                        children: [
+                          // Top circle - the number we're breaking down
+                          _buildExplanationNumber(widget.operand2.toString(), Colors.green, size: 40),
+                          const SizedBox(height: 8),
+                          // Connection lines
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Container(width: 2, height: 20, color: Colors.grey[400]),
+                              Container(width: 2, height: 20, color: Colors.grey[400]),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          // Bottom circles - the two parts
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _buildExplanationNumber(makeTenNumber.toString(), Colors.blue, size: 35),
+                              _buildExplanationNumber(remainingNumber.toString(), Colors.purple, size: 35),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildExplanationNumber(makeTenNumber.toString(), Colors.blue),
+                        const Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        _buildExplanationNumber(remainingNumber.toString(), Colors.purple),
+                        const Text(' = ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        _buildExplanationNumber(widget.operand2.toString(), Colors.green),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '$makeTenNumber + $remainingNumber = ${widget.operand2} ✓',
+                      style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                    ),
                   ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${widget.operand1} + $makeTenNumber = 10 ✓',
-                  style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
                 ),
               ],
             ),
@@ -946,7 +991,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
           
           const SizedBox(height: 16),
           
-          // Step 2: Add remaining
+          // Step 2: Make Ten Strategy
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -957,11 +1002,65 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
             child: Column(
               children: [
                 const Text(
-                  'Step 2: Add the Remaining',
+                  'Step 2: Use Make Ten Strategy',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.purple,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Column(
+                  children: [
+                    Text(
+                      'Now we use the Make Ten strategy:',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildExplanationNumber(widget.operand1.toString(), Colors.orange),
+                        const Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        _buildExplanationNumber(makeTenNumber.toString(), Colors.blue),
+                        const Text(' = ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        _buildExplanationNumber('10', Colors.green),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${widget.operand1} + $makeTenNumber = 10 ✓',
+                      style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Arrow
+          Icon(Icons.keyboard_arrow_down, color: Colors.green[600], size: 32),
+          
+          const SizedBox(height: 16),
+          
+          // Step 3: Final calculation
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green[200]!),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  'Step 3: Add the Remaining',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -1015,10 +1114,10 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
     );
   }
 
-  Widget _buildExplanationNumber(String number, Color color) {
+  Widget _buildExplanationNumber(String number, Color color, {double size = 40}) {
     return Container(
-      width: 40,
-      height: 40,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
@@ -1034,9 +1133,9 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
       child: Center(
         child: Text(
           number,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
-            fontSize: 18,
+            fontSize: size * 0.45, // Scale font size with circle size
             fontWeight: FontWeight.bold,
           ),
         ),

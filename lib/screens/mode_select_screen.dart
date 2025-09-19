@@ -95,7 +95,33 @@ class ModeSelectScreen extends ConsumerWidget {
                 
                 const SizedBox(height: 32),
                 
-                // Challenge mode button
+                // Adaptive Challenge mode button
+                SizedBox(
+                  width: double.infinity,
+                  height: 80,
+                  child: ElevatedButton(
+                    onPressed: () => context.go('/adaptive-challenge'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF9B59B6),
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.auto_awesome, size: 32),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Adaptive Challenge', 
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Regular Challenge mode button
                 SizedBox(
                   width: double.infinity,
                   height: 80,
@@ -121,12 +147,12 @@ class ModeSelectScreen extends ConsumerWidget {
                 
                 const SizedBox(height: 16),
                 
-                // Profile Management button
+                // Profile button (unified)
                 SizedBox(
                   width: double.infinity,
                   height: 80,
                   child: ElevatedButton(
-                    onPressed: () => context.go('/profile-management'),
+                    onPressed: () => context.go('/profile'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF3498DB),
                       foregroundColor: Colors.white,
@@ -137,7 +163,7 @@ class ModeSelectScreen extends ConsumerWidget {
                         const Icon(Icons.person, size: 32),
                         const SizedBox(height: 4),
                         Text(
-                          'Profile Settings',
+                          'My Profile',
                           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -145,31 +171,6 @@ class ModeSelectScreen extends ConsumerWidget {
                   ),
                 ),
                 
-                const SizedBox(height: 16),
-                
-                // Profile & History button
-                SizedBox(
-                  width: double.infinity,
-                  height: 80,
-                  child: ElevatedButton(
-                    onPressed: () => context.go('/profile-history'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF9B59B6),
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.history, size: 32),
-                        const SizedBox(height: 4),
-                        Text(
-                          'profile_history'.tr(profile.language), 
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
           ),

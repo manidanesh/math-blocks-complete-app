@@ -14,6 +14,21 @@ class ProblemAttemptService {
       final prefs = await SharedPreferences.getInstance();
       final attempts = await getAllAttempts();
       
+      // Check if this is a duplicate attempt (same problem, same child, within 1 minute)
+      final isDuplicate = attempts.any((existing) {
+        final timeDiff = attempt.timestamp.difference(existing.timestamp).inMinutes.abs();
+        return existing.childId == attempt.childId &&
+               existing.problemText == attempt.problemText &&
+               existing.operand1 == attempt.operand1 &&
+               existing.operand2 == attempt.operand2 &&
+               timeDiff < 1; // Within 1 minute
+      });
+      
+      if (isDuplicate) {
+        print('⚠️ Skipping duplicate attempt: ${attempt.problemText}');
+        return;
+      }
+      
       // Add new attempt to the beginning (most recent first)
       attempts.insert(0, attempt);
       
@@ -57,6 +72,26 @@ class ProblemAttemptService {
   static Future<List<ProblemAttempt>> getFailedAttempts(String childId) async {
     final attempts = await getAttemptsForChild(childId);
     return attempts.where((attempt) => !attempt.isCorrect).toList();
+  }
+
+  /// Get unique failed attempts (removing duplicates by problem)
+  static Future<List<ProblemAttempt>> getUniqueFailedAttempts(String childId) async {
+    final attempts = await getAttemptsForChild(childId);
+    final failedAttempts = attempts.where((attempt) => !attempt.isCorrect).toList();
+    
+    // Group by problem text and keep only the most recent attempt for each problem
+    final Map<String, ProblemAttempt> uniqueAttempts = {};
+    
+    for (final attempt in failedAttempts) {
+      final problemKey = '${attempt.operand1}+${attempt.operand2}';
+      if (!uniqueAttempts.containsKey(problemKey) || 
+          attempt.timestamp.isAfter(uniqueAttempts[problemKey]!.timestamp)) {
+        uniqueAttempts[problemKey] = attempt;
+      }
+    }
+    
+    return uniqueAttempts.values.toList()
+      ..sort((a, b) => b.timestamp.compareTo(a.timestamp)); // Most recent first
   }
 
   /// Get attempts for current session

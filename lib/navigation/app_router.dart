@@ -6,9 +6,9 @@ import '../providers/profile_provider.dart';
 import '../screens/profile_creation_screen.dart';
 import '../screens/mode_select_screen.dart';
 import '../screens/practice_screen.dart';
-import '../screens/profile_history_screen.dart';
 import '../screens/challenge_screen.dart';
-import '../screens/profile_management_screen.dart';
+import '../screens/profile_screen.dart';
+import '../screens/adaptive_challenge_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final profileAsync = ref.watch(profileProvider);
@@ -50,9 +50,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const PracticeScreen(),
       ),
       GoRoute(
-        path: '/profile-history',
-        name: 'profile-history',
-        builder: (context, state) => const ProfileHistoryScreen(),
+        path: '/profile',
+        name: 'profile',
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/challenge',
@@ -60,9 +60,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ChallengeScreen(),
       ),
       GoRoute(
-        path: '/profile-management',
-        name: 'profile-management',
-        builder: (context, state) => const ProfileManagementScreen(),
+        path: '/adaptive-challenge',
+        name: 'adaptive-challenge',
+        builder: (context, state) => const AdaptiveChallengeScreen(),
       ),
     ],
   );

@@ -40,12 +40,15 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
   bool _isLoading = true;
   bool _showNextChallenge = false;
   bool _showRetryChallenge = false;
+  bool _showSuccessMessage = false;
   
   // Animation controllers
   late AnimationController _feedbackController;
   late AnimationController _bounceController;
+  late AnimationController _successController;
   late Animation<double> _feedbackAnimation;
   late Animation<double> _bounceAnimation;
+  late Animation<double> _successAnimation;
 
   @override
   void initState() {
@@ -62,12 +65,21 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
       vsync: this,
     );
     
+    _successController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+    
     _feedbackAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _feedbackController, curve: Curves.easeOut),
     );
     
     _bounceAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _bounceController, curve: Curves.elasticOut),
+    );
+    
+    _successAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _successController, curve: Curves.elasticOut),
     );
     
     _initializeChallenge();
@@ -78,6 +90,7 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
   void dispose() {
     _feedbackController.dispose();
     _bounceController.dispose();
+    _successController.dispose();
     super.dispose();
   }
 
@@ -100,6 +113,7 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
     setState(() {
       _showNextChallenge = false;
       _showRetryChallenge = false;
+      _showSuccessMessage = false;
       _currentAttempt = 1;
     });
     
@@ -112,6 +126,7 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
     setState(() {
       _showNextChallenge = false;
       _showRetryChallenge = false;
+      _showSuccessMessage = false;
       _currentAttempt = 1;
     });
     
@@ -171,8 +186,22 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
         
         _currentLevel = recommendation.recommendedLevel;
         
-        // Generate first problem
-        _generateNewProblem();
+        // Check if we have extra parameters from navigation (from failed challenges)
+        final extra = GoRouterState.of(context).extra;
+        if (extra is Map<String, dynamic> && extra['problem'] != null) {
+          // Load the specific problem from failed challenge
+          _loadSpecificProblem(extra['problem'] as Map<String, dynamic>);
+          
+          // If showExplanation is true, show the explanation immediately
+          if (extra['showExplanation'] == true) {
+            setState(() {
+              _showExplanation = true;
+            });
+          }
+        } else {
+          // Generate first problem normally
+          _generateNewProblem();
+        }
         
         setState(() {
           _isLoading = false;
@@ -204,6 +233,33 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
     });
     
     print('🧮 New challenge: ${problem.problemText} (Level ${problem.level})');
+  }
+
+  void _loadSpecificProblem(Map<String, dynamic> problemData) {
+    final problem = MathProblem(
+      operand1: problemData['operand1'] as int,
+      operand2: problemData['operand2'] as int,
+      operator: problemData['operator'] as String,
+      correctAnswer: problemData['correctAnswer'] as int,
+      problemText: '${problemData['operand1']} + ${problemData['operand2']} = ?',
+      options: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // Default options
+      strategy: ProblemStrategy.values.firstWhere(
+        (s) => s.toString().split('.').last == problemData['strategy'],
+        orElse: () => ProblemStrategy.basic,
+      ),
+      level: _currentLevel,
+      explanation: 'This is a practice problem from your failed challenges.',
+    );
+    
+    setState(() {
+      _currentProblem = problem;
+      _currentAttempt = 1;
+      _showFeedback = false;
+      _showExplanation = false;
+      _showNextButton = false;
+    });
+    
+    print('🧮 Loaded specific problem: ${problem.problemText}');
   }
 
 
@@ -387,40 +443,47 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
             return const Center(child: CircularProgressIndicator());
           }
 
-          return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                // Header with profile info
-                _buildHeader(profile),
-                const SizedBox(height: 24),
-                
-                // Current problem display
-                if (_currentProblem != null) ...[
-                  _buildProblemCard(currentLanguage),
+          return Stack(
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                  // Header with profile info
+                  _buildHeader(profile),
                   const SizedBox(height: 24),
                   
-                  // Number bond visualization
-                  _buildNumberBondVisualization(),
-                  const SizedBox(height: 24),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Explanation section (after 3 failures)
-                  if (_showExplanation) _buildExplanationSection(),
-                  
-                  // Feedback section
-                  if (_showFeedback) _buildFeedbackSection(),
-                  
-                  // Challenge completion buttons
-                  if (_showNextChallenge || _showRetryChallenge) ...[
+                  // Current problem display
+                  if (_currentProblem != null) ...[
+                    _buildProblemCard(currentLanguage),
                     const SizedBox(height: 24),
-                    _buildChallengeCompletionButtons(),
+                    
+                    // Number bond visualization
+                    _buildNumberBondVisualization(),
+                    const SizedBox(height: 24),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Explanation section (after 3 failures)
+                    if (_showExplanation) _buildExplanationSection(),
+                    
+                    // Feedback section
+                    if (_showFeedback) _buildFeedbackSection(),
+                    
+                    // Challenge completion buttons
+                    if (_showNextChallenge || _showRetryChallenge) ...[
+                      const SizedBox(height: 24),
+                      _buildChallengeCompletionButtons(),
+                    ],
                   ],
                 ],
-              ],
+              ),
             ),
-          );
+            
+            // Beautiful success message overlay
+            if (_showSuccessMessage) _buildSuccessOverlay(),
+          ],
+        );
         },
       ),
     );
@@ -531,26 +594,57 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
               strategy: _currentProblem!.strategy,
               showSolution: _showExplanation,
               onBondComplete: (bool isCorrect) async {
+                final profile = ref.read(profileProvider).value;
+                if (profile != null && _currentProblem != null) {
+                  // Record the problem attempt
+                  final attempt = ProblemAttempt(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    childId: profile.id,
+                    problemText: '${_currentProblem!.operand1} + ${_currentProblem!.operand2} = ?',
+                    operand1: _currentProblem!.operand1,
+                    operand2: _currentProblem!.operand2,
+                    operator: '+',
+                    correctAnswer: _currentProblem!.operand1 + _currentProblem!.operand2,
+                    userAnswer: null, // We don't track the exact user answer in number bonds
+                    isCorrect: isCorrect,
+                    timestamp: DateTime.now(),
+                    attemptNumber: _currentAttempt,
+                    timeSpentSeconds: 30.0, // Estimated time spent
+                    strategy: _currentProblem!.strategy.toString(),
+                    difficultyLevel: _currentProblem!.level,
+                    skillArea: 'number_bonds_${_currentProblem!.strategy.toString()}',
+                    usedHint: false,
+                    hintType: null,
+                    explanation: isCorrect ? 'Correct number bond completion' : 'Failed after 3 attempts',
+                  );
+                  
+                  await ProblemAttemptService.recordAttempt(attempt);
+                }
+                
                 if (isCorrect) {
                   // Award star for correct answer
-                  final profile = ref.read(profileProvider).value;
                   if (profile != null) {
                     await _awardStar(profile.id, 'Correct number bond completion');
                     
-                    // Show positive feedback
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('🎉 Great! You built the number bond correctly! +1 Star ⭐'),
-                        backgroundColor: Colors.green,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
+                    // Show beautiful success message
+                    setState(() {
+                      _showSuccessMessage = true;
+                    });
+                    
+                    // Start success animation
+                    _successController.forward();
+                    
+                    // Hide success message and show next challenge button after animation
+                    Future.delayed(const Duration(seconds: 3), () {
+                      if (mounted) {
+                        setState(() {
+                          _showSuccessMessage = false;
+                          _showNextChallenge = true;
+                        });
+                        _successController.reset();
+                      }
+                    });
                   }
-                  
-                  // Show next challenge button after success
-                  setState(() {
-                    _showNextChallenge = true;
-                  });
                 } else {
                   // Show feedback for incorrect after 3 attempts
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -561,9 +655,10 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
                     ),
                   );
                   
-                  // Show retry challenge button after failure
+                  // Show both retry and next challenge buttons after failure
                   setState(() {
                     _showRetryChallenge = true;
+                    _showNextChallenge = true;
                   });
                 }
               },
@@ -744,7 +839,8 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
   Widget _buildChallengeCompletionButtons() {
     return Column(
       children: [
-        if (_showNextChallenge) ...[
+        if (_showNextChallenge && !_showRetryChallenge) ...[
+          // Success case: Only Next Challenge button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -772,34 +868,214 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen>
           ),
         ],
         
-        if (_showRetryChallenge) ...[
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _retryChallenge,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+        if (_showRetryChallenge && _showNextChallenge) ...[
+          // Failure case: Both buttons side by side
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _retryChallenge,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.orange[600]!, width: 2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.refresh, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Try This Challenge Again',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.refresh, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Try This Challenge Again',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _nextChallenge,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                ],
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.arrow_forward, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Next Challenge',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildSuccessOverlay() {
+    return AnimatedBuilder(
+      animation: _successAnimation,
+      builder: (context, child) {
+        return Container(
+          color: Colors.black.withOpacity(0.3),
+          child: Center(
+            child: Transform.scale(
+              scale: _successAnimation.value,
+              child: Container(
+                margin: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Celebration icon with animation
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      duration: const Duration(milliseconds: 800),
+                      builder: (context, value, child) {
+                        return Transform.rotate(
+                          angle: value * 0.3,
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Colors.yellow[400]!, Colors.orange[400]!],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.yellow.withOpacity(0.3),
+                                  blurRadius: 15,
+                                  spreadRadius: 5,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.star,
+                              color: Colors.white,
+                              size: 40,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Success message
+                    Text(
+                      '🎉 Fantastic!',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green[700],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    
+                    Text(
+                      'You built the number bond correctly!',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey[700],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Star reward
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.yellow[100],
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.yellow[300]!),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.star, color: Colors.orange, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            '+1 Star',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Current rewards display
+                    if (_currentRewards != null) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.blue[200]!),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '⭐ ${_currentRewards!.totalStars}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[700],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Text(
+                              '🏅 ${_currentRewards!.totalBadges}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

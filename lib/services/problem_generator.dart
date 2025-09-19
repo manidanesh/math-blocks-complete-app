@@ -242,6 +242,15 @@ class ProblemGenerator {
       return false; // Sum must ALWAYS exceed 10 (e.g., 13+8=21, not 12+8=20)
     }
     
+    // CRITICAL: Ensure the sum crosses the next 10
+    // Example: 31 + 4 = 35 (doesn't cross 40) ❌
+    // Example: 34 + 7 = 41 (crosses 40) ✅
+    final operand1Ones = operand1 % 10;
+    final nextTen = operand1 - operand1Ones + 10;
+    if (sum <= nextTen) {
+      return false; // Must cross the next 10
+    }
+    
     // Always respect level requirements
     if (level.mustCrossTwenty && sum <= 20) {
       return false; // MUST cross 20
