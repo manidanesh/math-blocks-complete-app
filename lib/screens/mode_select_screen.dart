@@ -98,7 +98,7 @@ class ModeSelectScreen extends ConsumerWidget {
                 // Intelligent Math Challenge mode button
                 SizedBox(
                   width: double.infinity,
-                  height: 100,
+                  height: 105,
                   child: ElevatedButton(
                     onPressed: () => context.go('/challenge'),
                     style: ElevatedButton.styleFrom(
