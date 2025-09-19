@@ -324,26 +324,34 @@ class AdaptiveChallengeEngine {
     if (isSubtraction) {
       // Enhanced favorite numbers logic for subtraction that crosses the next 10
       int firstNumber = random.nextInt(90) + 10; // 10-99
-      int secondNumber;
       
       // Calculate what second number is needed to cross the next lower 10
       final firstNumberOnes = firstNumber % 10;
-      int minSecondNumber = firstNumberOnes + 1; // +1 to ensure it crosses below the 10
       
-      // Ensure minSecondNumber doesn't exceed 9
-      if (minSecondNumber > 9) {
-        minSecondNumber = 9;
-      }
+      // Generate a second number that creates meaningful breakdown
+      // Avoid trivial cases like "9 → 9 + 0" by ensuring different digits
+      int secondNumber;
+      do {
+        // Generate second number that crosses the 10 boundary
+        final minSecond = firstNumberOnes + 1;
+        final maxSecond = 9;
+        
+        if (minSecond <= maxSecond) {
+          secondNumber = random.nextInt(maxSecond - minSecond + 1) + minSecond;
+        } else {
+          // Fallback: generate any number that doesn't equal firstNumberOnes
+          secondNumber = random.nextInt(9) + 1;
+          while (secondNumber == firstNumberOnes) {
+            secondNumber = random.nextInt(9) + 1;
+          }
+        }
+      } while (secondNumber == firstNumberOnes); // Ensure no trivial breakdown
       
-      // Ensure the range is valid
-      if (minSecondNumber >= 10) {
-        minSecondNumber = 9;
-      }
-      
+      // Try to use favorite numbers if available
       if (favoriteNumbers.isNotEmpty && random.nextBool()) {
         // Try to use favorite number as second operand (subtrahend)
         final validFavoriteNumbers = favoriteNumbers.where((num) => 
-          num >= minSecondNumber && num <= 9).toList();
+          num >= (firstNumberOnes + 1) && num <= 9 && num != firstNumberOnes).toList();
         if (validFavoriteNumbers.isNotEmpty) {
           secondNumber = validFavoriteNumbers[random.nextInt(validFavoriteNumbers.length)];
         } else {
@@ -353,13 +361,16 @@ class AdaptiveChallengeEngine {
             firstNumber = favoriteFirst;
             final newFirstOnes = firstNumber % 10;
             final newMinSecond = newFirstOnes + 1;
-            secondNumber = random.nextInt(10 - newMinSecond) + newMinSecond;
-          } else {
-            secondNumber = random.nextInt(10 - minSecondNumber) + minSecondNumber;
+            if (newMinSecond <= 9) {
+              secondNumber = random.nextInt(10 - newMinSecond) + newMinSecond;
+            } else {
+              secondNumber = random.nextInt(9) + 1;
+              while (secondNumber == newFirstOnes) {
+                secondNumber = random.nextInt(9) + 1;
+              }
+            }
           }
         }
-      } else {
-        secondNumber = random.nextInt(10 - minSecondNumber) + minSecondNumber;
       }
       final answer = firstNumber - secondNumber;
       final bondSteps = _generateSubtractionBondSteps(firstNumber, secondNumber);
