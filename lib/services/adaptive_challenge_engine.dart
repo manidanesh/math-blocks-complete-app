@@ -570,7 +570,8 @@ class AdaptiveChallengeEngine {
 
   /// Generate make-a-ten bond steps
   static String _generateMakeTenBondSteps(int firstNumber, int secondNumber) {
-    // CORRECT LOGIC: For addition number bonds, break the second number to make calculation easier
+    // CORRECT LOGIC: For Make Ten strategy, break the second number to help cross the next 10
+    // Example: 89 + 8 → break 8 into 1 + 7 (to make 89 + 1 = 90)
     // Example: 89 + 2 → break 2 into 1 + 1
     // Example: 47 + 6 → break 6 into 3 + 3  
     // Example: 43 + 8 → break 8 into 7 + 1
@@ -581,14 +582,26 @@ class AdaptiveChallengeEngine {
     } else if (secondNumber == 2) {
       // For 2, always break into 1 + 1
       return '$secondNumber → 1 + 1';
-    } else if (secondNumber % 2 == 0) {
-      // For even numbers, break into equal parts
-      final half = secondNumber ~/ 2;
-      return '$secondNumber → $half + $half';
     } else {
-      // For odd numbers, break into (n-1) + 1
-      final firstPart = secondNumber - 1;
-      return '$secondNumber → $firstPart + 1';
+      // For Make Ten strategy: break to help cross the next 10
+      // Find what number is needed to make firstNumber reach the next 10
+      final firstNumberOnes = firstNumber % 10;
+      final neededToMakeTen = 10 - firstNumberOnes;
+      
+      if (neededToMakeTen > 0 && neededToMakeTen < secondNumber) {
+        // Break secondNumber to include the number needed to make ten
+        final remaining = secondNumber - neededToMakeTen;
+        return '$secondNumber → $neededToMakeTen + $remaining';
+      } else {
+        // Fallback to simple breakdown
+        if (secondNumber % 2 == 0) {
+          final half = secondNumber ~/ 2;
+          return '$secondNumber → $half + $half';
+        } else {
+          final firstPart = secondNumber - 1;
+          return '$secondNumber → $firstPart + 1';
+        }
+      }
     }
   }
 
