@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/rewards_model.dart';
+import '../providers/profile_provider.dart';
+import '../services/language_service.dart';
 
 /// Widget to display current rewards and progress
 class RewardsDisplay extends StatelessWidget {
@@ -14,11 +17,29 @@ class RewardsDisplay extends StatelessWidget {
     this.showDetailed = false,
   });
 
+  String _getLevelName(ChildLevel level, String language) {
+    switch (level) {
+      case ChildLevel.onesExplorer:
+        return LanguageService.translate('ones_explorer', language);
+      case ChildLevel.tensBuilder:
+        return LanguageService.translate('tens_builder', language);
+      case ChildLevel.hundredsHero:
+        return LanguageService.translate('hundreds_hero', language);
+      case ChildLevel.thousandsChampion:
+        return LanguageService.translate('thousands_champion', language);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+    return Consumer(
+      builder: (context, ref, child) {
+        final profile = ref.watch(profileProvider).value;
+        final language = profile?.language ?? 'en';
+        
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.blue[200]!),
@@ -37,7 +58,7 @@ class RewardsDisplay extends StatelessWidget {
           Row(
             children: [
               Text(
-                '${rewards.currentLevel.emoji} ${rewards.currentLevel.name}',
+                '${rewards.currentLevel.emoji} ${_getLevelName(rewards.currentLevel, language)}',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -66,14 +87,14 @@ class RewardsDisplay extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Progress to next level',
+                    LanguageService.translate('progress_to_next_level', language),
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
                     ),
                   ),
                   Text(
-                    '${rewards.starsToNextLevel} stars to go',
+                    '${rewards.starsToNextLevel} ${LanguageService.translate('stars_to_go', language)}',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
@@ -119,6 +140,8 @@ class RewardsDisplay extends StatelessWidget {
           ],
         ],
       ),
+    );
+      },
     );
   }
 

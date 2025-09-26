@@ -6,6 +6,7 @@ import '../models/kid_profile.dart';
 import '../models/rewards_model.dart';
 import '../providers/profile_provider.dart';
 import '../services/adaptive_problem_service.dart';
+import '../services/language_service.dart';
 import '../services/problem_generator.dart';
 import '../services/rewards_service.dart';
 import '../widgets/adaptive_challenge_display.dart';
@@ -181,7 +182,80 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
       setState(() {
         _currentRewards = result.rewards;
       });
+      
+      // Show level up celebration if user leveled up
+      if (result.levelUp) {
+        _showLevelUpCelebration(result.rewards!);
+      }
     }
+  }
+
+  void _showLevelUpCelebration(ChildRewards rewards) {
+    final profile = ref.read(profileProvider).value;
+    if (profile == null) return;
+    
+    final language = profile.language ?? 'en';
+    final congratsText = LanguageService.translate('congratulations_level_up', language, params: {
+      'name': profile.name,
+      'level': rewards.currentLevel.name,
+    });
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.star, color: Colors.yellow[700], size: 30),
+            const SizedBox(width: 8),
+            Text(
+              LanguageService.translate('level_up', language),
+              style: TextStyle(
+                color: Colors.green[700],
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              congratsText,
+              style: const TextStyle(fontSize: 18),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green[200]!),
+              ),
+              child: Text(
+                '${rewards.currentLevel.emoji} ${rewards.currentLevel.name}',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green[600],
+              foregroundColor: Colors.white,
+            ),
+            child: Text(LanguageService.translate('continue', language)),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _nextChallenge() async {
@@ -244,10 +318,24 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
             children: [
               const Icon(Icons.person_off, size: 64, color: Colors.grey),
               const SizedBox(height: 16),
-              const Text('No profile found'),
-              ElevatedButton(
-                onPressed: () => context.go('/profile-creation'),
-                child: const Text('Create Profile'),
+              Consumer(
+                builder: (context, ref, child) {
+                  final profile = ref.watch(profileProvider).value;
+                  final language = profile?.language ?? 'en';
+                  
+                  return Text(LanguageService.translate('no_profile_found', language));
+                },
+              ),
+              Consumer(
+                builder: (context, ref, child) {
+                  final profile = ref.watch(profileProvider).value;
+                  final language = profile?.language ?? 'en';
+                  
+                  return ElevatedButton(
+                    onPressed: () => context.go('/profile-creation'),
+                    child: Text(LanguageService.translate('create_profile_button', language)),
+                  );
+                },
               ),
             ],
           ),
@@ -263,17 +351,19 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Adaptive Challenge'),
+        title: Text(LanguageService.translate('adaptive_challenge', currentLanguage)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/mode-select'),
+          onPressed: () {
+            // Check if we can go back in the navigation stack
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              // Fallback to mode select if no previous route
+              context.go('/mode-select');
+            }
+          },
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.analytics),
-            onPressed: () => _showPerformanceDialog(),
-          ),
-        ],
       ),
       body: Stack(
         children: [
@@ -291,11 +381,6 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
                   const SizedBox(height: 16),
                 ],
                 
-                // Motivational message completely removed
-                
-                
-                // Motivational message removed to eliminate duplicate
-                
                 // Challenge display
                 if (_currentChallenge != null) ...[
                   AdaptiveChallengeDisplay(challenge: _currentChallenge!),
@@ -309,19 +394,34 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           children: [
-                            const Text(
-                              'Interactive Number Bond',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            Consumer(
+                              builder: (context, ref, child) {
+                                final profile = ref.watch(profileProvider).value;
+                                final language = profile?.language ?? 'en';
+                                
+                                return Text(
+                                  LanguageService.translate('interactive_number_bond', language),
+                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                );
+                              },
                             ),
                             const SizedBox(height: 16),
-                            InteractiveNumberBondWidget(
-                              key: ValueKey('${_currentProblem!.operand1}_${_currentProblem!.operand2}'),
-                              operand1: _currentProblem!.operand1,
-                              operand2: _currentProblem!.operand2,
-                              strategy: _currentProblem!.strategy,
-                              showSolution: _showExplanation,
-                              onBondComplete: _onBondComplete,
-                              operation: _currentProblem!.operator == '+' ? 'addition' : 'subtraction',
+                            Consumer(
+                              builder: (context, ref, child) {
+                                final profile = ref.watch(profileProvider).value;
+                                final language = profile?.language ?? 'en';
+                                
+                                return InteractiveNumberBondWidget(
+                                  key: ValueKey('${_currentProblem!.operand1}_${_currentProblem!.operand2}'),
+                                  operand1: _currentProblem!.operand1,
+                                  operand2: _currentProblem!.operand2,
+                                  strategy: _currentProblem!.strategy,
+                                  showSolution: _showExplanation,
+                                  onBondComplete: _onBondComplete,
+                                  operation: _currentProblem!.operator == '+' ? 'addition' : 'subtraction',
+                                  language: language,
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -329,11 +429,9 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
                     ),
                   ],
                   
-                  // Challenge completion buttons
-                  if (_showNextChallenge || _showRetryChallenge) ...[
-                    const SizedBox(height: 24),
-                    _buildChallengeCompletionButtons(),
-                  ],
+                  // Challenge completion buttons - Always show Next Challenge
+                  const SizedBox(height: 24),
+                  _buildChallengeCompletionButtons(),
                 ],
               ],
             ),
@@ -345,6 +443,7 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
       ),
     );
   }
+
 
   Widget _buildProfileHeader(KidProfile profile) {
     return Card(
@@ -396,151 +495,73 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
   Widget _buildChallengeCompletionButtons() {
     return Column(
       children: [
-        if (_showNextChallenge && !_showRetryChallenge) ...[
-          // Success case: Only Next Challenge button
+        // ALWAYS show Next Challenge button first
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: _nextChallenge,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Consumer(
+              builder: (context, ref, child) {
+                final profile = ref.watch(profileProvider).value;
+                final language = profile?.language ?? 'en';
+                
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.arrow_forward, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      LanguageService.translate('next_challenge', language),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+        
+        // Show Try Again button below if needed
+        if (_showRetryChallenge) ...[
+          const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _nextChallenge,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
+            child: OutlinedButton(
+              onPressed: _retryChallenge,
+              style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
+                side: BorderSide(color: Colors.orange[600]!, width: 2),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.arrow_forward, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Next Challenge',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ],
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final profile = ref.watch(profileProvider).value;
+                  final language = profile?.language ?? 'en';
+                  
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.refresh, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        LanguageService.translate('try_again', language),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
-          ),
-        ],
-        
-        if (_showRetryChallenge && _showNextChallenge) ...[
-          // Failure case: Both buttons side by side
-          LayoutBuilder(
-            builder: (context, constraints) {
-              // If screen is too narrow, stack buttons vertically
-              if (constraints.maxWidth < 400) {
-                return Column(
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: _retryChallenge,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: BorderSide(color: Colors.orange[600]!, width: 2),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.refresh, size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              'Try Again',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _nextChallenge,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.arrow_forward, size: 18),
-                            SizedBox(width: 8),
-                            Text(
-                              'Next Challenge',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              } else {
-                // Normal horizontal layout for wider screens
-                return Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _retryChallenge,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: BorderSide(color: Colors.orange[600]!, width: 2),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.refresh, size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              'Try Again',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _nextChallenge,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.arrow_forward, size: 18),
-                            SizedBox(width: 8),
-                            Text(
-                              'Next Challenge',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              }
-            },
           ),
         ],
       ],
@@ -551,138 +572,83 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
     return AnimatedBuilder(
       animation: _successAnimation,
       builder: (context, child) {
-        return Container(
-          color: Colors.black.withOpacity(0.3),
-          child: Center(
-            child: Transform.scale(
-              scale: _successAnimation.value,
-              child: Container(
-                margin: const EdgeInsets.all(32),
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
+        return Center(
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 20,
+                  spreadRadius: 5,
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Celebration icon
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.yellow[400]!, Colors.orange[400]!],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Success animation
+                Transform.scale(
+                  scale: _successAnimation.value,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.yellow.withOpacity(0.3),
+                          blurRadius: 15,
+                          spreadRadius: 5,
                         ),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.yellow.withOpacity(0.3),
-                            blurRadius: 15,
-                            spreadRadius: 5,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.star,
-                        color: Colors.white,
-                        size: 40,
-                      ),
+                      ],
                     ),
-                    const SizedBox(height: 20),
+                    child: const Icon(
+                      Icons.star,
+                      color: Colors.white,
+                      size: 40,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                
+                // Success message
+                Consumer(
+                  builder: (context, ref, child) {
+                    final profile = ref.watch(profileProvider).value;
+                    final language = profile?.language ?? 'en';
                     
-                    // Success message
-                    Text(
-                      '🎉 Excellent!',
+                    return Text(
+                      LanguageService.translate('excellent_celebration', language),
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Colors.green[700],
                       ),
-                    ),
-                    const SizedBox(height: 8),
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
+                
+                Consumer(
+                  builder: (context, ref, child) {
+                    final profile = ref.watch(profileProvider).value;
+                    final language = profile?.language ?? 'en';
                     
-                    Text(
-                      'You solved the number bond correctly!',
+                    return Text(
+                      LanguageService.translate('number_bond_solved', language),
                       style: TextStyle(
                         fontSize: 18,
                         color: Colors.grey[700],
                       ),
                       textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Star reward
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.yellow[100],
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.yellow[300]!),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.star, color: Colors.orange, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            '+1 Star',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange[700],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Current rewards display
-                    if (_currentRewards != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.blue[50],
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.blue[200]!),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '⭐ ${_currentRewards!.totalStars}',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue[700],
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Text(
-                              '🏅 ${_currentRewards!.totalBadges}',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue[700],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
+                    );
+                  },
                 ),
-              ),
+              ],
             ),
           ),
         );
@@ -690,21 +656,4 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
     );
   }
 
-  void _showPerformanceDialog() {
-    if (_performanceMetrics == null) return;
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Performance Analytics'),
-        content: PerformanceMetricsDisplay(metrics: _performanceMetrics!),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
 }

@@ -75,10 +75,9 @@ class AnswerValidator {
   
   /// Validate addition answer
   static ValidationResult _validateAddition(int number1, int number2, int userPart1, int userPart2) {
-    // For addition, just check if the breakdown is mathematically correct
+    // For addition number bond, user should break down operand2 in bottom circles
+    // Example: 8 + 9 → Top: 9, Bottom: breakdown of 9 (parts that add to 9)
     final mathCorrect = userPart1 + userPart2 == number2;
-    
-    final correctBreakdown = _generateCorrectAdditionBreakdown(number1, number2);
     
     String message;
     if (mathCorrect) {
@@ -86,6 +85,8 @@ class AnswerValidator {
     } else {
       message = 'Math error: $userPart1 + $userPart2 = ${userPart1 + userPart2}, but should equal $number2';
     }
+    
+    final correctBreakdown = _generateCorrectAdditionBreakdown(number1, number2);
     
     return ValidationResult(
       success: mathCorrect,

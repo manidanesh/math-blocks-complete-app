@@ -4,12 +4,14 @@ class FavoriteNumbersSelector extends StatefulWidget {
   final List<int> initialFavorites;
   final Function(List<int>) onChanged;
   final int maxSelections;
+  final String language;
 
   const FavoriteNumbersSelector({
     super.key,
     required this.initialFavorites,
     required this.onChanged,
     this.maxSelections = 3,
+    this.language = 'en',
   });
 
   @override
@@ -23,6 +25,42 @@ class _FavoriteNumbersSelectorState extends State<FavoriteNumbersSelector> {
   void initState() {
     super.initState();
     _selectedNumbers = List.from(widget.initialFavorites);
+  }
+
+  String _getText(String key) {
+    final translations = {
+      'en': {
+        'favorite_numbers_subtitle': 'Choose your favorite numbers (0-9):',
+        'favorite_numbers_instruction': 'Select up to {count} numbers you like!',
+        'no_numbers_selected': 'No numbers selected yet',
+        'numbers_selected': 'Selected {current} of {max} numbers',
+        'perfect_selection': 'Perfect! You\'ve selected {count} favorite numbers',
+      },
+      'es': {
+        'favorite_numbers_subtitle': 'Elige tus números favoritos (0-9):',
+        'favorite_numbers_instruction': '¡Selecciona hasta {count} números que te gusten!',
+        'no_numbers_selected': 'Aún no hay números seleccionados',
+        'numbers_selected': 'Seleccionados {current} de {max} números',
+        'perfect_selection': '¡Perfecto! Has seleccionado {count} números favoritos',
+      },
+      'fr': {
+        'favorite_numbers_subtitle': 'Choisissez vos numéros favoris (0-9):',
+        'favorite_numbers_instruction': 'Sélectionnez jusqu\'à {count} numéros que vous aimez!',
+        'no_numbers_selected': 'Aucun numéro sélectionné pour le moment',
+        'numbers_selected': 'Sélectionnés {current} de {max} numéros',
+        'perfect_selection': 'Parfait! Vous avez sélectionné {count} numéros favoris',
+      }
+    };
+    
+    return translations[widget.language]?[key] ?? translations['en']![key]!;
+  }
+
+  String _getTextWithPlaceholders(String key, Map<String, dynamic> placeholders) {
+    String text = _getText(key);
+    placeholders.forEach((placeholder, value) {
+      text = text.replaceAll('{$placeholder}', value.toString());
+    });
+    return text;
   }
 
   void _toggleNumber(int number) {
@@ -42,14 +80,14 @@ class _FavoriteNumbersSelectorState extends State<FavoriteNumbersSelector> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Choose your favorite numbers (0-9):',
+          _getText('favorite_numbers_subtitle'),
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Select up to ${widget.maxSelections} numbers you like!',
+          _getTextWithPlaceholders('favorite_numbers_instruction', {'count': widget.maxSelections}),
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: Colors.grey[600],
           ),
@@ -153,10 +191,10 @@ class _FavoriteNumbersSelectorState extends State<FavoriteNumbersSelector> {
               Expanded(
                 child: Text(
                   _selectedNumbers.isEmpty
-                      ? 'No numbers selected yet'
+                      ? _getText('no_numbers_selected')
                       : _selectedNumbers.length == widget.maxSelections
-                          ? 'Perfect! You\'ve selected ${_selectedNumbers.length} favorite numbers'
-                          : 'Selected ${_selectedNumbers.length} of ${widget.maxSelections} numbers',
+                          ? _getTextWithPlaceholders('perfect_selection', {'count': _selectedNumbers.length})
+                          : _getTextWithPlaceholders('numbers_selected', {'current': _selectedNumbers.length, 'max': widget.maxSelections}),
                   style: TextStyle(
                     fontSize: 14,
                     color: _selectedNumbers.isEmpty 

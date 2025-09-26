@@ -76,7 +76,7 @@ class AdaptiveProblemService {
       correctAnswer: challenge.correctAnswer,
       problemText: challenge.problemText,
       options: _generateOptions(challenge.correctAnswer),
-      strategy: _getStrategyForLevel(challenge.level),
+      strategy: _getBestStrategyForProblem(challenge),
       level: challenge.level,
       explanation: challenge.isReviewProblem 
           ? 'This is a review problem to help you practice this concept.'
@@ -99,15 +99,49 @@ class AdaptiveProblemService {
     await AdaptiveChallengeEngine.clearChildData(childId);
   }
 
-  /// Get strategy enum for level
+  /// Get the best strategy for a specific problem based on its numbers
+  static ProblemStrategy _getBestStrategyForProblem(AdaptiveChallenge challenge) {
+    final operand1 = challenge.operand1;
+    final operand2 = challenge.operand2;
+    final isSubtraction = challenge.operator == '-';
+    
+    if (isSubtraction) {
+      final onesDigit = operand1 % 10;
+      // For valid crossing subtraction: operand2 must be > onesDigit
+      // This allows us to split operand2 into (onesDigit + remainder)
+      // Example: 19 - 11 → split 11 into 9 + 2 → 19 - 9 = 10, then 10 - 2 = 8
+      if (operand2 > onesDigit && operand1 > 10) {
+        return ProblemStrategy.crossing;
+      } else {
+        return ProblemStrategy.basic; // Simple subtraction like 19 - 5 (invalid for crossing)
+      }
+    } else {
+      // Addition - following the new rules
+      final onesDigit = operand1 % 10;
+      final need = 10 - onesDigit; // Amount needed to reach next 10
+      
+      // For valid crossing addition: operand2 must be > need (and != need)
+      // This allows us to split operand2 into (need + remainder)
+      // Example: 45 + 12 → split 12 into 5 + 7 → 45 + 5 = 50, then 50 + 7 = 57
+      if (operand2 > need) {
+        return ProblemStrategy.crossing;
+      } else {
+        return ProblemStrategy.basic; // Simple addition like 45 + 4 (invalid for crossing)
+      }
+    }
+  }
+
+  /// Get strategy enum for level and problem type  
   static ProblemStrategy _getStrategyForLevel(int level) {
+    // Fallback strategy by level
     switch (level) {
       case 1:
-        return ProblemStrategy.makeTen;
+        return ProblemStrategy.basic;
       case 2:
+        return ProblemStrategy.makeTen;
       case 3:
       case 4:
-        return ProblemStrategy.crossing; // Use crossing strategy for 2-digit problems
+        return ProblemStrategy.crossing;
       default:
         return ProblemStrategy.basic;
     }

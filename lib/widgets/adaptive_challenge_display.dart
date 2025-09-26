@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/adaptive_challenge.dart';
+import '../providers/profile_provider.dart';
+import '../services/language_service.dart';
 
 /// Widget to display adaptive challenge information
 class AdaptiveChallengeDisplay extends StatelessWidget {
@@ -29,13 +32,20 @@ class AdaptiveChallengeDisplay extends StatelessWidget {
                     color: _getLevelColor(challenge.level),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Text(
-                    'Level ${challenge.level}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
+                  child: Consumer(
+                    builder: (context, ref, child) {
+                      final profile = ref.watch(profileProvider).value;
+                      final language = profile?.language ?? 'en';
+                      
+                      return Text(
+                        '${LanguageService.translate('level', language)} ${challenge.level}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -46,36 +56,42 @@ class AdaptiveChallengeDisplay extends StatelessWidget {
                       color: Colors.orange,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Text(
-                      'REVIEW',
-                      style: TextStyle(
-                        color: Colors.white,
+                    child: Consumer(
+                      builder: (context, ref, child) {
+                        final profile = ref.watch(profileProvider).value;
+                        final language = profile?.language ?? 'en';
+                        
+                        return Text(
+                          LanguageService.translate('review', language),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                // Problem text in the center of the row
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      challenge.problemText,
+                      style: const TextStyle(
+                        fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                        color: Colors.black87,
                       ),
                     ),
                   ),
-                const Spacer(),
+                ),
+                const SizedBox(width: 8),
                 Icon(
                   _getLevelIcon(challenge.level),
                   color: _getLevelColor(challenge.level),
                   size: 24,
                 ),
               ],
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Problem text
-            Center(
-              child: Text(
-                challenge.problemText,
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
             ),
             
             // Motivational message - REMOVED TO ELIMINATE DUPLICATE
@@ -128,148 +144,228 @@ class PerformanceMetricsDisplay extends StatelessWidget {
   });
 
   String _getText(String key) {
-    final translations = {
-      'en': {
-        'performance_overview': 'Performance Overview',
-        'accuracy_last_5': 'Accuracy (Last 5 problems)',
-        'average_time': 'Average Time',
-        'consecutive_incorrect': 'Consecutive Incorrect',
-        'level_performance': 'Level Performance:',
-        'level': 'Level',
-      },
-      'es': {
-        'performance_overview': 'Resumen de Rendimiento',
-        'accuracy_last_5': 'Precisión (Últimos 5 problemas)',
-        'average_time': 'Tiempo Promedio',
-        'consecutive_incorrect': 'Incorrectos Consecutivos',
-        'level_performance': 'Rendimiento por Nivel:',
-        'level': 'Nivel',
-      },
-      'fr': {
-        'performance_overview': 'Aperçu des Performances',
-        'accuracy_last_5': 'Précision (5 derniers problèmes)',
-        'average_time': 'Temps Moyen',
-        'consecutive_incorrect': 'Incorrects Consécutifs',
-        'level_performance': 'Performance par Niveau:',
-        'level': 'Niveau',
-      },
-    };
-    
-    return translations[language]?[key] ?? translations['en']![key]!;
+    return LanguageService.translate(key, language);
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isLandscape = screenWidth > screenHeight;
+    
     return Card(
       elevation: 4,
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _getText('performance_overview'),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Accuracy
-            _buildMetricRow(
-              'Accuracy (Last 5 problems)',
-              '${(metrics.accuracy * 100).toStringAsFixed(1)}%',
-              _getAccuracyColor(metrics.accuracy),
-              Icons.track_changes,
-            ),
-            
-            const SizedBox(height: 12),
-            
-            // Average time
-            _buildMetricRow(
-              'Average Time',
-              '${metrics.averageTime.toStringAsFixed(1)}s',
-              Colors.blue,
-              Icons.timer,
-            ),
-            
-            const SizedBox(height: 12),
-            
-            // Consecutive incorrect
-            _buildMetricRow(
-              'Consecutive Incorrect',
-              metrics.consecutiveIncorrect.toString(),
-              metrics.consecutiveIncorrect > 1 ? Colors.red : Colors.green,
-              Icons.warning,
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Level accuracy breakdown
-            if (metrics.levelAccuracy.isNotEmpty) ...[
-              const Text(
-                'Level Performance:',
+      margin: const EdgeInsets.all(8),
+      child: Container(
+        width: double.infinity,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Text(
+                _getText('performance_overview'),
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: isLandscape ? 14 : 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 8),
-              ...metrics.levelAccuracy.entries.map((entry) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    children: [
-                      Text('Level ${entry.key}: '),
-                      Expanded(
-                        child: LinearProgressIndicator(
-                          value: entry.value,
-                          backgroundColor: Colors.grey[300],
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            _getAccuracyColor(entry.value),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text('${(entry.value * 100).toStringAsFixed(0)}%'),
-                    ],
-                  ),
-                );
-              }).toList(),
+              const SizedBox(height: 12),
+              
+              // Metrics in simple responsive grid
+              _buildSimpleMetricsGrid(isLandscape),
+              
+              const SizedBox(height: 16),
+              
+              // Level performance
+              if (metrics.levelAccuracy.isNotEmpty)
+                _buildSimpleLevelPerformance(isLandscape),
             ],
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildMetricRow(String label, String value, Color color, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 14),
-        ),
-        const Spacer(),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-      ],
-    );
-  }
 
   Color _getAccuracyColor(double accuracy) {
     if (accuracy >= 0.8) return Colors.green;
     if (accuracy >= 0.6) return Colors.orange;
     return Colors.red;
+  }
+
+  Widget _buildSimpleMetricsGrid(bool isLandscape) {
+    final metrics = [
+      {
+        'label': _getText('recent_accuracy'),
+        'value': '${(this.metrics.accuracy * 100).toStringAsFixed(1)}%',
+        'color': _getAccuracyColor(this.metrics.accuracy),
+        'icon': Icons.track_changes,
+      },
+      {
+        'label': _getText('average_time'),
+        'value': '${this.metrics.averageTime.toStringAsFixed(1)}s',
+        'color': Colors.blue,
+        'icon': Icons.timer,
+      },
+      {
+        'label': _getText('consecutive_incorrect'),
+        'value': this.metrics.consecutiveIncorrect.toString(),
+        'color': this.metrics.consecutiveIncorrect > 1 ? Colors.red : Colors.green,
+        'icon': Icons.warning,
+      },
+    ];
+
+    if (isLandscape) {
+      // In landscape, use 2 columns
+      return Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: _buildSimpleMetricCard(metrics[0], isLandscape)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildSimpleMetricCard(metrics[1], isLandscape)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _buildSimpleMetricCard(metrics[2], isLandscape),
+        ],
+      );
+    } else {
+      // In portrait, stack vertically
+      return Column(
+        children: metrics.map((metric) => 
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _buildSimpleMetricCard(metric, isLandscape),
+          )
+        ).toList(),
+      );
+    }
+  }
+
+  Widget _buildSimpleMetricCard(Map<String, dynamic> metric, bool isLandscape) {
+    return Container(
+      padding: EdgeInsets.all(isLandscape ? 8 : 12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Label row
+          Row(
+            children: [
+              Icon(
+                metric['icon'], 
+                color: metric['color'], 
+                size: isLandscape ? 14 : 16,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  metric['label'],
+                  style: TextStyle(
+                    fontSize: isLandscape ? 10 : 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          
+          // Value
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: (metric['color'] as Color).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              metric['value'],
+              style: TextStyle(
+                fontSize: isLandscape ? 12 : 14,
+                fontWeight: FontWeight.bold,
+                color: metric['color'],
+              ),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSimpleLevelPerformance(bool isLandscape) {
+    return Container(
+      padding: EdgeInsets.all(isLandscape ? 8 : 12),
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _getText('level_performance'),
+            style: TextStyle(
+              fontSize: isLandscape ? 12 : 14,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF3498DB),
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...metrics.levelAccuracy.entries.map((entry) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${_getText('level')} ${entry.key}',
+                        style: TextStyle(
+                          fontSize: isLandscape ? 10 : 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '${(entry.value * 100).toStringAsFixed(0)}%',
+                        style: TextStyle(
+                          fontSize: isLandscape ? 10 : 12,
+                          fontWeight: FontWeight.bold,
+                          color: _getAccuracyColor(entry.value),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  LinearProgressIndicator(
+                    value: entry.value,
+                    backgroundColor: Colors.grey[300],
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      _getAccuracyColor(entry.value),
+                    ),
+                    minHeight: isLandscape ? 3 : 5,
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
   }
 }

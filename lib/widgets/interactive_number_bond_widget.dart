@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../services/problem_generator.dart';
 import '../services/answer_validator.dart';
+import '../services/language_service.dart';
 
 /// Custom painter for drawing lines between number bond circles
 class NumberBondLinePainter extends CustomPainter {
@@ -32,6 +33,7 @@ class InteractiveNumberBondWidget extends StatefulWidget {
   final bool showSolution;
   final Function(bool isCorrect)? onBondComplete;
   final String? operation; // 'addition' or 'subtraction'
+  final String language; // Language code for translations
 
   const InteractiveNumberBondWidget({
     super.key,
@@ -41,6 +43,7 @@ class InteractiveNumberBondWidget extends StatefulWidget {
     this.showSolution = false,
     this.onBondComplete,
     this.operation,
+    this.language = 'en',
   });
 
   @override
@@ -73,6 +76,25 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
     super.dispose();
   }
 
+  String _getText(String key) {
+    final translation = LanguageService.translate(key, widget.language);
+    print('🔍 InteractiveNumberBond: _getText($key, ${widget.language}) = $translation');
+    return translation;
+  }
+
+  String _getTopCircleNumber() {
+    final isSubtraction = widget.operation == 'subtraction';
+    if (isSubtraction) {
+      // For subtraction: Top circle shows the number being broken down (operand2)
+      // Example: 37 - 15 → Top: 15, Bottom: 7 and 8 (breakdown of 15)
+      return widget.operand2.toString();
+    } else {
+      // For addition: Top circle shows the number being broken down (operand2)
+      // Example: 8 + 9 → Top: 9, Bottom: breakdown of 9 (like 1+8)
+      return widget.operand2.toString();
+    }
+  }
+
   void _initializeNumbers() {
     // Create available numbers based on strategy
     switch (widget.strategy) {
@@ -103,6 +125,11 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
       // Add some extra numbers for choice
       1, 2, 3, 4, 5, 6, 7, 8, 9,
     ].toSet().toList()..sort();
+    
+    // Limit to maximum 14 numbers
+    if (_availableNumbers.length > 14) {
+      _availableNumbers = _availableNumbers.take(14).toList();
+    }
   }
 
   void _initializeCrossingNumbers() {
@@ -145,11 +172,14 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
       widget.operand2 ~/ 10, widget.operand2 % 10,
       // Add the specific breakdown numbers needed for the solution
       ...breakdownNumbers,
-      // Add range of useful numbers - ensure we cover all possible breakdown numbers
-      // For subtraction, we need to include numbers up to operand2 + some buffer
-      // Also ensure we include the specific breakdown numbers
-      ...List.generate(isSubtraction ? math.max(25, widget.operand2 + 10) : 25, (i) => i + 1),
+      // Add essential numbers only
+      1, 2, 3, 4, 5, 6, 7, 8, 9,
     ].toSet().where((n) => n > 0).toList()..sort();
+    
+    // Limit to maximum 14 numbers
+    if (_availableNumbers.length > 14) {
+      _availableNumbers = _availableNumbers.take(14).toList();
+    }
     
     // Debug: Print what numbers are available for this problem (can be removed in production)
     print('🔧 AVAILABLE NUMBERS for ${widget.operand1} ${isSubtraction ? '-' : '+'} ${widget.operand2}: $_availableNumbers');
@@ -162,8 +192,13 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
       widget.operand1,
       widget.operand2,
       sum,
-      ...List.generate(20, (i) => i + 1),
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
     ].toSet().toList()..sort();
+    
+    // Limit to maximum 14 numbers
+    if (_availableNumbers.length > 14) {
+      _availableNumbers = _availableNumbers.take(14).toList();
+    }
   }
 
   void _selectNumber(int number) {
@@ -188,14 +223,16 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
     final userPart1 = _circleNumbers['operand1']!.first;
     final userPart2 = _circleNumbers['operand2']!.first;
     
-    print('🔧 Validating: ${widget.operand1} - ${widget.operand2}');
+    final isSubtraction = widget.operation == 'subtraction';
+    final operation = isSubtraction ? '-' : '+';
+    print('🔧 Validating: ${widget.operand1} $operation ${widget.operand2}');
     print('🔧 User breakdown: $userPart1 + $userPart2');
     
-    // Use clean validation function
+    // Use clean validation function with correct operation
     final validationResult = AnswerValidator.validateAnswer(
       number1: widget.operand1,
       number2: widget.operand2,
-      action: 'subtraction',
+      action: isSubtraction ? 'subtraction' : 'addition',
       userPart1: userPart1,
       userPart2: userPart2,
     );
@@ -355,22 +392,22 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
               // Three-circle number bond structure: Top circle with second number, two empty circles below
               SizedBox(
                 width: 300,
-                height: 220,
+                height: 160,
                 child: Stack(
                   children: [
-                    // Top circle - SECOND NUMBER (given) - centered
+                    // Top circle - RESULT for addition, FIRST NUMBER for subtraction
                     Positioned(
-                      top: 30,
+                      top: 10,
                       left: 125, // Center horizontally (300/2 - 25)
                       child: _buildNumberCircle(
-                        widget.operand2.toString(), 
+                        _getTopCircleNumber(),
                         Colors.purple
                       ),
                     ),
                     
-                    // Bottom left circle - EMPTY for user selection
+                    // Bottom left circle - EMPTY for user selection, closer to top
                     Positioned(
-                      bottom: 30,
+                      bottom: 15,
                       left: 75, // Aligned under the top circle
                       child: _buildNumberCircle(
                         _getNumbersInCircle('operand1').isNotEmpty 
@@ -382,9 +419,9 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                       ),
                     ),
                     
-                    // Bottom right circle - EMPTY for user selection
+                    // Bottom right circle - EMPTY for user selection, closer to top
                     Positioned(
-                      bottom: 30,
+                      bottom: 15,
                       left: 175, // Aligned under the top circle
                       child: _buildNumberCircle(
                         _getNumbersInCircle('operand2').isNotEmpty 
@@ -612,9 +649,9 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
       ),
       child: Column(
         children: [
-          const Text(
-            'Available Numbers (tap to add to circle):',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          Text(
+            _getText('tap_numbers_instruction'),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -737,67 +774,460 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
   }
 
   Widget _buildMakeTenSolution() {
+    final isSubtraction = widget.operation == 'subtraction';
+    final operator = isSubtraction ? ' - ' : ' + ';
+    
+    if (isSubtraction) {
+      // For make-ten subtraction: Break down to make subtraction easier
+      final onesDigitOfFirst = widget.operand1 % 10;
+      final amountToReachTen = math.min(onesDigitOfFirst, widget.operand2);
+      final remaining = widget.operand2 - amountToReachTen;
+      final intermediate = widget.operand1 - amountToReachTen;
+      final finalAnswer = widget.operand1 - widget.operand2;
+      
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.green[50],
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.green[300]!),
+        ),
+        child: Column(
+          children: [
+            Text(
+              '💡 Break ${widget.operand2} into ${amountToReachTen} + ${remaining}',
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildSolutionNumber(widget.operand1.toString(), Colors.orange, size: 20),
+                const Text(' - '),
+                _buildSolutionNumber(amountToReachTen.toString(), Colors.green, size: 20),
+                const Text(' = '),
+                _buildSolutionNumber(intermediate.toString(), Colors.red, size: 20),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildSolutionNumber(intermediate.toString(), Colors.red, size: 20),
+                const Text(' - '),
+                _buildSolutionNumber(remaining.toString(), Colors.purple, size: 20),
+                const Text(' = '),
+                _buildSolutionNumber(finalAnswer.toString(), Colors.green, size: 20),
+              ],
+            ),
+          ],
+        ),
+      );
+    } else {
+      // For addition: use make-ten strategy
     final needed = 10 - widget.operand1;
     final remaining = widget.operand2 - needed;
     final answer = widget.operand1 + widget.operand2;
     
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Step 1: Make 10 first'),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            _buildSolutionNumber(widget.operand1.toString(), Colors.orange),
-            const Text(' + '),
-            _buildSolutionNumber(needed.toString(), Colors.green),
-            const Text(' = '),
-            _buildSolutionNumber('10', Colors.red),
-          ],
-        ),
-        const SizedBox(height: 8),
-        const Text('Step 2: Add the remaining'),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            _buildSolutionNumber('10', Colors.red),
-            const Text(' + '),
-            _buildSolutionNumber(remaining.toString(), Colors.purple),
-            const Text(' = '),
-            _buildSolutionNumber(answer.toString(), Colors.green),
-          ],
-        ),
-      ],
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.green[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.green[300]!),
+      ),
+      child: Column(
+        children: [
+          Text(
+            '💡 Break ${widget.operand2} into ${needed} + ${remaining}',
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildSolutionNumber(widget.operand1.toString(), Colors.orange, size: 20),
+              const Text(' + '),
+              _buildSolutionNumber(needed.toString(), Colors.green, size: 20),
+              const Text(' = '),
+              _buildSolutionNumber('10', Colors.red, size: 20),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildSolutionNumber('10', Colors.red, size: 20),
+              const Text(' + '),
+              _buildSolutionNumber(remaining.toString(), Colors.purple, size: 20),
+              const Text(' = '),
+              _buildSolutionNumber(answer.toString(), Colors.green, size: 20),
+            ],
+          ),
+        ],
+      ),
     );
+    }
   }
 
   Widget _buildCrossingSolution() {
-    final answer = widget.operand1 + widget.operand2;
-    return Row(
+    final isSubtraction = widget.operation == 'subtraction';
+    final operator = isSubtraction ? ' - ' : ' + ';
+    final answer = isSubtraction ? widget.operand1 - widget.operand2 : widget.operand1 + widget.operand2;
+    
+    if (isSubtraction) {
+      // For crossing subtraction: Break down the subtrahend to reach a ten
+      final onesDigitOfFirst = widget.operand1 % 10;
+      final amountToReachTen = onesDigitOfFirst; // Amount needed to subtract to reach the previous ten
+      final remainingToSubtract = widget.operand2 - amountToReachTen;
+      final intermediate = widget.operand1 - amountToReachTen; // This should be a multiple of 10
+      
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue[50]!, Colors.cyan[50]!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.blue[300]!, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withOpacity(0.2),
+              spreadRadius: 2,
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Fun character introduction
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '🦸‍♂️',
+                  style: const TextStyle(fontSize: 32),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Math Hero shows you the SECRET TRICK!',
+                    style: TextStyle(
+                      fontSize: 18, 
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue[800],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Text(
+                  '✨',
+                  style: const TextStyle(fontSize: 32),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            
+            // Problem in a fun way
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: Colors.orange[300]!, width: 2),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    '🎯 Mission: Solve ${widget.operand1} - ${widget.operand2}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange[800],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '🎪 MAGIC TRICK: Break ${widget.operand2} into smaller pieces!',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.purple[700],
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Step 1 with animations
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: Colors.green[300]!, width: 2),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('🔥', style: const TextStyle(fontSize: 24)),
+                      const SizedBox(width: 8),
+                      Text(
+                        'STEP 1: Split the number!',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green[800],
+                        ),
+                      ),
+                      Text('🔥', style: const TextStyle(fontSize: 24)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '🪄 Turn ${widget.operand2} into ${amountToReachTen} + ${remainingToSubtract}',
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(color: Colors.green[400]!, width: 2),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildMagicNumber(widget.operand2.toString(), Colors.blue[600]!, '🎲'),
+                        const Text(' = ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        _buildMagicNumber(amountToReachTen.toString(), Colors.green[600]!, '⭐'),
+                        const Text(' + ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        _buildMagicNumber(remainingToSubtract.toString(), Colors.purple[600]!, '🎈'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Step 2 with more fun
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: Colors.orange[300]!, width: 2),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('⚡', style: const TextStyle(fontSize: 24)),
+                      const SizedBox(width: 8),
+                      Text(
+                        'STEP 2: Subtract like a ninja!',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange[800],
+                        ),
+                      ),
+                      Text('⚡', style: const TextStyle(fontSize: 24)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // First subtraction
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: Colors.orange[200]!),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('🥷 First: ', style: TextStyle(fontSize: 14, color: Colors.orange[700])),
+                        _buildMagicNumber(widget.operand1.toString(), Colors.orange[600]!, '🏰'),
+                        const Text(' - ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        _buildMagicNumber(amountToReachTen.toString(), Colors.green[600]!, '⭐'),
+                        const Text(' = ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
+                      ],
+                    ),
+                  ),
+                  
+                  // Second subtraction
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: Colors.orange[200]!),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('🥷 Then: ', style: TextStyle(fontSize: 14, color: Colors.orange[700])),
+                        _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
+                        const Text(' - ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        _buildMagicNumber(remainingToSubtract.toString(), Colors.purple[600]!, '🎈'),
+                        const Text(' = ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        _buildMagicNumber(answer.toString(), Colors.green[700]!, '🏆'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Victory celebration
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.yellow[100]!, Colors.orange[100]!],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.amber[400]!, width: 3),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    '🎉 MISSION ACCOMPLISHED! 🎉',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber[800],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('🌟', style: const TextStyle(fontSize: 20)),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${widget.operand1} - ${widget.operand2} = ${answer}',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green[700],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text('🌟', style: const TextStyle(fontSize: 20)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'You\'re a Math Superhero! 🦸‍♀️',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.purple[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // For addition crossing strategy
+      final tenComplement = 10 - (widget.operand1 % 10);
+      final remaining = widget.operand2 - tenComplement;
+      final nextTen = ((widget.operand1 ~/ 10) + 1) * 10;
+      
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Step 1: Add ${tenComplement} to reach the next ten',
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 8),
+          Row(
       children: [
         _buildSolutionNumber(widget.operand1.toString(), Colors.orange),
         const Text(' + '),
-        _buildSolutionNumber(widget.operand2.toString(), Colors.purple),
+              _buildSolutionNumber(tenComplement.toString(), Colors.green),
+              const Text(' = '),
+              _buildSolutionNumber(nextTen.toString(), Colors.red),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Step 2: Add the remaining ${remaining}',
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _buildSolutionNumber(nextTen.toString(), Colors.red),
+              const Text(' + '),
+              _buildSolutionNumber(remaining.toString(), Colors.purple),
         const Text(' = '),
         _buildSolutionNumber(answer.toString(), Colors.green),
+            ],
+          ),
       ],
     );
+    }
   }
 
   Widget _buildBasicSolution() {
-    final answer = widget.operand1 + widget.operand2;
-    return Row(
+    final isSubtraction = widget.operation == 'subtraction';
+    final operator = isSubtraction ? ' - ' : ' + ';
+    final answer = isSubtraction ? widget.operand1 - widget.operand2 : widget.operand1 + widget.operand2;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          isSubtraction 
+            ? 'For ${widget.operand1} - ${widget.operand2}, we count backwards:'
+            : 'For ${widget.operand1} + ${widget.operand2}, we count forwards:',
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        Row(
       children: [
         _buildSolutionNumber(widget.operand1.toString(), Colors.orange),
-        const Text(' + '),
+            Text(operator),
         _buildSolutionNumber(widget.operand2.toString(), Colors.purple),
         const Text(' = '),
         _buildSolutionNumber(answer.toString(), Colors.green),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          isSubtraction 
+            ? 'Think: Start at ${widget.operand1}, count back ${widget.operand2} steps'
+            : 'Think: Start at ${widget.operand1}, count forward ${widget.operand2} steps',
+          style: TextStyle(fontSize: 12, color: Colors.grey[600], fontStyle: FontStyle.italic),
+        ),
       ],
     );
   }
 
-  Widget _buildSolutionNumber(String number, Color color) {
+  Widget _buildSolutionNumber(String number, Color color, {double? size}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -806,11 +1236,48 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
       ),
       child: Text(
         number,
-        style: const TextStyle(
-          fontSize: 14,
+        style: TextStyle(
+          fontSize: size ?? 14,
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),
+      ),
+    );
+  }
+
+  Widget _buildMagicNumber(String text, Color color, String emoji) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            emoji,
+            style: const TextStyle(fontSize: 16),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -827,13 +1294,13 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
   String _getStrategyTitle() {
     switch (widget.strategy) {
       case ProblemStrategy.makeTen:
-        return 'Make Ten Strategy';
+        return _getText('make_ten_strategy');
       case ProblemStrategy.crossing:
-        return 'Crossing Strategy';
+        return _getText('crossing_strategy');
       case ProblemStrategy.basic:
-        return 'Counting Strategy';
+        return _getText('basic_strategy');
       default:
-        return 'Number Bond';
+        return _getText('interactive_number_bond');
     }
   }
 
@@ -1140,56 +1607,207 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
 
   Widget _buildTryAgainMessage() {
     final remainingAttempts = 3 - _attemptCount;
+    final isSubtraction = widget.operation == 'subtraction';
+    
+    String hintText;
+    if (isSubtraction) {
+      // For subtraction problems like 16 - 7
+      final onesDigitOfFirst = widget.operand1 % 10;
+      final amountToReachTen = math.min(onesDigitOfFirst, widget.operand2);
+      final remaining = widget.operand2 - amountToReachTen;
+      final intermediate = widget.operand1 - amountToReachTen;
+      
+      // Simplify for basic subtraction - if it's a simple problem, just show simple hint
+      final answer = widget.operand1 - widget.operand2;
+      if (widget.operand1 <= 20 && widget.operand2 <= 10) {
+        hintText = 'Simple: ${widget.operand1} - ${widget.operand2} = ${answer}\nJust count backwards ${widget.operand2} steps from ${widget.operand1}!';
+      } else {
+        switch (widget.strategy) {
+          case ProblemStrategy.crossing:
+          case ProblemStrategy.makeTen:
+            hintText = 'Break it down: ${widget.operand1} - ${widget.operand2}\n'
+                      'You can subtract ${amountToReachTen} first to get ${intermediate},\n'
+                      'then subtract the remaining ${remaining} to get ${answer}';
+            break;
+          default:
+            hintText = 'Count backwards ${widget.operand2} steps from ${widget.operand1}!';
+        }
+      }
+    } else {
+      switch (widget.strategy) {
+        case ProblemStrategy.crossing:
+          hintText = 'Make ${widget.operand1} reach the next ten, then add the rest!';
+          break;
+        case ProblemStrategy.makeTen:
+          hintText = 'Make 10 first, then add the remaining numbers!';
+          break;
+        default:
+          hintText = 'Count forward ${widget.operand2} steps from ${widget.operand1}!';
+      }
+    }
     
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.orange[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange[300]!, width: 2),
+        gradient: LinearGradient(
+          colors: [Colors.orange[50]!, Colors.yellow[50]!],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.orange[300]!, width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.orange.withOpacity(0.2),
+            spreadRadius: 2,
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
+          // Fun encouraging header
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.info_outline, color: Colors.orange[700], size: 24),
+              Text('🤔', style: const TextStyle(fontSize: 28)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _getText('oops_try_different'),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange[800],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Text('💪', style: const TextStyle(fontSize: 28)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // Attempts remaining in a fun way
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(color: Colors.orange[400]!, width: 2),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('⚡', style: const TextStyle(fontSize: 20)),
               const SizedBox(width: 8),
               Text(
-                'Try again!',
+                  _getText('more_chances_hero').replaceAll('{count}', remainingAttempts.toString()),
                 style: TextStyle(
-                  fontSize: 18,
+                    fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: Colors.orange[700],
                 ),
               ),
-            ],
+                Text('⚡', style: const TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
           
+          const SizedBox(height: 16),
+          
+          // Magic hint box
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: Colors.purple[300]!, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.purple.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('🎪', style: const TextStyle(fontSize: 20)),
+                    const SizedBox(width: 8),
           Text(
-            'Remember: First number = ones digit of ${widget.operand1}',
+                      _getText('magic_trick_for')
+                        .replaceAll('{operand1}', widget.operand1.toString())
+                        .replaceAll('{operator}', isSubtraction ? '-' : '+')
+                        .replaceAll('{operand2}', widget.operand2.toString()),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.purple[700],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    Text('🎪', style: const TextStyle(fontSize: 20)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.purple[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.purple[200]!),
+                  ),
+                  child: Text(
+                    hintText,
             style: TextStyle(
               fontSize: 14,
-              color: Colors.orange[600],
+                      color: Colors.purple[800],
+                      fontWeight: FontWeight.w500,
             ),
             textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
           ),
           
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           
+          // Fun try again button
           ElevatedButton(
             onPressed: _refreshForRetry,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange[600],
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(25),
               ),
+              elevation: 5,
             ),
-            child: const Text('Clear and Try Again'),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('🚀', style: const TextStyle(fontSize: 16)),
+                const SizedBox(width: 8),
+                const Text(
+                  'Clear & Try Again!',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text('🚀', style: const TextStyle(fontSize: 16)),
+              ],
+            ),
           ),
         ],
       ),
@@ -1201,9 +1819,9 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Tap numbers to fill the circles:',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        Text(
+          _getText('tap_numbers_instruction'),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         Wrap(

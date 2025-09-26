@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/kid_profile.dart';
+import '../services/adaptive_challenge_engine.dart';
+import '../services/problem_attempt_service.dart';
+import '../services/insights_engine.dart';
+import '../services/rewards_service.dart';
 
 class ProfileNotifier extends AsyncNotifier<KidProfile?> {
   @override
@@ -83,18 +87,19 @@ class ProfileNotifier extends AsyncNotifier<KidProfile?> {
           lastPlayed: DateTime.now(),
         );
         
-        // Clear all historical data from SharedPreferences
-        final prefs = await SharedPreferences.getInstance();
+        // Clear all historical data using proper service methods
         
-        // Clear problem attempts
-        await prefs.remove('problem_attempts');
+        // Clear problem attempts data
+        await ProblemAttemptService.clearAllAttempts();
         
-        // Clear adaptive challenge results and count
-        await prefs.remove('adaptive_challenge_results_${currentProfile.id}');
-        await prefs.remove('challenge_count_${currentProfile.id}');
+        // Clear adaptive challenge data
+        await AdaptiveChallengeEngine.clearChildData(currentProfile.id);
         
-        // Clear any session data
-        await prefs.remove('current_session');
+        // Clear insights data
+        await InsightsEngine.clearInsights(currentProfile.id);
+        
+        // Clear rewards data
+        await RewardsService.resetRewards(currentProfile.id);
         
         // Update the profile with reset data
         await updateProfile(resetProfile);

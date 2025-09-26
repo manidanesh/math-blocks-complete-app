@@ -9,7 +9,7 @@ import 'central_problem_generator.dart';
 class AdaptiveChallengeEngine {
   static const String _resultsKey = 'adaptive_challenge_results';
   static const String _challengeCountKey = 'challenge_count';
-  static const int _recentProblemsCount = 5;
+  static const int _recentProblemsCount = 10; // Increased from 5 to 10 for better analysis
   static const int _reviewProblemInterval = 4;
 
   /// Store a problem result in local storage
@@ -124,12 +124,21 @@ class AdaptiveChallengeEngine {
     );
   }
 
-  /// Determine the next challenge level based on performance
+  /// Enhanced Level Progression Constants
+  static const double _levelUpAccuracyThreshold = 0.9; // 90% accuracy required
+  static const int _stabilityBufferSets = 3; // Must sustain performance across 3 sets
+  static const int _setSize = 10; // Each set is 10 problems
+  static const int _minScoreForLevelUp = 35; // Minimum weighted score
+  
+  /// Determine the next challenge level based on enhanced algorithm
   static Future<int> determineNextLevel(String childId, int currentLevel) async {
     final metrics = await calculatePerformanceMetrics(childId);
     
-    // If accuracy >= 80% → move to next harder level
-    if (metrics.accuracy >= 0.8) {
+    // Enhanced Level Progression Algorithm
+    // 1. Require 90% accuracy over last 10 problems
+    // 2. Must sustain across multiple sets (stability buffer)
+    // 3. Use weighted scoring system
+    if (await _shouldLevelUp(childId, currentLevel, metrics)) {
       return (currentLevel + 1).clamp(1, 4);
     }
     
@@ -140,6 +149,85 @@ class AdaptiveChallengeEngine {
     
     // If accuracy < 60% → move down one level (not below Level 1)
     return (currentLevel - 1).clamp(1, 4);
+  }
+
+  /// Enhanced level up decision with stability buffer and weighted scoring
+  static Future<bool> _shouldLevelUp(String childId, int currentLevel, PerformanceMetrics metrics) async {
+    print('🎯 ENHANCED LEVEL UP CHECK for Level $currentLevel → ${currentLevel + 1}');
+    
+    // Don't level up if already at max level
+    if (currentLevel >= 4) {
+      print('❌ Already at max level');
+      return false;
+    }
+    
+    final results = await getAllProblemResults(childId);
+    final requiredProblems = _setSize * _stabilityBufferSets; // 30 problems
+    
+    if (results.length < requiredProblems) {
+      print('❌ Not enough problems: ${results.length}/$requiredProblems needed');
+      return false; // Not enough data for stability analysis
+    }
+    
+    // Check weighted scoring system
+    final weightedScore = await _calculateWeightedScore(childId);
+    print('📊 Weighted Score: $weightedScore/$_minScoreForLevelUp required');
+    if (weightedScore < _minScoreForLevelUp) {
+      print('❌ Score too low: $weightedScore < $_minScoreForLevelUp');
+      return false; // Doesn't meet weighted score threshold
+    }
+    
+    // Check stability buffer: must maintain 90%+ across 3 consecutive sets
+    print('🔍 Checking stability across $_stabilityBufferSets sets:');
+    for (int setIndex = 0; setIndex < _stabilityBufferSets; setIndex++) {
+      final setStart = setIndex * _setSize;
+      final setResults = results.skip(setStart).take(_setSize).toList();
+      
+      if (setResults.length < _setSize) {
+        print('❌ Set ${setIndex + 1}: Not enough problems (${setResults.length}/$_setSize)');
+        return false; // Not enough problems in this set
+      }
+      
+      final setAccuracy = setResults.where((r) => r.correct).length / setResults.length;
+      final setPercentage = (setAccuracy * 100).toStringAsFixed(1);
+      print('📈 Set ${setIndex + 1}: $setPercentage% accuracy');
+      
+      if (setAccuracy < _levelUpAccuracyThreshold) {
+        print('❌ Set ${setIndex + 1}: Failed threshold ($setPercentage% < 90%)');
+        return false; // Failed to maintain 90% in this set
+      }
+    }
+    
+    print('✅ LEVEL UP APPROVED! All criteria met');
+    return true; // Passed all criteria!
+  }
+
+  /// Calculate weighted score based on attempt efficiency
+  static Future<double> _calculateWeightedScore(String childId) async {
+    final results = await getAllProblemResults(childId);
+    final recentResults = results.take(_setSize * _stabilityBufferSets).toList();
+    
+    double totalScore = 0.0;
+    
+    for (final result in recentResults) {
+      if (result.correct) {
+        // Award points based on attempt count (simulated from time/accuracy)
+        // Fast solve (< 10s) = first attempt = +3 points
+        // Medium solve (10-20s) = second attempt = +2 points  
+        // Slow solve (> 20s) = third attempt = +1 point
+        if (result.timeTaken <= 10.0) {
+          totalScore += 3.0; // First attempt
+        } else if (result.timeTaken <= 20.0) {
+          totalScore += 2.0; // Second attempt
+        } else {
+          totalScore += 1.0; // Third attempt
+        }
+      } else {
+        totalScore -= 2.0; // Failure after 3 attempts = -2 points
+      }
+    }
+    
+    return totalScore;
   }
 
   /// Check if we should inject a review problem
@@ -244,10 +332,9 @@ class AdaptiveChallengeEngine {
     // Generate motivational feedback
     final motivationalMessage = await getMotivationalFeedback(childId, childName);
     
-    // Generate problem using central generator
+    // Generate problem using central generator - randomly choose addition or subtraction
     final problem = CentralProblemGenerator.generateProblem(
-      action: 'subtraction', // For now, focus on subtraction
-      level: nextLevel,
+      level: nextLevel, // Don't specify action - let it randomly choose
     );
     
     return AdaptiveChallenge(

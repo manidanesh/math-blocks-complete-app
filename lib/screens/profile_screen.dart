@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,6 +33,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void initState() {
     super.initState();
     _loadProfileData();
+    // Safety timeout to prevent infinite loading
+    Timer(const Duration(seconds: 10), () {
+      if (mounted && _isLoading) {
+        print('⚠️ Profile loading timeout - forcing completion');
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    });
   }
 
   Future<void> _loadProfileData() async {
@@ -96,12 +106,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _loadAdaptiveMetrics(String profileId) async {
     try {
+      print('🔍 Loading adaptive metrics for profile: $profileId');
       final metrics = await AdaptiveProblemService.getPerformanceMetrics(profileId);
+      print('📊 Metrics loaded: ${metrics != null ? 'SUCCESS' : 'NULL'}');
+      if (metrics != null) {
+        print('📈 Accuracy: ${(metrics.accuracy * 100).toStringAsFixed(1)}%');
+        print('📈 Recent levels: ${metrics.recentLevels}');
+      }
       setState(() {
         _performanceMetrics = metrics;
       });
     } catch (e) {
-      print('Error loading adaptive metrics: $e');
+      print('❌ Error loading adaptive metrics: $e');
+      print('📍 Stack trace: ${StackTrace.current}');
+      // Create fallback empty metrics to prevent UI issues
+      setState(() {
+        _performanceMetrics = const PerformanceMetrics(
+          accuracy: 0.0,
+          averageTime: 0.0,
+          consecutiveIncorrect: 0,
+          recentLevels: [],
+          levelAccuracy: {},
+        );
+      });
     }
   }
 
@@ -158,8 +185,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
 
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Profile'),
+          backgroundColor: Colors.blue[600],
+          foregroundColor: Colors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.go('/mode-select'),
+          ),
+        ),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading profile...'),
+            ],
+          ),
+        ),
       );
     }
 
@@ -214,14 +259,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 ),
                               ),
                               Text(
-                                'Age: ${profile.age}',
+                                '${_getText('age_label')}: ${profile.age}',
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: Colors.grey[600],
                                 ),
                               ),
                               Text(
-                                'Language: ${profile.language.toUpperCase()}',
+                                '${_getText('language_label')}: ${profile.language.toUpperCase()}',
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: Colors.grey[600],
@@ -332,7 +377,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      PerformanceMetricsDisplay(metrics: _performanceMetrics!),
+                      PerformanceMetricsDisplay(
+                        metrics: _performanceMetrics!,
+                        language: profile?.language ?? 'en',
+                      ),
+                      
+                      const SizedBox(height: 20),
+                      
+                      // Reset Progress Button
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _showResetProgressDialog(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange[600],
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            textStyle: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          icon: const Icon(Icons.refresh, size: 18),
+                          label: Text(_getResetButtonText()),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -399,7 +468,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'No failed challenges yet!',
+                              _getText('no_failed_challenges'),
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Colors.green[600],
@@ -565,26 +634,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ),
             
-            const SizedBox(height: 24),
-            
-            // Reset Progress Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _showResetProgressDialog(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange[600],
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  textStyle: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                icon: const Icon(Icons.refresh),
-                label: Text(_getResetButtonText()),
-              ),
-            ),
             
             const SizedBox(height: 16),
             
@@ -792,6 +841,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         'edit': 'Edit',
         'favorite_numbers_description': 'These numbers will appear more often in your math problems! 🎯',
         'tap_edit_to_choose': 'Tap Edit to choose your favorite numbers!',
+        'age_label': 'Age',
+        'language_label': 'Language',
       },
       'es': {
         'profile_title': 'Perfil',
@@ -834,6 +885,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         'edit': 'Editar',
         'favorite_numbers_description': '¡Estos números aparecerán más a menudo en tus problemas de matemáticas! 🎯',
         'tap_edit_to_choose': '¡Toca Editar para elegir tus números favoritos!',
+        'age_label': 'Edad',
+        'language_label': 'Idioma',
       },
       'fr': {
         'profile_title': 'Profil',
@@ -876,10 +929,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         'edit': 'Modifier',
         'favorite_numbers_description': 'Ces nombres apparaîtront plus souvent dans vos problèmes de mathématiques! 🎯',
         'tap_edit_to_choose': 'Appuyez sur Modifier pour choisir vos nombres favoris!',
+        'age_label': 'Âge',
+        'language_label': 'Langue',
       },
     };
     
-    return translations[_tempLanguage]?[key] ?? translations['en']![key]!;
+    return translations[_tempLanguage]?[key] ?? translations['en']?[key] ?? key;
   }
 
   String _getResetButtonText() {

@@ -3,12 +3,23 @@ import 'package:flutter/material.dart';
 class AgeSelector extends StatelessWidget {
   final int? selectedAge;
   final Function(int) onAgeSelected;
+  final String language;
 
   const AgeSelector({
     super.key,
     required this.selectedAge,
     required this.onAgeSelected,
+    this.language = 'en',
   });
+
+  String _getText(String key) {
+    final translations = {
+      'en': {'years': 'years'},
+      'es': {'years': 'años'},
+      'fr': {'years': 'ans'},
+    };
+    return translations[language]?[key] ?? translations['en']![key]!;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +64,7 @@ class AgeSelector extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'years',
+                    _getText('years'),
                     style: TextStyle(
                       fontSize: 10,
                       color: isSelected ? Colors.white : const Color(0xFF7F8C8D),

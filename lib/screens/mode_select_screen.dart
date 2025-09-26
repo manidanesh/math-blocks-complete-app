@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../models/kid_profile.dart';
 import '../providers/profile_provider.dart';
 import '../services/language_service.dart';
 
@@ -78,6 +79,7 @@ class ModeSelectScreen extends ConsumerWidget {
             backgroundColor: const Color(0xFF3498DB),
             foregroundColor: Colors.white,
             automaticallyImplyLeading: false, // Remove back button
+            actions: const [], // Explicitly remove any actions/icons
           ),
           body: Padding(
             padding: const EdgeInsets.all(24),
@@ -192,4 +194,5 @@ class ModeSelectScreen extends ConsumerWidget {
       },
     );
   }
+
 }

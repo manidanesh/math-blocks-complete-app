@@ -48,18 +48,19 @@ class LanguageService {
         'submit_answer': 'Submit Answer',
         'select_answer_first': 'Select an answer first',
         'next_challenge': 'Next Challenge',
-        'get_hint': 'Get a hint',
+        'get_hint': 'Get Hint',
+        'try_again': 'Try Again',
         'interactive_number_bond': 'Interactive Number Bond',
         
         // Number Bond
         'make_ten_strategy': 'Make Ten Strategy',
         'crossing_strategy': 'Crossing Strategy',
+        'basic_strategy': 'Basic Strategy',
         'counting_strategy': 'Counting Strategy',
         'number_bond': 'Number Bond',
         'sum': 'Sum',
         'first_number': 'First\nNumber',
         'second_number': 'Second\nNumber',
-        'clear_try_again': 'Clear and try again',
         'available_numbers': 'Available Numbers (tap to add to circle):',
         'build_number_bond': 'Select numbers\nto build the\nnumber bond',
         
@@ -101,11 +102,51 @@ class LanguageService {
         'clear_data': 'Clear Data',
         'data_cleared': 'All data cleared successfully',
         
+        // Performance Metrics
+        'performance_overview': 'Performance Overview',
+        'recent_accuracy': 'Recent Accuracy',
+        'consecutive_incorrect': 'Consecutive Incorrect',
+        'level_performance': 'Level Performance:',
+        'level': 'Level',
+        
+        // Adaptive Challenge
+        'adaptive_challenge': 'Adaptive Challenge',
+        'ones_explorer': 'Ones Explorer',
+        'tens_builder': 'Tens Builder',
+        'hundreds_hero': 'Hundreds Hero',
+        'thousands_champion': 'Thousands Champion',
+        'progress_to_next_level': 'Progress to next level',
+        'stars_to_go': 'stars to go',
+        'review': 'REVIEW',
+        
+        // Interactive Number Bond
+        'tap_numbers_instruction': 'Tap numbers to fill the circles:',
+        
+        // Failed Challenges
+        'no_failed_challenges': 'No failed challenges yet!',
+        'and_more_failed': 'and {count} more failed challenges',
+        
         // Hints
         'make_ten_hint': 'Try making 10 first! What number goes with {number} to make 10?',
         'crossing_hint': 'Break down the bigger number! Think about tens and ones.',
         'basic_hint': 'Count up from the bigger number!',
         'general_hint': 'Use your favorite strategy: counting, making 10, or breaking numbers apart!',
+        
+        // Success Messages
+        'excellent_celebration': '🎉 Excellent!',
+        'number_bond_solved': 'You solved the number bond correctly!',
+        'star_reward': '+1 Star',
+        'current_stars': '⭐ {stars}',
+        'current_badges': '🏅 {badges}',
+        
+        // Interactive Number Bond Messages
+        'oops_try_different': 'Oops! Let\'s try a different way!',
+        'more_chances_hero': '{count} more chances to be a Math Hero!',
+        'magic_trick_for': 'Magic Trick for {operand1} {operator} {operand2}:',
+        'clear_try_again': 'Clear & Try Again!',
+        'congratulations_level_up': 'Congratulations {name}!\nYou reached {level} level!',
+        'level_up': 'LEVEL UP!',
+        'continue': 'Continue',
         
         // Errors
         'error_loading_profile': 'Error loading profile:',
@@ -143,18 +184,19 @@ class LanguageService {
         'submit_answer': 'Enviar Respuesta',
         'select_answer_first': 'Selecciona una respuesta primero',
         'next_challenge': 'Siguiente Desafío',
-        'get_hint': 'Obtener pista',
+        'get_hint': 'Pista',
+        'try_again': 'Intentar de Nuevo',
         'interactive_number_bond': 'Enlace Numérico Interactivo',
         
         // Number Bond
         'make_ten_strategy': 'Estrategia Hacer Diez',
         'crossing_strategy': 'Estrategia de Cruce',
+        'basic_strategy': 'Estrategia Básica',
         'counting_strategy': 'Estrategia de Conteo',
         'number_bond': 'Enlace Numérico',
         'sum': 'Suma',
         'first_number': 'Primer\nNúmero',
         'second_number': 'Segundo\nNúmero',
-        'clear_try_again': 'Limpiar e intentar de nuevo',
         'available_numbers': 'Números Disponibles (toca para agregar al círculo):',
         'build_number_bond': 'Selecciona números\npara construir el\nenlace numérico',
         
@@ -196,11 +238,51 @@ class LanguageService {
         'clear_data': 'Limpiar Datos',
         'data_cleared': 'Todos los datos eliminados exitosamente',
         
+        // Performance Metrics
+        'performance_overview': 'Resumen de Rendimiento',
+        'recent_accuracy': 'Precisión Reciente',
+        'consecutive_incorrect': 'Incorrectos Consecutivos',
+        'level_performance': 'Rendimiento por Nivel:',
+        'level': 'Nivel',
+        
+        // Adaptive Challenge
+        'adaptive_challenge': 'Desafío Adaptativo',
+        'ones_explorer': 'Explorador de Unidades',
+        'tens_builder': 'Constructor de Decenas',
+        'hundreds_hero': 'Héroe de Centenas',
+        'thousands_champion': 'Campeón de Miles',
+        'progress_to_next_level': 'Progreso al siguiente nivel',
+        'stars_to_go': 'estrellas para continuar',
+        'review': 'REPASO',
+        
+        // Interactive Number Bond
+        'tap_numbers_instruction': 'Toca números para llenar los círculos:',
+        
+        // Failed Challenges
+        'no_failed_challenges': '¡Aún no hay desafíos fallidos!',
+        'and_more_failed': 'y {count} desafíos fallidos más',
+        
         // Hints
         'make_ten_hint': '¡Intenta hacer 10 primero! ¿Qué número va con {number} para hacer 10?',
         'crossing_hint': '¡Descompón el número más grande! Piensa en decenas y unidades.',
         'basic_hint': '¡Cuenta desde el número más grande!',
         'general_hint': 'Usa tu estrategia favorita: contar, hacer 10, o separar números!',
+        
+        // Success Messages
+        'excellent_celebration': '¡🎉 Excelente!',
+        'number_bond_solved': '¡Resolviste el enlace numérico correctamente!',
+        'star_reward': '+1 Estrella',
+        'current_stars': '⭐ {stars}',
+        'current_badges': '🏅 {badges}',
+        
+        // Interactive Number Bond Messages
+        'oops_try_different': '¡Ups! ¡Intentemos de otra manera!',
+        'more_chances_hero': '¡{count} oportunidades más para ser un Héroe Matemático!',
+        'magic_trick_for': 'Truco Mágico para {operand1} {operator} {operand2}:',
+        'clear_try_again': '¡Limpiar e Intentar de Nuevo!',
+        'congratulations_level_up': '¡Felicitaciones {name}!\n¡Has alcanzado el nivel {level}!',
+        'level_up': '¡SUBISTE DE NIVEL!',
+        'continue': 'Continuar',
         
         // Errors
         'error_loading_profile': 'Error cargando perfil:',
@@ -238,18 +320,19 @@ class LanguageService {
         'submit_answer': 'Soumettre la Réponse',
         'select_answer_first': 'Sélectionnez d\'abord une réponse',
         'next_challenge': 'Défi Suivant',
-        'get_hint': 'Obtenir un indice',
+        'get_hint': 'Indice',
+        'try_again': 'Réessayer',
         'interactive_number_bond': 'Lien Numérique Interactif',
         
         // Number Bond
         'make_ten_strategy': 'Stratégie Faire Dix',
         'crossing_strategy': 'Stratégie de Croisement',
+        'basic_strategy': 'Stratégie de Base',
         'counting_strategy': 'Stratégie de Comptage',
         'number_bond': 'Lien Numérique',
         'sum': 'Somme',
         'first_number': 'Premier\nNombre',
         'second_number': 'Deuxième\nNombre',
-        'clear_try_again': 'Effacer et réessayer',
         'available_numbers': 'Nombres Disponibles (appuyez pour ajouter au cercle):',
         'build_number_bond': 'Sélectionnez des nombres\npour construire le\nlien numérique',
         
@@ -291,11 +374,51 @@ class LanguageService {
         'clear_data': 'Effacer les Données',
         'data_cleared': 'Toutes les données effacées avec succès',
         
+        // Performance Metrics
+        'performance_overview': 'Aperçu des Performances',
+        'recent_accuracy': 'Précision Récente',
+        'consecutive_incorrect': 'Incorrects Consécutifs',
+        'level_performance': 'Performance par Niveau:',
+        'level': 'Niveau',
+        
+        // Adaptive Challenge
+        'adaptive_challenge': 'Défi Adaptatif',
+        'ones_explorer': 'Explorateur d\'Unités',
+        'tens_builder': 'Constructeur de Dizaines',
+        'hundreds_hero': 'Héros des Centaines',
+        'thousands_champion': 'Champion des Milliers',
+        'progress_to_next_level': 'Progrès vers le niveau suivant',
+        'stars_to_go': 'étoiles à parcourir',
+        'review': 'RÉVISION',
+        
+        // Interactive Number Bond
+        'tap_numbers_instruction': 'Appuyez sur les nombres pour remplir les cercles:',
+        
+        // Failed Challenges
+        'no_failed_challenges': 'Aucun défi échoué pour le moment !',
+        'and_more_failed': 'et {count} défis échoués de plus',
+        
         // Hints
         'make_ten_hint': 'Essayez de faire 10 d\'abord! Quel nombre va avec {number} pour faire 10?',
         'crossing_hint': 'Décomposez le plus grand nombre! Pensez aux dizaines et aux unités.',
         'basic_hint': 'Comptez à partir du plus grand nombre!',
         'general_hint': 'Utilisez votre stratégie préférée: compter, faire 10, ou séparer les nombres!',
+        
+        // Success Messages
+        'excellent_celebration': '🎉 Excellent!',
+        'number_bond_solved': 'Vous avez résolu le lien numérique correctement!',
+        'star_reward': '+1 Étoile',
+        'current_stars': '⭐ {stars}',
+        'current_badges': '🏅 {badges}',
+        
+        // Interactive Number Bond Messages
+        'oops_try_different': 'Oups! Essayons d\'une autre façon!',
+        'more_chances_hero': '{count} chances de plus d\'être un Héros Mathématique!',
+        'magic_trick_for': 'Astuce Magique pour {operand1} {operator} {operand2}:',
+        'clear_try_again': 'Effacer et Réessayer!',
+        'congratulations_level_up': 'Félicitations {name}!\nVous avez atteint le niveau {level}!',
+        'level_up': 'NIVEAU SUPÉRIEUR!',
+        'continue': 'Continuer',
         
         // Errors
         'error_loading_profile': 'Erreur lors du chargement du profil:',
@@ -307,9 +430,15 @@ class LanguageService {
   };
 
   /// Get translation for a key in the specified language
+  /// Follows the recommendation: English as source of truth with proper fallback
   static String translate(String key, String languageCode, {Map<String, String>? params}) {
-    final language = _languages[languageCode] ?? _languages['en']!;
-    String translation = language.translations[key] ?? key;
+    // First try the requested language
+    String translation = _languages[languageCode]?.translations[key] ?? '';
+    
+    // If not found, fallback to English (source of truth)
+    if (translation.isEmpty) {
+      translation = _languages['en']?.translations[key] ?? key;
+    }
     
     // Replace parameters if provided
     if (params != null) {

@@ -76,37 +76,89 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
     }
   }
 
+  String _getText(String key) {
+    final translations = {
+      'en': {
+        'welcome_message': 'Welcome to Math Blocks!\nLet\'s create your profile!',
+        'welcome_title': 'Welcome to Math Blocks!',
+        'name_label': 'Name',
+        'enter_name': 'Enter your name',
+        'name_entered': 'Name entered',
+        'age_label': 'Age',
+        'age_selected': 'Age selected', 
+        'language_label': 'Language',
+        'language_selected': 'Language selected',
+        'favorite_numbers': 'Favorite Numbers',
+        'optional': '(Optional)',
+        'select_favorites': 'Select your favorite numbers to use in problems',
+        'favorite_numbers_subtitle': 'Choose your favorite numbers (0-9):',
+        'favorite_numbers_instruction': 'Select up to {count} numbers you like!',
+        'no_numbers_selected': 'No numbers selected yet',
+        'numbers_selected': 'Selected {current} of {max} numbers',
+        'perfect_selection': 'Perfect! You\'ve selected {count} favorite numbers',
+        'create_profile_button': 'Create Profile',
+        'creating_profile': 'Creating Profile...',
+        'error_creating': 'Error creating profile',
+      },
+      'es': {
+        'welcome_message': '¡Bienvenido a Math Blocks!\n¡Vamos a crear tu perfil!',
+        'welcome_title': '¡Bienvenido a Math Blocks!',
+        'name_label': 'Nombre',
+        'enter_name': 'Escribe tu nombre',
+        'name_entered': 'Nombre ingresado',
+        'age_label': 'Edad',
+        'age_selected': 'Edad seleccionada',
+        'language_label': 'Idioma',
+        'language_selected': 'Idioma seleccionado',
+        'favorite_numbers': 'Números Favoritos',
+        'optional': '(Opcional)',
+        'select_favorites': 'Selecciona tus números favoritos para usar en problemas',
+        'favorite_numbers_subtitle': 'Elige tus números favoritos (0-9):',
+        'favorite_numbers_instruction': '¡Selecciona hasta {count} números que te gusten!',
+        'no_numbers_selected': 'Aún no hay números seleccionados',
+        'numbers_selected': 'Seleccionados {current} de {max} números',
+        'perfect_selection': '¡Perfecto! Has seleccionado {count} números favoritos',
+        'create_profile_button': 'Crear Perfil',
+        'creating_profile': 'Creando Perfil...',
+        'error_creating': 'Error al crear perfil',
+      },
+      'fr': {
+        'welcome_message': 'Bienvenue à Math Blocks!\nCréons ton profil!',
+        'welcome_title': 'Bienvenue à Math Blocks!',
+        'name_label': 'Nom',
+        'enter_name': 'Entrez votre nom',
+        'name_entered': 'Nom saisi',
+        'age_label': 'Âge',
+        'age_selected': 'Âge sélectionné',
+        'language_label': 'Langue',
+        'language_selected': 'Langue sélectionnée',
+        'favorite_numbers': 'Nombres Favoris',
+        'optional': '(Optionnel)',
+        'select_favorites': 'Sélectionnez vos nombres favoris à utiliser dans les problèmes',
+        'favorite_numbers_subtitle': 'Choisissez vos numéros favoris (0-9):',
+        'favorite_numbers_instruction': 'Sélectionnez jusqu\'à {count} numéros que vous aimez!',
+        'no_numbers_selected': 'Aucun numéro sélectionné pour le moment',
+        'numbers_selected': 'Sélectionnés {current} de {max} numéros',
+        'perfect_selection': 'Parfait! Vous avez sélectionné {count} numéros favoris',
+        'create_profile_button': 'Créer le Profil',
+        'creating_profile': 'Création du Profil...',
+        'error_creating': 'Erreur lors de la création du profil',
+      },
+    };
+    
+    return translations[selectedLanguageCode]?[key] ?? translations['en']![key]!;
+  }
+
   String _getWelcomeMessage() {
-    switch (selectedLanguageCode) {
-      case 'es':
-        return '¡Bienvenido a Math Blocks!\n¡Vamos a crear tu perfil!';
-      case 'fr':
-        return 'Bienvenue à Math Blocks!\nCréons ton profil!';
-      default:
-        return 'Welcome to Math Blocks!\nLet\'s create your profile!';
-    }
+    return _getText('welcome_message');
   }
 
   String _getCreateButtonText() {
-    switch (selectedLanguageCode) {
-      case 'es':
-        return 'Crear Perfil';
-      case 'fr':
-        return 'Créer le Profil';
-      default:
-        return 'Create Profile';
-    }
+    return _getText('create_profile_button');
   }
 
   String _getNameHint() {
-    switch (selectedLanguageCode) {
-      case 'es':
-        return 'Escribe tu nombre';
-      case 'fr':
-        return 'Écris ton nom';
-      default:
-        return 'Enter your name';
-    }
+    return _getText('enter_name');
   }
 
   @override
@@ -158,8 +210,8 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        '👤 Your Name',
+                      Text(
+                        '👤 ${_getText('name_label')}',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -193,8 +245,8 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        '🎂 Your Age',
+                      Text(
+                        '🎂 ${_getText('age_label')}',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -204,6 +256,7 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                       const SizedBox(height: 12),
                       AgeSelector(
                         selectedAge: selectedAge,
+                        language: selectedLanguageCode,
                         onAgeSelected: (age) {
                           setState(() {
                             selectedAge = age;
@@ -224,8 +277,8 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        '🌍 Choose Your Language',
+                      Text(
+                        '🌍 ${_getText('language_label')}',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -255,8 +308,8 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        '⭐ Choose Your Favorite Numbers',
+                      Text(
+                        '⭐ ${_getText('favorite_numbers')}',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -266,6 +319,7 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                       const SizedBox(height: 12),
                       FavoriteNumbersSelector(
                         initialFavorites: favoriteNumbers,
+                        language: selectedLanguageCode,
                         onChanged: (numbers) {
                           setState(() {
                             favoriteNumbers = numbers;
@@ -309,9 +363,9 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                 ),
                 child: Column(
                   children: [
-                    _buildRequirement('Name entered', _nameController.text.trim().isNotEmpty),
-                    _buildRequirement('Age selected', selectedAge != null),
-                    _buildRequirement('Language selected', true), // Always true
+                    _buildRequirement(_getText('name_entered'), _nameController.text.trim().isNotEmpty),
+                    _buildRequirement(_getText('age_selected'), selectedAge != null),
+                    _buildRequirement(_getText('language_selected'), true), // Always true
                   ],
                 ),
               ),
