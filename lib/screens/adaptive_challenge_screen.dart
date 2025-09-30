@@ -83,6 +83,15 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
         // Convert to MathProblem for existing widgets
         final problem = AdaptiveProblemService.convertToMathProblem(challenge);
         
+        print('🔍 Challenge details:');
+        print('   problemText: ${challenge.problemText}');
+        print('   operand1: ${challenge.operand1}');
+        print('   operand2: ${challenge.operand2}');
+        print('   operator: ${challenge.operator}');
+        print('   correctAnswer: ${challenge.correctAnswer}');
+        print('   level: ${challenge.level}');
+        print('🔍 Converted problem: ${problem != null ? 'SUCCESS' : 'NULL'}');
+        
         // Get performance metrics
         final metrics = await AdaptiveProblemService.getPerformanceMetrics(profile.id);
         

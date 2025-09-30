@@ -377,148 +377,142 @@ class _NumberBondFormat extends StatelessWidget {
         // Subtraction: A - B = A - [__] - [__]
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Flexible(
-                child: Text(
-                  '$operand1',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
-                ),
-              ),
-              const Flexible(
-                child: Text(' - ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              ),
-              Flexible(
-                child: Text(
-                  '$operand2',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
-                ),
-              ),
-              const Flexible(
-                child: Text(' = ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              ),
-              Flexible(
-                child: Text(
-                  '$operand1',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
-                ),
-              ),
-              const Flexible(
-                child: Text(' - ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              ),
-              Flexible(
-                flex: 1,
-                child: Container(
-                  height: 40,
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  child: const Center(
-                    child: Text(
-                      '__',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '$operand1',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                    ),
+                    const Text(' - ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text(
+                      '$operand2',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                    ),
+                    const Text(' = ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text(
+                      '$operand1',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                    ),
+                    const Text(' - ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    Container(
+                      width: 50,
+                      height: 40,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.blue, width: 2),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          '__',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              ),
-              const Flexible(
-                child: Text(' - ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              ),
-              Flexible(
-                flex: 1,
-                child: Container(
-                  height: 40,
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  child: const Center(
-                    child: Text(
-                      '__',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold,
+                    const Text(' - ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    Container(
+                      width: 50,
+                      height: 40,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.blue, width: 2),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          '__',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ),
-            ],
+              );
+            },
           ),
         );
       } else {
         // Addition: A + B = A + [__] + [__]
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Flexible(
-                child: Text(
-                  '$operand1',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
-                ),
-              ),
-              const Flexible(
-                child: Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              ),
-              Flexible(
-                child: Text(
-                  '$operand2',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
-                ),
-              ),
-              const Flexible(
-                child: Text(' = ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              ),
-              Flexible(
-                child: Text(
-                  '$operand1',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
-                ),
-              ),
-              const Flexible(
-                child: Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              ),
-              Flexible(
-                flex: 1,
-                child: Container(
-                  height: 40,
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  child: const Center(
-                    child: Text(
-                      '__',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '$operand1',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                    ),
+                    const Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text(
+                      '$operand2',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                    ),
+                    const Text(' = ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text(
+                      '$operand1',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                    ),
+                    const Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    Container(
+                      width: 50,
+                      height: 40,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.green, width: 2),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          '__',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              ),
-              const Flexible(
-                child: Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              ),
-              Flexible(
-                flex: 1,
-                child: Container(
-                  height: 40,
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  child: const Center(
-                    child: Text(
-                      '__',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
+                    const Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    Container(
+                      width: 50,
+                      height: 40,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.green, width: 2),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          '__',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ),
-            ],
+              );
+            },
           ),
         );
       }
