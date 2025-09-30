@@ -799,26 +799,40 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildSolutionNumber(widget.operand1.toString(), Colors.orange, size: 20),
-                const Text(' - '),
-                _buildSolutionNumber(amountToReachTen.toString(), Colors.green, size: 20),
-                const Text(' = '),
-                _buildSolutionNumber(intermediate.toString(), Colors.red, size: 20),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildSolutionNumber(widget.operand1.toString(), Colors.orange, size: 20),
+                      const Text(' - '),
+                      _buildSolutionNumber(amountToReachTen.toString(), Colors.green, size: 20),
+                      const Text(' = '),
+                      _buildSolutionNumber(intermediate.toString(), Colors.red, size: 20),
+                    ],
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildSolutionNumber(intermediate.toString(), Colors.red, size: 20),
-                const Text(' - '),
-                _buildSolutionNumber(remaining.toString(), Colors.purple, size: 20),
-                const Text(' = '),
-                _buildSolutionNumber(finalAnswer.toString(), Colors.green, size: 20),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildSolutionNumber(intermediate.toString(), Colors.red, size: 20),
+                      const Text(' - '),
+                      _buildSolutionNumber(remaining.toString(), Colors.purple, size: 20),
+                      const Text(' = '),
+                      _buildSolutionNumber(finalAnswer.toString(), Colors.green, size: 20),
+                    ],
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -843,26 +857,40 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-              _buildSolutionNumber(widget.operand1.toString(), Colors.orange, size: 20),
-            const Text(' + '),
-              _buildSolutionNumber(needed.toString(), Colors.green, size: 20),
-            const Text(' = '),
-              _buildSolutionNumber('10', Colors.red, size: 20),
-          ],
-        ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildSolutionNumber(widget.operand1.toString(), Colors.orange, size: 20),
+                    const Text(' + '),
+                    _buildSolutionNumber(needed.toString(), Colors.green, size: 20),
+                    const Text(' = '),
+                    _buildSolutionNumber('10', Colors.red, size: 20),
+                  ],
+                ),
+              );
+            },
+          ),
           const SizedBox(height: 6),
-        Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-              _buildSolutionNumber('10', Colors.red, size: 20),
-            const Text(' + '),
-              _buildSolutionNumber(remaining.toString(), Colors.purple, size: 20),
-            const Text(' = '),
-              _buildSolutionNumber(answer.toString(), Colors.green, size: 20),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            return FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildSolutionNumber('10', Colors.red, size: 20),
+                  const Text(' + '),
+                  _buildSolutionNumber(remaining.toString(), Colors.purple, size: 20),
+                  const Text(' = '),
+                  _buildSolutionNumber(answer.toString(), Colors.green, size: 20),
+                ],
+              ),
+            );
+          },
         ),
       ],
       ),
@@ -1008,15 +1036,22 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                       borderRadius: BorderRadius.circular(25),
                       border: Border.all(color: Colors.green[400]!, width: 2),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildMagicNumber(widget.operand2.toString(), Colors.blue[600]!, '🎲'),
-                        const Text(' = ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        _buildMagicNumber(half.toString(), Colors.green[600]!, '⭐'),
-                        const Text(' + ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        _buildMagicNumber(otherHalf.toString(), Colors.purple[600]!, '🎈'),
-                      ],
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildMagicNumber(widget.operand2.toString(), Colors.blue[600]!, '🎲'),
+                              const Text(' = ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              _buildMagicNumber(half.toString(), Colors.green[600]!, '⭐'),
+                              const Text(' + ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              _buildMagicNumber(otherHalf.toString(), Colors.purple[600]!, '🎈'),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -1062,16 +1097,23 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                       borderRadius: BorderRadius.circular(15),
                       border: Border.all(color: Colors.orange[200]!),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('🥷 First: ', style: TextStyle(fontSize: 14, color: Colors.orange[700])),
-                        _buildMagicNumber(widget.operand1.toString(), Colors.orange[600]!, '🏰'),
-                        const Text(' - ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        _buildMagicNumber(half.toString(), Colors.green[600]!, '⭐'),
-                        const Text(' = ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
-                      ],
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('🥷 First: ', style: TextStyle(fontSize: 14, color: Colors.orange[700])),
+                              _buildMagicNumber(widget.operand1.toString(), Colors.orange[600]!, '🏰'),
+                              const Text(' - ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              _buildMagicNumber(half.toString(), Colors.green[600]!, '⭐'),
+                              const Text(' = ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
                   
@@ -1083,16 +1125,23 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                       borderRadius: BorderRadius.circular(15),
                       border: Border.all(color: Colors.orange[200]!),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('🥷 Then: ', style: TextStyle(fontSize: 14, color: Colors.orange[700])),
-                        _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
-                        const Text(' - ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        _buildMagicNumber(otherHalf.toString(), Colors.purple[600]!, '🎈'),
-                        const Text(' = ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        _buildMagicNumber(answer.toString(), Colors.green[700]!, '🏆'),
-                      ],
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('🥷 Then: ', style: TextStyle(fontSize: 14, color: Colors.orange[700])),
+                              _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
+                              const Text(' - ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              _buildMagicNumber(otherHalf.toString(), Colors.purple[600]!, '🎈'),
+                              const Text(' = ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              _buildMagicNumber(answer.toString(), Colors.green[700]!, '🏆'),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -1168,14 +1217,21 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
-          Row(
-      children: [
-        _buildSolutionNumber(widget.operand1.toString(), Colors.orange),
-        const Text(' + '),
-              _buildSolutionNumber(tenComplement.toString(), Colors.green),
-              const Text(' = '),
-              _buildSolutionNumber(nextTen.toString(), Colors.red),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  children: [
+                    _buildSolutionNumber(widget.operand1.toString(), Colors.orange),
+                    const Text(' + '),
+                    _buildSolutionNumber(tenComplement.toString(), Colors.green),
+                    const Text(' = '),
+                    _buildSolutionNumber(nextTen.toString(), Colors.red),
+                  ],
+                ),
+              );
+            },
           ),
           const SizedBox(height: 12),
           Text(
@@ -1183,14 +1239,21 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              _buildSolutionNumber(nextTen.toString(), Colors.red),
-              const Text(' + '),
-              _buildSolutionNumber(remaining.toString(), Colors.purple),
-        const Text(' = '),
-        _buildSolutionNumber(answer.toString(), Colors.green),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  children: [
+                    _buildSolutionNumber(nextTen.toString(), Colors.red),
+                    const Text(' + '),
+                    _buildSolutionNumber(remaining.toString(), Colors.purple),
+                    const Text(' = '),
+                    _buildSolutionNumber(answer.toString(), Colors.green),
+                  ],
+                ),
+              );
+            },
           ),
       ],
     );
@@ -1212,14 +1275,21 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
-        Row(
-      children: [
-        _buildSolutionNumber(widget.operand1.toString(), Colors.orange),
-            Text(operator),
-        _buildSolutionNumber(widget.operand2.toString(), Colors.purple),
-        const Text(' = '),
-        _buildSolutionNumber(answer.toString(), Colors.green),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            return FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                children: [
+                  _buildSolutionNumber(widget.operand1.toString(), Colors.orange),
+                  Text(operator),
+                  _buildSolutionNumber(widget.operand2.toString(), Colors.purple),
+                  const Text(' = '),
+                  _buildSolutionNumber(answer.toString(), Colors.green),
+                ],
+              ),
+            );
+          },
         ),
         const SizedBox(height: 8),
         Text(
