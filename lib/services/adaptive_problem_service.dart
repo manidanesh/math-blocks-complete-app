@@ -107,13 +107,17 @@ class AdaptiveProblemService {
     
     if (isSubtraction) {
       final onesDigit = operand1 % 10;
-      // For valid crossing subtraction: operand2 must be > onesDigit
-      // This allows us to split operand2 into (onesDigit + remainder)
-      // Example: 19 - 11 → split 11 into 9 + 2 → 19 - 9 = 10, then 10 - 2 = 8
-      if (operand2 > onesDigit && operand1 > 10) {
+      final result = operand1 - operand2;
+      
+      // For valid crossing subtraction:
+      // 1. operand2 must be > onesDigit (to force crossing)
+      // 2. operand2 must be >= 6 (large enough to break down meaningfully)
+      // 3. result must be positive
+      // 4. operand1 must be > 10 (multi-digit)
+      if (operand2 > onesDigit && operand2 >= 6 && result > 0 && operand1 > 10) {
         return ProblemStrategy.crossing;
       } else {
-        return ProblemStrategy.basic; // Simple subtraction like 19 - 5 (invalid for crossing)
+        return ProblemStrategy.basic; // Simple subtraction like 20 - 4 (invalid for crossing)
       }
     } else {
       // Addition - following the new rules

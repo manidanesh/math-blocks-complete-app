@@ -9,17 +9,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:math_blocks_complete_app/main.dart';
+import 'package:number_bond_math/main.dart';
 
 void main() {
-  testWidgets('Math Blocks app smoke test', (WidgetTester tester) async {
+  testWidgets('Number Bond Math app smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const ProviderScope(child: MathBlocksCompleteApp()));
 
     // Wait for the app to load
     await tester.pumpAndSettle();
 
-    // Verify that the app starts with profile creation
-    expect(find.text('Welcome to Math Blocks!'), findsOneWidget);
+    // Verify that the app starts with profile creation screen
+    expect(find.text('Create Profile'), findsOneWidget);
+    
+    // Verify that the name input field is present
+    expect(find.byType(TextField), findsOneWidget);
+    
+    // Verify that the create button is present
+    expect(find.text('Create Profile'), findsOneWidget);
   });
 }

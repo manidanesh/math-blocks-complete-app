@@ -24,8 +24,10 @@ class AdaptiveChallengeDisplay extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header with level and type
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Level button on top
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
@@ -48,48 +50,10 @@ class AdaptiveChallengeDisplay extends StatelessWidget {
                     },
                   ),
                 ),
-                const SizedBox(width: 8),
-                if (challenge.isReviewProblem)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.orange,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Consumer(
-                      builder: (context, ref, child) {
-                        final profile = ref.watch(profileProvider).value;
-                        final language = profile?.language ?? 'en';
-                        
-                        return Text(
-                          LanguageService.translate('review', language),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                // Problem text in the center of the row
+                const SizedBox(height: 12),
+                // Challenge below
                 Expanded(
-                  child: Center(
-                    child: Text(
-                      challenge.problemText,
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Icon(
-                  _getLevelIcon(challenge.level),
-                  color: _getLevelColor(challenge.level),
-                  size: 24,
+                  child: _NumberBondFormat(challenge: challenge),
                 ),
               ],
             ),
@@ -365,6 +329,208 @@ class PerformanceMetricsDisplay extends StatelessWidget {
             );
           }).toList(),
         ],
+      ),
+    );
+  }
+
+}
+
+/// Separate widget for displaying number bond decomposition format
+class _NumberBondFormat extends StatelessWidget {
+  final AdaptiveChallenge challenge;
+
+  const _NumberBondFormat({
+    required this.challenge,
+  });
+
+  Color _getLevelColor(int level) {
+    switch (level) {
+      case 1:
+        return Colors.green;
+      case 2:
+        return Colors.blue;
+      case 3:
+        return Colors.orange;
+      case 4:
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Parse the problem text to extract operands and operator
+    final problemText = challenge.problemText;
+    print('🔍 _NumberBondFormat - problemText: $problemText');
+    
+    // Handle different formats: "11 - 9 = ?" or "8 + 9 = ?"
+    final RegExp regex = RegExp(r'(\d+)\s*([+\-])\s*(\d+)\s*=\s*\?');
+    final match = regex.firstMatch(problemText);
+    
+    if (match != null) {
+      final int operand1 = int.parse(match.group(1)!);
+      final String operator = match.group(2)!;
+      final int operand2 = int.parse(match.group(3)!);
+      
+      if (operator == '-') {
+        // Subtraction: A - B = A - [__] - [__]
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  '$operand1',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                ),
+              ),
+              const Flexible(
+                child: Text(' - ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+              Flexible(
+                child: Text(
+                  '$operand2',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                ),
+              ),
+              const Flexible(
+                child: Text(' = ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+              Flexible(
+                child: Text(
+                  '$operand1',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                ),
+              ),
+              const Flexible(
+                child: Text(' - ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+              Flexible(
+                flex: 1,
+                child: Container(
+                  height: 40,
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  child: const Center(
+                    child: Text(
+                      '__',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const Flexible(
+                child: Text(' - ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+              Flexible(
+                flex: 1,
+                child: Container(
+                  height: 40,
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  child: const Center(
+                    child: Text(
+                      '__',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      } else {
+        // Addition: A + B = A + [__] + [__]
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  '$operand1',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                ),
+              ),
+              const Flexible(
+                child: Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+              Flexible(
+                child: Text(
+                  '$operand2',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                ),
+              ),
+              const Flexible(
+                child: Text(' = ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+              Flexible(
+                child: Text(
+                  '$operand1',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                ),
+              ),
+              const Flexible(
+                child: Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+              Flexible(
+                flex: 1,
+                child: Container(
+                  height: 40,
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  child: const Center(
+                    child: Text(
+                      '__',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const Flexible(
+                child: Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+              Flexible(
+                flex: 1,
+                child: Container(
+                  height: 40,
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  child: const Center(
+                    child: Text(
+                      '__',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+    
+    // Fallback to original text if parsing fails
+    return Text(
+      problemText,
+      style: const TextStyle(
+        fontSize: 32,
+        fontWeight: FontWeight.bold,
+        color: Colors.black87,
       ),
     );
   }

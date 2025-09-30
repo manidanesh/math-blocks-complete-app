@@ -210,16 +210,20 @@ class CentralProblemGenerator {
   
   /// Standard Level 1 crossing subtraction
   static Map<String, dynamic> _generateLevel1StandardSubtraction() {
+    print('🔧 _generateLevel1StandardSubtraction called');
     // Generate valid crossing subtraction for Level 1
     int firstNumber = _random.nextInt(10) + 11; // 11-20 for Level 1
     int secondNumber = 2; // Initialize with default
     int attempts = 0;
+    
+    print('🔧 Starting with firstNumber: $firstNumber');
     
     do {
       attempts++;
       if (attempts > 20) {
         firstNumber = _random.nextInt(10) + 11; // Regenerate if stuck
         attempts = 0;
+        print('🔧 Regenerated firstNumber: $firstNumber');
       }
       
       final onesDigit = firstNumber % 10;
@@ -227,14 +231,18 @@ class CentralProblemGenerator {
       final minSecond = onesDigit + 1;
       final maxSecond = min(9, firstNumber - 1);
       
+      print('🔧 onesDigit: $onesDigit, minSecond: $minSecond, maxSecond: $maxSecond');
+      
       if (minSecond > maxSecond) {
         // No valid crossing possible for this firstNumber, try another
         firstNumber = _random.nextInt(10) + 11;
         secondNumber = 2; // Reset default
+        print('🔧 No valid crossing, trying new firstNumber: $firstNumber');
         continue;
       }
       
       secondNumber = _random.nextInt(maxSecond - minSecond + 1) + minSecond;
+      print('🔧 Generated secondNumber: $secondNumber');
       
     } while (!_isValidCrossingSubtraction(firstNumber, secondNumber));
 
@@ -434,11 +442,13 @@ class CentralProblemGenerator {
     // 1. secondNumber must be > onesDigit (to force crossing)
     // 2. Result must be positive  
     // 3. First number must be > 10 (multi-digit)
-    // 4. Must actually cross a ten boundary
+    // 4. secondNumber must be large enough to be meaningfully broken down (>= 6)
+    // 5. Must actually cross a ten boundary
     
     if (firstNumber <= 10) return false;  // Must be multi-digit
     if (secondNumber <= onesDigit) return false;  // Must require crossing
     if (result <= 0) return false;  // Must be positive
+    if (secondNumber < 6) return false;  // Too small to break down meaningfully
     
     // Check if it actually crosses a ten boundary
     final nextLowerTen = (firstNumber ~/ 10) * 10;

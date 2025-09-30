@@ -44,20 +44,22 @@ class NumberBondValidator {
   }) {
     final onesDigit = firstNumber % 10;
     final result = firstNumber - secondNumber;
-    final nextLowerTen = onesDigit == 0 ? firstNumber - 10 : firstNumber - onesDigit;
     
-    // Must cross the ten boundary
-    final crossesTen = result < nextLowerTen;
+    // Rules for valid crossing subtraction:
+    // 1. secondNumber must be > onesDigit (to force crossing)
+    // 2. secondNumber must be >= 6 (large enough to break down meaningfully)
+    // 3. result must be positive
+    // 4. firstNumber must be > 10 (multi-digit)
+    // 5. Must actually cross a ten boundary
     
-    // For numbers ending in 0, minimum subtraction should be > 10
-    if (onesDigit == 0) {
-      final minSubtraction = firstNumber - nextLowerTen + 1;
-      return secondNumber >= minSubtraction && crossesTen;
-    }
+    if (firstNumber <= 10) return false;  // Must be multi-digit
+    if (secondNumber <= onesDigit) return false;  // Must require crossing
+    if (result <= 0) return false;  // Must be positive
+    if (secondNumber < 6) return false;  // Too small to break down meaningfully
     
-    // For other numbers, minimum subtraction should be > ones digit
-    final minSubtraction = onesDigit + 1;
-    return secondNumber >= minSubtraction && crossesTen;
+    // Check if it actually crosses a ten boundary
+    final nextLowerTen = (firstNumber ~/ 10) * 10;
+    return result < nextLowerTen;
   }
   
   /// Generates correct breakdown for a subtraction problem

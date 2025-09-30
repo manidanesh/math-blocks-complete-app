@@ -144,6 +144,10 @@ class LanguageService {
         'more_chances_hero': '{count} more chances to be a Math Hero!',
         'magic_trick_for': 'Magic Trick for {operand1} {operator} {operand2}:',
         'clear_try_again': 'Clear & Try Again!',
+        
+        // Number Bond Format
+        'subtraction_format': 'Subtraction:',
+        'addition_format': 'Addition:',
         'congratulations_level_up': 'Congratulations {name}!\nYou reached {level} level!',
         'level_up': 'LEVEL UP!',
         'continue': 'Continue',
@@ -280,6 +284,10 @@ class LanguageService {
         'more_chances_hero': '¡{count} oportunidades más para ser un Héroe Matemático!',
         'magic_trick_for': 'Truco Mágico para {operand1} {operator} {operand2}:',
         'clear_try_again': '¡Limpiar e Intentar de Nuevo!',
+        
+        // Number Bond Format
+        'subtraction_format': 'Resta:',
+        'addition_format': 'Suma:',
         'congratulations_level_up': '¡Felicitaciones {name}!\n¡Has alcanzado el nivel {level}!',
         'level_up': '¡SUBISTE DE NIVEL!',
         'continue': 'Continuar',
@@ -416,6 +424,10 @@ class LanguageService {
         'more_chances_hero': '{count} chances de plus d\'être un Héros Mathématique!',
         'magic_trick_for': 'Astuce Magique pour {operand1} {operator} {operand2}:',
         'clear_try_again': 'Effacer et Réessayer!',
+        
+        // Number Bond Format
+        'subtraction_format': 'Soustraction:',
+        'addition_format': 'Addition:',
         'congratulations_level_up': 'Félicitations {name}!\nVous avez atteint le niveau {level}!',
         'level_up': 'NIVEAU SUPÉRIEUR!',
         'continue': 'Continuer',

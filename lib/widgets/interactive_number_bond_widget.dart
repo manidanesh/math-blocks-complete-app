@@ -837,7 +837,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
         border: Border.all(color: Colors.green[300]!),
       ),
       child: Column(
-        children: [
+      children: [
           Text(
             '💡 Break ${widget.operand2} into ${needed} + ${remaining}',
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
@@ -845,26 +845,26 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+          children: [
               _buildSolutionNumber(widget.operand1.toString(), Colors.orange, size: 20),
-              const Text(' + '),
+            const Text(' + '),
               _buildSolutionNumber(needed.toString(), Colors.green, size: 20),
-              const Text(' = '),
+            const Text(' = '),
               _buildSolutionNumber('10', Colors.red, size: 20),
-            ],
-          ),
+          ],
+        ),
           const SizedBox(height: 6),
-          Row(
+        Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+          children: [
               _buildSolutionNumber('10', Colors.red, size: 20),
-              const Text(' + '),
+            const Text(' + '),
               _buildSolutionNumber(remaining.toString(), Colors.purple, size: 20),
-              const Text(' = '),
+            const Text(' = '),
               _buildSolutionNumber(answer.toString(), Colors.green, size: 20),
-            ],
-          ),
-        ],
+          ],
+        ),
+      ],
       ),
     );
     }
@@ -1684,9 +1684,9 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
               Expanded(
                 child: Text(
                   _getText('oops_try_different'),
-                  style: TextStyle(
+                style: TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                     color: Colors.orange[800],
                   ),
                   textAlign: TextAlign.center,
@@ -1716,12 +1716,12 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
               Flexible(
                 child: Text(
                     _getText('more_chances_hero').replaceAll('{count}', remainingAttempts.toString()),
-                  style: TextStyle(
+            style: TextStyle(
                       fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: Colors.orange[700],
-                  ),
-                  textAlign: TextAlign.center,
+            ),
+            textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                 ),
@@ -1778,7 +1778,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                     Text('🎪', style: const TextStyle(fontSize: 18)),
                   ],
                 ),
-                const SizedBox(height: 12),
+          const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
