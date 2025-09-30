@@ -1010,17 +1010,21 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('🔥', style: const TextStyle(fontSize: 24)),
-                      const SizedBox(width: 8),
-                      Text(
-                        'STEP 1: Split the number!',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green[800],
+                      Text('🔥', style: const TextStyle(fontSize: 16)),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          'STEP 1: Split the number!',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green[800],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text('🔥', style: const TextStyle(fontSize: 24)),
+                      Text('🔥', style: const TextStyle(fontSize: 16)),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -1073,17 +1077,21 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('⚡', style: const TextStyle(fontSize: 24)),
-                      const SizedBox(width: 8),
-                      Text(
-                        'STEP 2: Subtract like a ninja!',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange[800],
+                      Text('⚡', style: const TextStyle(fontSize: 16)),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          'STEP 2: Subtract like a ninja!',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange[800],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text('⚡', style: const TextStyle(fontSize: 24)),
+                      Text('⚡', style: const TextStyle(fontSize: 16)),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -1189,7 +1197,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text('🌟', style: const TextStyle(fontSize: 20)),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
                       Text(
                         '${widget.operand1} - ${widget.operand2} = ${answer}',
                         style: TextStyle(
@@ -1198,7 +1206,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                           color: Colors.green[700],
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
                       Text('🌟', style: const TextStyle(fontSize: 20)),
                     ],
                   ),
@@ -1324,17 +1332,21 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('🔥', style: const TextStyle(fontSize: 24)),
-                      const SizedBox(width: 8),
-                      Text(
-                        'STEP 1: Split the number!',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green[800],
+                      Text('🔥', style: const TextStyle(fontSize: 16)),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          'STEP 1: Split the number!',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green[800],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text('🔥', style: const TextStyle(fontSize: 24)),
+                      Text('🔥', style: const TextStyle(fontSize: 16)),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -1387,17 +1399,21 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('⚡', style: const TextStyle(fontSize: 24)),
-                      const SizedBox(width: 8),
-                      Text(
-                        'STEP 2: Add like a ninja!',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange[800],
+                      Text('⚡', style: const TextStyle(fontSize: 16)),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          'STEP 2: Add like a ninja!',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange[800],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text('⚡', style: const TextStyle(fontSize: 24)),
+                      Text('⚡', style: const TextStyle(fontSize: 16)),
                     ],
                   ),
                   const SizedBox(height: 16),
