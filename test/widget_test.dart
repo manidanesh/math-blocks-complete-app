@@ -12,7 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:number_bond_math/main.dart';
 
 void main() {
-  testWidgets('Number Bond Math app smoke test', (WidgetTester tester) async {
+    testWidgets('Number Bond Challenge app smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const ProviderScope(child: MathBlocksCompleteApp()));
 
