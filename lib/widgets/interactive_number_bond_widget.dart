@@ -1104,11 +1104,18 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('🥷 First: ', style: TextStyle(fontSize: 14, color: Colors.orange[700])),
+                              Flexible(
+                                child: Text(
+                                  '🥷 First: ', 
+                                  style: TextStyle(fontSize: 12, color: Colors.orange[700]),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ),
                               _buildMagicNumber(widget.operand1.toString(), Colors.orange[600]!, '🏰'),
-                              const Text(' - ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              const Text(' - ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                               _buildMagicNumber(half.toString(), Colors.green[600]!, '⭐'),
-                              const Text(' = ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              const Text(' = ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                               _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
                             ],
                           ),
@@ -1132,11 +1139,18 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('🥷 Then: ', style: TextStyle(fontSize: 14, color: Colors.orange[700])),
+                              Flexible(
+                                child: Text(
+                                  '🥷 Then: ', 
+                                  style: TextStyle(fontSize: 12, color: Colors.orange[700]),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ),
                               _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
-                              const Text(' - ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              const Text(' - ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                               _buildMagicNumber(otherHalf.toString(), Colors.purple[600]!, '🎈'),
-                              const Text(' = ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              const Text(' = ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                               _buildMagicNumber(answer.toString(), Colors.green[700]!, '🏆'),
                             ],
                           ),
@@ -1404,11 +1418,18 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('🥷 First: ', style: TextStyle(fontSize: 14, color: Colors.orange[700])),
+                              Flexible(
+                                child: Text(
+                                  '🥷 First: ', 
+                                  style: TextStyle(fontSize: 12, color: Colors.orange[700]),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ),
                               _buildMagicNumber(widget.operand1.toString(), Colors.orange[600]!, '🏰'),
-                              const Text(' + ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              const Text(' + ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                               _buildMagicNumber(half.toString(), Colors.green[600]!, '⭐'),
-                              const Text(' = ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              const Text(' = ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                               _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
                             ],
                           ),
@@ -1432,11 +1453,18 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('🥷 Then: ', style: TextStyle(fontSize: 14, color: Colors.orange[700])),
+                              Flexible(
+                                child: Text(
+                                  '🥷 Then: ', 
+                                  style: TextStyle(fontSize: 12, color: Colors.orange[700]),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ),
                               _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
-                              const Text(' + ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              const Text(' + ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                               _buildMagicNumber(otherHalf.toString(), Colors.purple[600]!, '🎈'),
-                              const Text(' = ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              const Text(' = ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                               _buildMagicNumber(answer.toString(), Colors.green[700]!, '🏆'),
                             ],
                           ),
