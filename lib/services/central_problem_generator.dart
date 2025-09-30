@@ -456,17 +456,11 @@ class CentralProblemGenerator {
   }
 
   static String _generateSimpleSubtractionBondSteps(int firstNumber, int secondNumber) {
-    // For Level 1 simple subtraction, provide basic counting steps
-    final onesDigit = firstNumber % 10;
-    final tensDigit = firstNumber ~/ 10;
+    // For Level 1 simple subtraction, break down secondNumber into two equal parts
+    final half = secondNumber ~/ 2;
+    final otherHalf = secondNumber - half;
     
-    if (secondNumber <= onesDigit) {
-      // Simple subtraction within the ones place
-      return 'Count back: $firstNumber → ${firstNumber - secondNumber}';
-    } else {
-      // Valid crossing subtraction: split secondNumber into (onesDigit + remainder)
-      final remainder = secondNumber - onesDigit;
-      return 'Crossing strategy: $firstNumber - $secondNumber = $firstNumber - $onesDigit - $remainder = ${firstNumber - onesDigit} - $remainder = ${firstNumber - secondNumber}';
-    }
+    // Example: 14 - 8 → Break 8 into 4 + 4 → 14 - 4 = 10 → 10 - 4 = 6
+    return 'Crossing strategy: $firstNumber - $secondNumber = $firstNumber - $half - $otherHalf = ${firstNumber - half} - $otherHalf = ${firstNumber - secondNumber}';
   }
 }

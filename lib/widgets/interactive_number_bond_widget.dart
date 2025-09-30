@@ -876,11 +876,10 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
     final answer = isSubtraction ? widget.operand1 - widget.operand2 : widget.operand1 + widget.operand2;
     
     if (isSubtraction) {
-      // For crossing subtraction: Break down the subtrahend to reach a ten
-      final onesDigitOfFirst = widget.operand1 % 10;
-      final amountToReachTen = onesDigitOfFirst; // Amount needed to subtract to reach the previous ten
-      final remainingToSubtract = widget.operand2 - amountToReachTen;
-      final intermediate = widget.operand1 - amountToReachTen; // This should be a multiple of 10
+      // For crossing subtraction: Break down the subtrahend into two equal parts
+      final half = widget.operand2 ~/ 2;
+      final otherHalf = widget.operand2 - half;
+      final intermediate = widget.operand1 - half;
       
       return Container(
         padding: const EdgeInsets.all(20),
@@ -998,7 +997,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    '🪄 Turn ${widget.operand2} into ${amountToReachTen} + ${remainingToSubtract}',
+                    '🪄 Turn ${widget.operand2} into $half + $otherHalf',
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 12),
@@ -1014,9 +1013,9 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                       children: [
                         _buildMagicNumber(widget.operand2.toString(), Colors.blue[600]!, '🎲'),
                         const Text(' = ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        _buildMagicNumber(amountToReachTen.toString(), Colors.green[600]!, '⭐'),
+                        _buildMagicNumber(half.toString(), Colors.green[600]!, '⭐'),
                         const Text(' + ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        _buildMagicNumber(remainingToSubtract.toString(), Colors.purple[600]!, '🎈'),
+                        _buildMagicNumber(otherHalf.toString(), Colors.purple[600]!, '🎈'),
                       ],
                     ),
                   ),
@@ -1069,7 +1068,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                         Text('🥷 First: ', style: TextStyle(fontSize: 14, color: Colors.orange[700])),
                         _buildMagicNumber(widget.operand1.toString(), Colors.orange[600]!, '🏰'),
                         const Text(' - ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        _buildMagicNumber(amountToReachTen.toString(), Colors.green[600]!, '⭐'),
+                        _buildMagicNumber(half.toString(), Colors.green[600]!, '⭐'),
                         const Text(' = ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
                       ],
@@ -1090,7 +1089,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                         Text('🥷 Then: ', style: TextStyle(fontSize: 14, color: Colors.orange[700])),
                         _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
                         const Text(' - ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        _buildMagicNumber(remainingToSubtract.toString(), Colors.purple[600]!, '🎈'),
+                        _buildMagicNumber(otherHalf.toString(), Colors.purple[600]!, '🎈'),
                         const Text(' = ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         _buildMagicNumber(answer.toString(), Colors.green[700]!, '🏆'),
                       ],
