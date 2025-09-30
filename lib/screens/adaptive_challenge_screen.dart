@@ -7,6 +7,7 @@ import '../models/rewards_model.dart';
 import '../providers/profile_provider.dart';
 import '../services/adaptive_problem_service.dart';
 import '../services/language_service.dart';
+import '../services/debug_validator.dart';
 import '../services/problem_generator.dart';
 import '../services/rewards_service.dart';
 import '../widgets/adaptive_challenge_display.dart';
@@ -373,6 +374,22 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
             }
           },
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bug_report),
+            onPressed: () {
+              if (_currentChallenge != null) {
+                final validation = DebugValidator.validateProblem(
+                  _currentChallenge!.operand1,
+                  _currentChallenge!.operand2,
+                  _currentChallenge!.operator,
+                );
+                print('🔍 Problem Validation:');
+                print(validation);
+              }
+            },
+          ),
+        ],
       ),
       body: Stack(
         children: [

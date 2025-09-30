@@ -438,6 +438,10 @@ class CentralProblemGenerator {
     final onesDigit = firstNumber % 10;
     final result = firstNumber - secondNumber;
     
+    print('🔍 _isValidCrossingSubtraction($firstNumber, $secondNumber)');
+    print('   onesDigit: $onesDigit');
+    print('   result: $result');
+    
     // Rules for valid crossing subtraction:
     // 1. secondNumber must be > onesDigit (to force crossing)
     // 2. Result must be positive  
@@ -445,14 +449,29 @@ class CentralProblemGenerator {
     // 4. secondNumber must be large enough to be meaningfully broken down (>= 6)
     // 5. Must actually cross a ten boundary
     
-    if (firstNumber <= 10) return false;  // Must be multi-digit
-    if (secondNumber <= onesDigit) return false;  // Must require crossing
-    if (result <= 0) return false;  // Must be positive
-    if (secondNumber < 6) return false;  // Too small to break down meaningfully
+    if (firstNumber <= 10) {
+      print('   ❌ firstNumber <= 10');
+      return false;  // Must be multi-digit
+    }
+    if (secondNumber <= onesDigit) {
+      print('   ❌ secondNumber ($secondNumber) <= onesDigit ($onesDigit)');
+      return false;  // Must require crossing
+    }
+    if (result <= 0) {
+      print('   ❌ result <= 0');
+      return false;  // Must be positive
+    }
+    if (secondNumber < 6) {
+      print('   ❌ secondNumber < 6');
+      return false;  // Too small to break down meaningfully
+    }
     
     // Check if it actually crosses a ten boundary
     final nextLowerTen = (firstNumber ~/ 10) * 10;
-    return result < nextLowerTen;
+    final crossesBoundary = result < nextLowerTen;
+    print('   nextLowerTen: $nextLowerTen, crossesBoundary: $crossesBoundary');
+    
+    return crossesBoundary;
   }
 
   static String _generateSimpleSubtractionBondSteps(int firstNumber, int secondNumber) {
