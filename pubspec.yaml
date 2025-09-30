@@ -1,5 +1,5 @@
-name: math_blocks_complete_app
-description: "A new Flutter project."
+name: number_bond_math
+description: "Number Bond Math - Fun Addition & Subtraction. Educational math game helping kids master number bonds through interactive challenges and adaptive learning."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev

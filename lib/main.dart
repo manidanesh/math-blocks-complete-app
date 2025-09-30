@@ -20,7 +20,7 @@ class MathBlocksCompleteApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'Math Blocks - Complete App',
+      title: 'Number Bond Math - Fun Addition & Subtraction',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         useMaterial3: true,

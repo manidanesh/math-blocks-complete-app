@@ -179,13 +179,13 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Welcome message
+              // Welcome message - made more compact
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: const Color(0xFF3498DB).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
@@ -193,7 +193,7 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                 child: Text(
                   _getWelcomeMessage(),
                   style: const TextStyle(
-                    fontSize: 24,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF2C3E50),
                   ),
@@ -201,7 +201,7 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                 ),
               ),
               
-              const SizedBox(height: 32),
+              const SizedBox(height: 20),
               
               // Name input
               Card(
@@ -213,7 +213,7 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                       Text(
                         '👤 ${_getText('name_label')}',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF2C3E50),
                         ),
@@ -236,19 +236,19 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                 ),
               ),
               
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               
               // Age selection
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         '🎂 ${_getText('age_label')}',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF2C3E50),
                         ),
@@ -268,19 +268,19 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                 ),
               ),
               
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               
               // Language selection
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         '🌍 ${_getText('language_label')}',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF2C3E50),
                         ),
@@ -299,19 +299,19 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                 ),
               ),
               
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               
               // Favorite numbers selection
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         '⭐ ${_getText('favorite_numbers')}',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF2C3E50),
                         ),
@@ -331,11 +331,11 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                 ),
               ),
               
-              const SizedBox(height: 32),
+              const SizedBox(height: 20),
               
               // Create profile button
               SizedBox(
-                height: 60,
+                height: 50,
                 child: ElevatedButton(
                   onPressed: _canCreateProfile && !isLoading ? _createProfile : null,
                   style: ElevatedButton.styleFrom(

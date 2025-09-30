@@ -18,7 +18,7 @@ class AgeSelector extends StatelessWidget {
       'es': {'years': 'años'},
       'fr': {'years': 'ans'},
     };
-    return translations[language]?[key] ?? translations['en']![key]!;
+    return translations[language]?[key] ?? translations['en']?[key] ?? key;
   }
 
   @override

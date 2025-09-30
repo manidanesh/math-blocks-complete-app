@@ -11,7 +11,13 @@ import '../services/rewards_service.dart';
 class ProfileNotifier extends AsyncNotifier<KidProfile?> {
   @override
   Future<KidProfile?> build() async {
-    return await _loadProfile();
+    try {
+      return await _loadProfile();
+    } catch (e) {
+      print('❌ ProfileNotifier build error: $e');
+      // Return null instead of throwing to prevent app crash
+      return null;
+    }
   }
 
   static const String _profileKey = 'current_profile';
@@ -32,7 +38,8 @@ class ProfileNotifier extends AsyncNotifier<KidProfile?> {
       }
     } catch (e) {
       print('❌ Error loading profile: $e');
-      throw e;
+      // Don't throw the error - return null instead to prevent app crash
+      return null;
     }
   }
 

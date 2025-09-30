@@ -945,19 +945,25 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                   Text(
                     '🎯 Mission: Solve ${widget.operand1} - ${widget.operand2}',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.orange[800],
                     ),
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '🎪 MAGIC TRICK: Break ${widget.operand2} into smaller pieces!',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 12,
                       color: Colors.purple[700],
                       fontWeight: FontWeight.w600,
                     ),
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
                   ),
                 ],
               ),
@@ -1647,8 +1653,9 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
     }
     
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.all(16),
+      constraints: const BoxConstraints(maxWidth: 350), // Limit container width
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.orange[50]!, Colors.yellow[50]!],
@@ -1678,11 +1685,13 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                 child: Text(
                   _getText('oops_try_different'),
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.orange[800],
                   ),
                   textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
                 ),
               ),
               Text('💪', style: const TextStyle(fontSize: 28)),
@@ -1690,37 +1699,45 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
           ),
           const SizedBox(height: 16),
           
-          // Attempts remaining in a fun way
+          // Attempts remaining in a fun way - more flexible container
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            constraints: const BoxConstraints(maxWidth: 280), // Limit max width
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(25),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Colors.orange[400]!, width: 2),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('⚡', style: const TextStyle(fontSize: 20)),
-              const SizedBox(width: 8),
-              Text(
-                  _getText('more_chances_hero').replaceAll('{count}', remainingAttempts.toString()),
-                style: TextStyle(
-                    fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orange[700],
+                Text('⚡', style: const TextStyle(fontSize: 18)),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                    _getText('more_chances_hero').replaceAll('{count}', remainingAttempts.toString()),
+                  style: TextStyle(
+                      fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange[700],
+                  ),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
                 ),
               ),
-                Text('⚡', style: const TextStyle(fontSize: 20)),
+                const SizedBox(width: 6),
+                Text('💪', style: const TextStyle(fontSize: 18)),
               ],
             ),
           ),
           
           const SizedBox(height: 16),
           
-          // Magic hint box
+          // Magic hint box - more flexible
           Container(
-            padding: const EdgeInsets.all(16),
+            constraints: const BoxConstraints(maxWidth: 320), // Limit max width
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(15),
@@ -1739,21 +1756,26 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('🎪', style: const TextStyle(fontSize: 20)),
-                    const SizedBox(width: 8),
-          Text(
-                      _getText('magic_trick_for')
-                        .replaceAll('{operand1}', widget.operand1.toString())
-                        .replaceAll('{operator}', isSubtraction ? '-' : '+')
-                        .replaceAll('{operand2}', widget.operand2.toString()),
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.purple[700],
+                    Text('🎪', style: const TextStyle(fontSize: 18)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        _getText('magic_trick_for')
+                          .replaceAll('{operand1}', widget.operand1.toString())
+                          .replaceAll('{operator}', isSubtraction ? '-' : '+')
+                          .replaceAll('{operand2}', widget.operand2.toString()),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.purple[700],
+                        ),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                    Text('🎪', style: const TextStyle(fontSize: 20)),
+                    const SizedBox(width: 6),
+                    Text('🎪', style: const TextStyle(fontSize: 18)),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -1766,12 +1788,14 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                   ),
                   child: Text(
                     hintText,
-            style: TextStyle(
-              fontSize: 14,
+                    style: TextStyle(
+                      fontSize: 12,
                       color: Colors.purple[800],
                       fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
+                    ),
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.visible,
+                    maxLines: 3,
                   ),
                 ),
               ],
@@ -1795,17 +1819,21 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('🚀', style: const TextStyle(fontSize: 16)),
-                const SizedBox(width: 8),
-                const Text(
-                  'Clear & Try Again!',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                Text('🚀', style: const TextStyle(fontSize: 14)),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    _getText('clear_try_again'),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 ),
-                const SizedBox(width: 8),
-                Text('🚀', style: const TextStyle(fontSize: 16)),
+                const SizedBox(width: 6),
+                Text('🚀', style: const TextStyle(fontSize: 14)),
               ],
             ),
           ),
