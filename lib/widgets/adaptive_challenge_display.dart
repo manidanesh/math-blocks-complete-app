@@ -403,15 +403,11 @@ class _NumberBondFormat extends StatelessWidget {
                       child: Container(
                         height: 40,
                         margin: const EdgeInsets.symmetric(horizontal: 2),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.blue, width: 2),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
                         child: const Center(
                           child: Text(
                             '__',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 18,
                               color: Colors.blue,
                               fontWeight: FontWeight.bold,
                             ),
@@ -424,15 +420,11 @@ class _NumberBondFormat extends StatelessWidget {
                       child: Container(
                         height: 40,
                         margin: const EdgeInsets.symmetric(horizontal: 2),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.blue, width: 2),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
                         child: const Center(
                           child: Text(
                             '__',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 18,
                               color: Colors.blue,
                               fontWeight: FontWeight.bold,
                             ),
@@ -476,15 +468,11 @@ class _NumberBondFormat extends StatelessWidget {
                       child: Container(
                         height: 40,
                         margin: const EdgeInsets.symmetric(horizontal: 2),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.green, width: 2),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
                         child: const Center(
                           child: Text(
                             '__',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 18,
                               color: Colors.green,
                               fontWeight: FontWeight.bold,
                             ),
@@ -497,15 +485,11 @@ class _NumberBondFormat extends StatelessWidget {
                       child: Container(
                         height: 40,
                         margin: const EdgeInsets.symmetric(horizontal: 2),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.green, width: 2),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
                         child: const Center(
                           child: Text(
                             '__',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 18,
                               color: Colors.green,
                               fontWeight: FontWeight.bold,
                             ),
