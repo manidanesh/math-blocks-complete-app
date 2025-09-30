@@ -1204,59 +1204,287 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
         ),
       );
     } else {
-      // For addition crossing strategy
-      final tenComplement = 10 - (widget.operand1 % 10);
-      final remaining = widget.operand2 - tenComplement;
-      final nextTen = ((widget.operand1 ~/ 10) + 1) * 10;
+      // For addition crossing strategy: Break down the second number into two equal parts
+      final half = widget.operand2 ~/ 2;
+      final otherHalf = widget.operand2 - half;
+      final intermediate = widget.operand1 + half;
       
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Step 1: Add ${tenComplement} to reach the next ten',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue[50]!, Colors.cyan[50]!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          const SizedBox(height: 8),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              return FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Row(
-                  children: [
-                    _buildSolutionNumber(widget.operand1.toString(), Colors.orange),
-                    const Text(' + '),
-                    _buildSolutionNumber(tenComplement.toString(), Colors.green),
-                    const Text(' = '),
-                    _buildSolutionNumber(nextTen.toString(), Colors.red),
-                  ],
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.blue[300]!, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withOpacity(0.2),
+              spreadRadius: 2,
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Fun character introduction
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '🦸‍♂️',
+                  style: const TextStyle(fontSize: 32),
                 ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Step 2: Add the remaining ${remaining}',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 8),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              return FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Row(
-                  children: [
-                    _buildSolutionNumber(nextTen.toString(), Colors.red),
-                    const Text(' + '),
-                    _buildSolutionNumber(remaining.toString(), Colors.purple),
-                    const Text(' = '),
-                    _buildSolutionNumber(answer.toString(), Colors.green),
-                  ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Math Hero shows you the SECRET TRICK!',
+                    style: TextStyle(
+                      fontSize: 18, 
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue[800],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              );
-            },
-          ),
-      ],
-    );
+                Text(
+                  '✨',
+                  style: const TextStyle(fontSize: 32),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            
+            // Problem in a fun way
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: Colors.orange[300]!, width: 2),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    '🎯 Mission: Solve ${widget.operand1} + ${widget.operand2}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange[800],
+                    ),
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '🎪 MAGIC TRICK: Break ${widget.operand2} into smaller pieces!',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.purple[700],
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Step 1 with animations
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: Colors.green[300]!, width: 2),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('🔥', style: const TextStyle(fontSize: 24)),
+                      const SizedBox(width: 8),
+                      Text(
+                        'STEP 1: Split the number!',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green[800],
+                        ),
+                      ),
+                      Text('🔥', style: const TextStyle(fontSize: 24)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '🪄 Turn ${widget.operand2} into $half + $otherHalf',
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(color: Colors.green[400]!, width: 2),
+                    ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildMagicNumber(widget.operand2.toString(), Colors.blue[600]!, '🎲'),
+                              const Text(' = ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              _buildMagicNumber(half.toString(), Colors.green[600]!, '⭐'),
+                              const Text(' + ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              _buildMagicNumber(otherHalf.toString(), Colors.purple[600]!, '🎈'),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Step 2 with more fun
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: Colors.orange[300]!, width: 2),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('⚡', style: const TextStyle(fontSize: 24)),
+                      const SizedBox(width: 8),
+                      Text(
+                        'STEP 2: Add like a ninja!',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange[800],
+                        ),
+                      ),
+                      Text('⚡', style: const TextStyle(fontSize: 24)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // First addition
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: Colors.orange[200]!),
+                    ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('🥷 First: ', style: TextStyle(fontSize: 14, color: Colors.orange[700])),
+                              _buildMagicNumber(widget.operand1.toString(), Colors.orange[600]!, '🏰'),
+                              const Text(' + ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              _buildMagicNumber(half.toString(), Colors.green[600]!, '⭐'),
+                              const Text(' = ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  
+                  // Second addition
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: Colors.orange[200]!),
+                    ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('🥷 Then: ', style: TextStyle(fontSize: 14, color: Colors.orange[700])),
+                              _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
+                              const Text(' + ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              _buildMagicNumber(otherHalf.toString(), Colors.purple[600]!, '🎈'),
+                              const Text(' = ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              _buildMagicNumber(answer.toString(), Colors.green[700]!, '🏆'),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Victory celebration
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.yellow[100]!, Colors.orange[100]!],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.yellow[400]!, width: 2),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('🎉', style: const TextStyle(fontSize: 24)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'You did it! The answer is $answer!',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange[800],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Text('🎊', style: const TextStyle(fontSize: 24)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
     }
   }
 
