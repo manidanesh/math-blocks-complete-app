@@ -904,9 +904,10 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
     final answer = isSubtraction ? widget.operand1 - widget.operand2 : widget.operand1 + widget.operand2;
     
     if (isSubtraction) {
-      // For crossing subtraction: Break down the subtrahend into two equal parts
-      final half = widget.operand2 ~/ 2;
-      final otherHalf = widget.operand2 - half;
+      // For crossing subtraction: Break down operand2 to reach the lower ten
+      final onesDigit = widget.operand1 % 10;
+      final half = onesDigit; // Amount needed to reach the lower ten
+      final otherHalf = widget.operand2 - onesDigit; // Remainder
       final intermediate = widget.operand1 - half;
       
       return Container(
