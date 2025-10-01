@@ -1226,9 +1226,11 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
         ),
       );
     } else {
-      // For addition crossing strategy: Break down the second number into two equal parts
-      final half = widget.operand2 ~/ 2;
-      final otherHalf = widget.operand2 - half;
+      // For addition crossing strategy: Break down operand2 to reach next ten
+      final onesDigit = widget.operand1 % 10;
+      final needToReachTen = 10 - onesDigit;
+      final half = needToReachTen;
+      final otherHalf = widget.operand2 - needToReachTen;
       final intermediate = widget.operand1 + half;
       
       return Container(
