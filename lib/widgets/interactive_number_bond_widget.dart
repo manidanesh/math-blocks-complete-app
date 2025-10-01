@@ -863,11 +863,11 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                 fit: BoxFit.scaleDown,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+          children: [
                     _buildSolutionNumber(widget.operand1.toString(), Colors.orange, size: 20),
-                    const Text(' + '),
+            const Text(' + '),
                     _buildSolutionNumber(needed.toString(), Colors.green, size: 20),
-                    const Text(' = '),
+            const Text(' = '),
                     _buildSolutionNumber('10', Colors.red, size: 20),
                   ],
                 ),
@@ -881,13 +881,13 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
               fit: BoxFit.scaleDown,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+          children: [
                   _buildSolutionNumber('10', Colors.red, size: 20),
-                  const Text(' + '),
+            const Text(' + '),
                   _buildSolutionNumber(remaining.toString(), Colors.purple, size: 20),
-                  const Text(' = '),
+            const Text(' = '),
                   _buildSolutionNumber(answer.toString(), Colors.green, size: 20),
-                ],
+          ],
               ),
             );
           },
@@ -931,7 +931,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
+      children: [
             // Fun character introduction
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1555,12 +1555,12 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
             return FittedBox(
               fit: BoxFit.scaleDown,
               child: Row(
-                children: [
-                  _buildSolutionNumber(widget.operand1.toString(), Colors.orange),
+      children: [
+        _buildSolutionNumber(widget.operand1.toString(), Colors.orange),
                   Text(operator),
-                  _buildSolutionNumber(widget.operand2.toString(), Colors.purple),
-                  const Text(' = '),
-                  _buildSolutionNumber(answer.toString(), Colors.green),
+        _buildSolutionNumber(widget.operand2.toString(), Colors.purple),
+        const Text(' = '),
+        _buildSolutionNumber(answer.toString(), Colors.green),
                 ],
               ),
             );
@@ -1581,16 +1581,16 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
     return Flexible(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-        decoration: BoxDecoration(
-          color: color,
+      decoration: BoxDecoration(
+        color: color,
           borderRadius: BorderRadius.circular(4),
-        ),
-        child: Text(
-          number,
+      ),
+      child: Text(
+        number,
           style: TextStyle(
             fontSize: (size ?? 14) * 0.8, // Scale down the font size
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
           ),
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
