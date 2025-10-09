@@ -417,7 +417,7 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
                     Card(
                       elevation: 4,
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(8),
                         child: Column(
                           children: [
                             Consumer(
@@ -427,11 +427,11 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
                                 
                                 return Text(
                                   LanguageService.translate('interactive_number_bond', language),
-                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                 );
                               },
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 8),
                             Consumer(
                               builder: (context, ref, child) {
                                 final profile = ref.watch(profileProvider).value;
