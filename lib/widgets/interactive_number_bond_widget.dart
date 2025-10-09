@@ -314,7 +314,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -328,29 +328,29 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
             children: [
               Text(
                 _getStrategyTitle(),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
               ),
               if (_circleNumbers.values.any((list) => list.isNotEmpty))
                 IconButton(
                   onPressed: _clearBond,
-                  icon: const Icon(Icons.refresh, color: Colors.grey),
+                  icon: const Icon(Icons.refresh, color: Colors.grey, size: 20),
                   tooltip: 'Clear and try again',
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           
           // Interactive circle for selected numbers
           _buildInteractiveCircle(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
           
           
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           
           // Available numbers grid
           _buildNumberSelectionGrid(),
           
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           
           // Success feedback - animation removed
           if (_bondComplete)
@@ -392,7 +392,7 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
               // Three-circle number bond structure: Top circle with second number, two empty circles below
               SizedBox(
                 width: 300,
-                height: 160,
+                height: 150,
                 child: Stack(
                   children: [
                     // Top circle - RESULT for addition, FIRST NUMBER for subtraction
