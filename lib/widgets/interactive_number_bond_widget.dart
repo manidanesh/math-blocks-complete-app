@@ -595,31 +595,29 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                     ),
                   )
                 else
-                  Flexible(
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      children: circleNumbers.map((number) => 
-                        GestureDetector(
-                          onTap: () => _removeNumberFromCircle('operand$operandNumber', number),
-                          child: Container(
-                            margin: const EdgeInsets.all(2),
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: operandNumber == 1 ? Colors.orange : Colors.purple,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              number.toString(),
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    children: circleNumbers.map((number) => 
+                      GestureDetector(
+                        onTap: () => _removeNumberFromCircle('operand$operandNumber', number),
+                        child: Container(
+                          margin: const EdgeInsets.all(2),
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: operandNumber == 1 ? Colors.orange : Colors.purple,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            number.toString(),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
                         ),
-                      ).toList(),
-                    ),
+                      ),
+                    ).toList(),
                   ),
                 if (isCorrect)
                   const Icon(Icons.check, color: Colors.green, size: 16),
@@ -656,11 +654,10 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 12),
-          Flexible(
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _availableNumbers.map((number) {
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _availableNumbers.map((number) {
               final allSelected = _circleNumbers.values.expand((list) => list).toList();
               final isSelected = allSelected.contains(number);
               final selectionCount = allSelected.where((n) => n == number).length;
@@ -726,7 +723,6 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                 ),
               );
             }).toList(),
-            ),
           ),
         ],
       ),
