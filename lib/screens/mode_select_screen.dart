@@ -129,7 +129,7 @@ class ModeSelectScreen extends ConsumerWidget {
                 // Intelligent Math Challenge mode button
                 SizedBox(
                   width: double.infinity,
-                  height: 105,
+                  height: 95,
                   child: ElevatedButton(
                     onPressed: () => context.go('/challenge'),
                     style: ElevatedButton.styleFrom(
@@ -137,16 +137,16 @@ class ModeSelectScreen extends ConsumerWidget {
                       foregroundColor: Colors.white,
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.auto_awesome, size: 28),
-                          const SizedBox(height: 6),
+                          const Icon(Icons.auto_awesome, size: 24),
+                          const SizedBox(height: 4),
                           Text(
                             _getText('intelligent_challenge', profile.language),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 4),
@@ -166,7 +166,7 @@ class ModeSelectScreen extends ConsumerWidget {
                 // Profile button (unified)
                 SizedBox(
                   width: double.infinity,
-                  height: 80,
+                  height: 75,
                   child: ElevatedButton(
                     onPressed: () => context.go('/profile'),
                     style: ElevatedButton.styleFrom(
@@ -176,11 +176,11 @@ class ModeSelectScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.person, size: 32),
-                        const SizedBox(height: 4),
+                        const Icon(Icons.person, size: 28),
+                        const SizedBox(height: 2),
                         Text(
                           _getText('my_profile', profile.language),
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
