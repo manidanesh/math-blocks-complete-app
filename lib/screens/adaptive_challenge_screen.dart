@@ -374,22 +374,6 @@ class _AdaptiveChallengeScreenState extends ConsumerState<AdaptiveChallengeScree
             }
           },
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.bug_report),
-            onPressed: () {
-              if (_currentChallenge != null) {
-                final validation = DebugValidator.validateProblem(
-                  _currentChallenge!.operand1,
-                  _currentChallenge!.operand2,
-                  _currentChallenge!.operator,
-                );
-                print('🔍 Problem Validation:');
-                print(validation);
-              }
-            },
-          ),
-        ],
       ),
       body: Stack(
         children: [
