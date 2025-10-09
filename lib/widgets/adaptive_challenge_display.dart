@@ -52,9 +52,7 @@ class AdaptiveChallengeDisplay extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 // Challenge below
-                Expanded(
-                  child: _NumberBondFormat(challenge: challenge),
-                ),
+                _NumberBondFormat(challenge: challenge),
               ],
             ),
             
@@ -399,35 +397,31 @@ class _NumberBondFormat extends StatelessWidget {
                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
                     ),
                     const Text(' - ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                    Flexible(
-                      child: Container(
-                        height: 40,
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        child: const Center(
-                          child: Text(
-                            '__',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
-                            ),
+                    Container(
+                      height: 40,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      child: const Center(
+                        child: Text(
+                          '__',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ),
                     const Text(' - ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                    Flexible(
-                      child: Container(
-                        height: 40,
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        child: const Center(
-                          child: Text(
-                            '__',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
-                            ),
+                    Container(
+                      height: 40,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      child: const Center(
+                        child: Text(
+                          '__',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
@@ -464,35 +458,31 @@ class _NumberBondFormat extends StatelessWidget {
                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
                     ),
                     const Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                    Flexible(
-                      child: Container(
-                        height: 40,
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        child: const Center(
-                          child: Text(
-                            '__',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.green,
-                              fontWeight: FontWeight.bold,
-                            ),
+                    Container(
+                      height: 40,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      child: const Center(
+                        child: Text(
+                          '__',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ),
                     const Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                    Flexible(
-                      child: Container(
-                        height: 40,
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        child: const Center(
-                          child: Text(
-                            '__',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.green,
-                              fontWeight: FontWeight.bold,
-                            ),
+                    Container(
+                      height: 40,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      child: const Center(
+                        child: Text(
+                          '__',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
