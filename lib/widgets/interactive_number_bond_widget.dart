@@ -1112,20 +1112,17 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                           fit: BoxFit.scaleDown,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Flexible(
-                                child: Text(
-                                  '🥷 First: ', 
-                                  style: TextStyle(fontSize: 12, color: Colors.orange[700]),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
+                              Text(
+                                '🥷 First: ', 
+                                style: TextStyle(fontSize: 12, color: Colors.orange[700]),
                               ),
-                              _buildMagicNumber(widget.operand1.toString(), Colors.orange[600]!, '🏰'),
+                              _buildMagicNumberSimple(widget.operand1.toString(), Colors.orange[600]!, '🏰'),
                               const Text(' - ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                              _buildMagicNumber(half.toString(), Colors.green[600]!, '⭐'),
+                              _buildMagicNumberSimple(half.toString(), Colors.green[600]!, '⭐'),
                               const Text(' = ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                              _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
+                              _buildMagicNumberSimple(intermediate.toString(), Colors.red[600]!, '🎯'),
                             ],
                           ),
                         );
@@ -1147,20 +1144,17 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                           fit: BoxFit.scaleDown,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Flexible(
-                                child: Text(
-                                  '🥷 Then: ', 
-                                  style: TextStyle(fontSize: 12, color: Colors.orange[700]),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
+                              Text(
+                                '🥷 Then: ', 
+                                style: TextStyle(fontSize: 12, color: Colors.orange[700]),
                               ),
-                              _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
+                              _buildMagicNumberSimple(intermediate.toString(), Colors.red[600]!, '🎯'),
                               const Text(' - ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                              _buildMagicNumber(otherHalf.toString(), Colors.purple[600]!, '🎈'),
+                              _buildMagicNumberSimple(otherHalf.toString(), Colors.purple[600]!, '🎈'),
                               const Text(' = ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                              _buildMagicNumber(answer.toString(), Colors.green[700]!, '🏆'),
+                              _buildMagicNumberSimple(answer.toString(), Colors.green[700]!, '🏆'),
                             ],
                           ),
                         );
@@ -1436,20 +1430,17 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                           fit: BoxFit.scaleDown,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Flexible(
-                                child: Text(
-                                  '🥷 First: ', 
-                                  style: TextStyle(fontSize: 12, color: Colors.orange[700]),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
+                              Text(
+                                '🥷 First: ', 
+                                style: TextStyle(fontSize: 12, color: Colors.orange[700]),
                               ),
-                              _buildMagicNumber(widget.operand1.toString(), Colors.orange[600]!, '🏰'),
+                              _buildMagicNumberSimple(widget.operand1.toString(), Colors.orange[600]!, '🏰'),
                               const Text(' + ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                              _buildMagicNumber(half.toString(), Colors.green[600]!, '⭐'),
+                              _buildMagicNumberSimple(half.toString(), Colors.green[600]!, '⭐'),
                               const Text(' = ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                              _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
+                              _buildMagicNumberSimple(intermediate.toString(), Colors.red[600]!, '🎯'),
                             ],
                           ),
                         );
@@ -1471,20 +1462,17 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
                           fit: BoxFit.scaleDown,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Flexible(
-                                child: Text(
-                                  '🥷 Then: ', 
-                                  style: TextStyle(fontSize: 12, color: Colors.orange[700]),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
+                              Text(
+                                '🥷 Then: ', 
+                                style: TextStyle(fontSize: 12, color: Colors.orange[700]),
                               ),
-                              _buildMagicNumber(intermediate.toString(), Colors.red[600]!, '🎯'),
+                              _buildMagicNumberSimple(intermediate.toString(), Colors.red[600]!, '🎯'),
                               const Text(' + ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                              _buildMagicNumber(otherHalf.toString(), Colors.purple[600]!, '🎈'),
+                              _buildMagicNumberSimple(otherHalf.toString(), Colors.purple[600]!, '🎈'),
                               const Text(' = ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                              _buildMagicNumber(answer.toString(), Colors.green[700]!, '🏆'),
+                              _buildMagicNumberSimple(answer.toString(), Colors.green[700]!, '🏆'),
                             ],
                           ),
                         );
@@ -1638,6 +1626,44 @@ class _InteractiveNumberBondWidgetState extends State<InteractiveNumberBondWidge
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Simple version without Flexible for use inside FittedBox
+  Widget _buildMagicNumberSimple(String text, Color color, String emoji) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: color, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.2),
+            spreadRadius: 0.5,
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            emoji,
+            style: const TextStyle(fontSize: 12),
+          ),
+          const SizedBox(width: 2),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
