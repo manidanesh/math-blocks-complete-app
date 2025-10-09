@@ -443,12 +443,17 @@ class CentralProblemGenerator {
     print('   result: $result');
     
     // Rules for valid crossing subtraction:
-    // 1. secondNumber must be > onesDigit (to force crossing)
-    // 2. Result must be positive  
-    // 3. First number must be > 10 (multi-digit)
-    // 4. secondNumber must be large enough to be meaningfully broken down (>= 6)
-    // 5. Must actually cross a ten boundary
+    // 1. First number must NOT end in 0 (already on ten boundary)
+    // 2. secondNumber must be > onesDigit (to force crossing)
+    // 3. Result must be positive  
+    // 4. First number must be > 10 (multi-digit)
+    // 5. secondNumber must be large enough to be meaningfully broken down (>= 6)
+    // 6. Must actually cross a ten boundary
     
+    if (onesDigit == 0) {
+      print('   ❌ onesDigit == 0 (already on ten boundary)');
+      return false;  // Cannot cross from a ten boundary (20, 30, etc.)
+    }
     if (firstNumber <= 10) {
       print('   ❌ firstNumber <= 10');
       return false;  // Must be multi-digit
