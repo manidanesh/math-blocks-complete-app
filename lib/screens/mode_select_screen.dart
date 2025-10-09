@@ -129,34 +129,36 @@ class ModeSelectScreen extends ConsumerWidget {
                 // Intelligent Math Challenge mode button
                 SizedBox(
                   width: double.infinity,
-                  height: 95,
+                  height: 88,
                   child: ElevatedButton(
                     onPressed: () => context.go('/challenge'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF9B59B6),
                       foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.auto_awesome, size: 24),
-                          const SizedBox(height: 4),
-                          Text(
-                            _getText('intelligent_challenge', profile.language),
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _getText('adapts_skill', profile.language),
-                            style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.8)),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.auto_awesome, size: 22),
+                        const SizedBox(height: 3),
+                        Text(
+                          _getText('intelligent_challenge', profile.language),
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _getText('adapts_skill', profile.language),
+                          style: TextStyle(fontSize: 10, color: Colors.white.withOpacity(0.8)),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -166,21 +168,24 @@ class ModeSelectScreen extends ConsumerWidget {
                 // Profile button (unified)
                 SizedBox(
                   width: double.infinity,
-                  height: 75,
+                  height: 70,
                   child: ElevatedButton(
                     onPressed: () => context.go('/profile'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF3498DB),
                       foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.person, size: 28),
+                        const Icon(Icons.person, size: 26),
                         const SizedBox(height: 2),
                         Text(
                           _getText('my_profile', profile.language),
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
