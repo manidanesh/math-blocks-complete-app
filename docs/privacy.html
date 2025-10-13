@@ -52,45 +52,57 @@
         }
         
         .section {
-            margin-bottom: 35px;
+            margin-bottom: 40px;
         }
         
         .section h2 {
             color: #2c3e50;
-            font-size: 1.6em;
+            font-size: 1.8em;
             margin-bottom: 15px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #3498db;
+            border-bottom: 3px solid #3498db;
         }
         
         .section p {
-            font-size: 1.05em;
             margin-bottom: 15px;
-            color: #555;
+            font-size: 1.1em;
         }
         
         .section ul {
-            list-style: disc;
-            padding-left: 30px;
+            margin-left: 30px;
             margin-bottom: 15px;
         }
         
-        .section ul li {
+        .section li {
             margin-bottom: 10px;
-            color: #555;
+            font-size: 1.1em;
         }
         
         .highlight-box {
-            background: #e8f8f5;
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
             padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #27ae60;
             margin: 20px 0;
+            border-radius: 5px;
         }
         
-        .highlight-box strong {
-            color: #27ae60;
-            font-size: 1.1em;
+        .contact-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .contact-box a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.2em;
+        }
+        
+        .contact-box a:hover {
+            text-decoration: underline;
         }
         
         .footer {
@@ -101,19 +113,18 @@
             font-size: 0.9em;
         }
         
-        .nav-link {
-            text-align: center;
-            margin: 20px 0;
-        }
-        
-        .nav-link a {
-            color: #3498db;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .nav-link a:hover {
-            text-decoration: underline;
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .section h2 {
+                font-size: 1.5em;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
         }
     </style>
 </head>
@@ -122,111 +133,52 @@
         <div class="header">
             <h1>🔒 Privacy Policy</h1>
             <p>Number Bond Challenge</p>
-            <p style="font-size: 0.9em; margin-top: 10px;">Last Updated: October 1, 2025</p>
         </div>
         
         <div class="content">
-            <div class="nav-link">
-                <a href="index.html">← Back to Support</a>
-            </div>
-            
-            <!-- Privacy Commitment -->
             <div class="highlight-box">
-                <strong>Your Privacy is Our Priority:</strong> Number Bond Challenge does not collect, transmit, or share any personal data. All information stays on your device.
+                <p><strong>Last updated: October 2025</strong></p>
+                <p>Number Bond Challenge is a math learning app designed for children. We respect your privacy and are committed to protecting all user data.</p>
             </div>
             
-            <!-- Information We DON'T Collect -->
+            <!-- Data Collection -->
             <div class="section">
-                <h2>Information We DON'T Collect</h2>
-                <p>Number Bond Challenge is designed with privacy first. We do NOT collect:</p>
+                <h2>1. Data Collection</h2>
+                <p>The app does not collect, store, or share any personal information.</p>
                 <ul>
-                    <li>Personal information (names, emails, phone numbers)</li>
-                    <li>Location data</li>
-                    <li>Device identifiers</li>
-                    <li>Usage analytics or statistics</li>
-                    <li>Crash reports with personal data</li>
-                    <li>Any data that leaves your device</li>
+                    <li>No user account or personal data is required.</li>
+                    <li>All progress, scores, and preferences are stored locally on your device only.</li>
                 </ul>
             </div>
             
-            <!-- Data Storage -->
+            <!-- Data Sharing -->
             <div class="section">
-                <h2>Local Data Storage</h2>
-                <p>All app data is stored <strong>locally on your device only</strong>:</p>
+                <h2>2. Data Sharing</h2>
+                <p>We do not share any information with third parties.</p>
                 <ul>
-                    <li><strong>Child Profile</strong>: Name, age, language preference, and favorite numbers</li>
-                    <li><strong>Progress Data</strong>: Problem attempts, accuracy, and performance metrics</li>
-                    <li><strong>Rewards</strong>: Stars earned and current level</li>
-                </ul>
-                <p>This data is saved using iOS's secure local storage (SharedPreferences) and is never transmitted to any server or third party.</p>
-            </div>
-            
-            <!-- Third-Party Services -->
-            <div class="section">
-                <h2>Third-Party Services</h2>
-                <p><strong>We do NOT use any third-party services</strong> that collect data, including:</p>
-                <ul>
-                    <li>No analytics platforms (Google Analytics, Firebase, etc.)</li>
-                    <li>No advertising networks</li>
-                    <li>No crash reporting services with personal data</li>
-                    <li>No social media integration</li>
-                    <li>No cloud storage or backup services</li>
+                    <li>The app does not include analytics, advertising, or social media links.</li>
                 </ul>
             </div>
             
-            <!-- Internet Connection -->
+            <!-- In-App Purchases & Ads -->
             <div class="section">
-                <h2>Internet Connection</h2>
-                <p>Number Bond Challenge <strong>does not require an internet connection</strong> to function. The app works completely offline after installation. No data is sent to or received from any server.</p>
+                <h2>3. In-App Purchases & Ads</h2>
+                <p>The app does not include in-app purchases or third-party advertising.</p>
             </div>
             
             <!-- Children's Privacy -->
             <div class="section">
-                <h2>Children's Privacy (COPPA Compliance)</h2>
-                <p>We are committed to protecting children's privacy:</p>
+                <h2>4. Children's Privacy</h2>
+                <p>This app is built specifically for children under 13, in compliance with COPPA (Children's Online Privacy Protection Act).</p>
                 <ul>
-                    <li>The app is designed for children under 13</li>
-                    <li>We do not knowingly collect any personal information from children</li>
-                    <li>No registration or account creation is required</li>
-                    <li>Parents have full control over all data through device settings</li>
-                    <li>All data can be deleted by uninstalling the app</li>
+                    <li>Parents can delete the app at any time to remove all stored data.</li>
                 </ul>
-            </div>
-            
-            <!-- Data Security -->
-            <div class="section">
-                <h2>Data Security</h2>
-                <p>Since all data is stored locally on your device:</p>
-                <ul>
-                    <li>Your data is protected by your device's security measures (passcode, Face ID, etc.)</li>
-                    <li>Data is isolated to the app's sandbox environment</li>
-                    <li>No data transmission means no risk of interception</li>
-                    <li>Deleting the app permanently removes all data</li>
-                </ul>
-            </div>
-            
-            <!-- Your Rights -->
-            <div class="section">
-                <h2>Your Rights</h2>
-                <p>You have complete control over your data:</p>
-                <ul>
-                    <li><strong>Access</strong>: All data is accessible within the app</li>
-                    <li><strong>Deletion</strong>: Uninstall the app to permanently delete all data</li>
-                    <li><strong>Control</strong>: Modify or reset profiles at any time</li>
-                    <li><strong>Export</strong>: Data stays on your device, no need for export</li>
-                </ul>
-            </div>
-            
-            <!-- Changes to Privacy Policy -->
-            <div class="section">
-                <h2>Changes to This Privacy Policy</h2>
-                <p>We may update this Privacy Policy from time to time. Any changes will be reflected on this page with an updated "Last Updated" date. We encourage you to review this Privacy Policy periodically.</p>
             </div>
             
             <!-- Contact -->
             <div class="section">
-                <h2>Contact Us</h2>
-                <p>If you have any questions about this Privacy Policy or our privacy practices, please contact us:</p>
+                <h2>5. Contact</h2>
+                <p>If you have any questions about privacy or data usage, please contact us at:</p>
                 <div class="contact-box">
                     <p><strong>Email:</strong> <a href="mailto:numberbondmath@gmail.com">numberbondmath@gmail.com</a></p>
                 </div>
@@ -234,8 +186,7 @@
         </div>
         
         <div class="footer">
-            <p>© 2025 Number Bond Challenge. All rights reserved.</p>
-            <p style="margin-top: 8px;"><a href="index.html" style="color: #3498db;">Support Page</a></p>
+            <p>&copy; 2025 Number Bond Challenge. All rights reserved.</p>
         </div>
     </div>
 </body>
