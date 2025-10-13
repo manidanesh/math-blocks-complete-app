@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Bond Challenge - Support</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+        }
+        
+        .section h3 {
+            color: #34495e;
+            font-size: 1.3em;
+            margin: 25px 0 10px 0;
+        }
+        
+        .section p, .section li {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        
+        .section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .section ul li {
+            padding-left: 30px;
+            position: relative;
+            margin-bottom: 12px;
+        }
+        
+        .section ul li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 1.3em;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .feature-card h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .contact-box {
+            background: #e8f4f8;
+            padding: 25px;
+            border-radius: 10px;
+            border: 2px solid #3498db;
+            text-align: center;
+        }
+        
+        .contact-box a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.2em;
+        }
+        
+        .contact-box a:hover {
+            text-decoration: underline;
+        }
+        
+        .footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+        }
+        
+        .emoji {
+            font-size: 1.5em;
+            margin-right: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Number Bond Challenge</h1>
+            <p>Fun Addition & Subtraction</p>
+        </div>
+        
+        <div class="content">
+            <!-- About Section -->
+            <div class="section">
+                <h2><span class="emoji">📱</span>About the App</h2>
+                <p>Number Bond Challenge is an educational math app that helps kids master addition and subtraction through interactive number bond strategies. Our adaptive learning system ensures each child progresses at their own pace while building strong mathematical foundations.</p>
+            </div>
+            
+            <!-- Features Section -->
+            <div class="section">
+                <h2><span class="emoji">🎯</span>Features</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>🧠 Adaptive Learning</h4>
+                        <p>Problems automatically adjust to your child's skill level for optimal learning</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🌍 Multi-Language</h4>
+                        <p>Support for English, Spanish, and French</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🎮 Interactive</h4>
+                        <p>Tap-to-select number bonds make learning fun and engaging</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📊 Progress Tracking</h4>
+                        <p>Monitor your child's improvement and accuracy over time</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>⭐ Rewards System</h4>
+                        <p>Stars and levels keep kids motivated to learn</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🎯 Number Bond Strategy</h4>
+                        <p>Teaching the crossing tens method for mental math mastery</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- FAQ Section -->
+            <div class="section">
+                <h2><span class="emoji">❓</span>Frequently Asked Questions</h2>
+                
+                <h3>How do I create a profile?</h3>
+                <p>Open the app and follow the on-screen instructions. You'll need to enter your child's name, select their age, choose their preferred language, and optionally pick favorite numbers.</p>
+                
+                <h3>What age is this app suitable for?</h3>
+                <p>The app is designed for children ages 5-10 who are learning basic addition and subtraction with number bonds.</p>
+                
+                <h3>How does the adaptive learning work?</h3>
+                <p>The app tracks your child's performance (accuracy, speed, and consistency) and automatically adjusts problem difficulty. Children must demonstrate mastery (90%+ accuracy over 10 problems) before advancing to the next level.</p>
+                
+                <h3>Can I change the language?</h3>
+                <p>Yes! You can select English, Spanish (Español), or French (Français) when creating a profile or from the profile settings.</p>
+                
+                <h3>What is the "crossing strategy"?</h3>
+                <p>The crossing strategy is a mental math technique where numbers are broken down to cross tens boundaries. For example, 9 + 7 becomes 9 + 1 + 6 (reaching 10 first, then adding the remainder). This builds strong number sense.</p>
+                
+                <h3>How do I reset my child's progress?</h3>
+                <p>Go to the Profile screen and tap the reset button. Note that this will clear all progress and cannot be undone.</p>
+                
+                <h3>Are there any in-app purchases or ads?</h3>
+                <p>No! Number Bond Challenge is completely free with no ads and no in-app purchases.</p>
+            </div>
+            
+            <!-- System Requirements -->
+            <div class="section">
+                <h2><span class="emoji">📱</span>System Requirements</h2>
+                <ul>
+                    <li>iOS 13.0 or later</li>
+                    <li>Compatible with iPhone and iPad</li>
+                    <li>Approximately 15 MB download size</li>
+                    <li>No internet connection required after installation</li>
+                </ul>
+            </div>
+            
+            <!-- Privacy Section -->
+            <div class="section">
+                <h2><span class="emoji">🔒</span>Privacy & Data</h2>
+                <p>We take your child's privacy seriously:</p>
+                <ul>
+                    <li>No personal data is collected or transmitted</li>
+                    <li>All data is stored locally on your device</li>
+                    <li>No third-party tracking or analytics</li>
+                    <li>No account or email required</li>
+                    <li>No ads or data sharing</li>
+                    <li>Completely offline after installation</li>
+                </ul>
+            </div>
+            
+            <!-- Contact Section -->
+            <div class="section">
+                <h2><span class="emoji">📧</span>Contact Support</h2>
+                <div class="contact-box">
+                    <p style="margin-bottom: 15px;">Need help or have questions?</p>
+                    <p><strong>Email:</strong> <a href="mailto:mani.danesh@outlook.com">mani.danesh@outlook.com</a></p>
+                    <p style="margin-top: 10px; font-size: 0.9em; color: #666;">We typically respond within 24-48 hours</p>
+                </div>
+            </div>
+            
+            <!-- Version History -->
+            <div class="section">
+                <h2><span class="emoji">🆕</span>Version History</h2>
+                <h3>Version 1.0 (Current)</h3>
+                <ul>
+                    <li>Initial release</li>
+                    <li>Adaptive challenge system with Level 1-5</li>
+                    <li>Multi-language support (English, Spanish, French)</li>
+                    <li>Interactive number bond visualization</li>
+                    <li>Crossing strategy for addition and subtraction</li>
+                    <li>Progress tracking and performance insights</li>
+                    <li>Rewards system with stars and level progression</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 Number Bond Challenge. All rights reserved.</p>
+            <p style="margin-top: 8px; font-size: 0.85em;">Made with ❤️ for young mathematicians</p>
+        </div>
+    </div>
+</body>
+</html>
