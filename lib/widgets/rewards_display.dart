@@ -10,11 +10,15 @@ class RewardsDisplay extends StatelessWidget {
   final String childName;
   final bool showDetailed;
 
+  /// Uses the profile language when omitted.
+  final String? language;
+
   const RewardsDisplay({
     super.key,
     required this.rewards,
     required this.childName,
     this.showDetailed = false,
+    this.language,
   });
 
   String _getLevelName(ChildLevel level, String language) {
@@ -32,30 +36,41 @@ class RewardsDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final selectedLanguage = language;
+    if (selectedLanguage != null) return _buildRewards(selectedLanguage);
     return Consumer(
       builder: (context, ref, child) {
         final profile = ref.watch(profileProvider).value;
-        final language = profile?.language ?? 'en';
-        
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
+        return _buildRewards(profile?.language ?? 'en');
+      },
+    );
+  }
+
+  Widget _buildRewards(String language) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.blue[200]!),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.1),
+          blurRadius: 4,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        SizedBox(
+          width: double.infinity,
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 8,
             children: [
               Text(
                 '${rewards.currentLevel.emoji} ${_getLevelName(rewards.currentLevel, language)}',
@@ -65,7 +80,6 @@ class RewardsDisplay extends StatelessWidget {
                   color: Color(0xFF2C3E50),
                 ),
               ),
-              const Spacer(),
               Text(
                 '${rewards.totalStars} ⭐',
                 style: const TextStyle(
@@ -76,89 +90,88 @@ class RewardsDisplay extends StatelessWidget {
               ),
             ],
           ),
-          
-          const SizedBox(height: 12),
-          
-          // Progress bar
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        ),
+
+        const SizedBox(height: 12),
+
+        // Progress bar
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: double.infinity,
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                spacing: 12,
+                runSpacing: 4,
                 children: [
                   Text(
-                    LanguageService.translate('progress_to_next_level', language),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
+                    LanguageService.translate(
+                      'progress_to_next_level',
+                      language,
                     ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                   Text(
                     '${rewards.starsToNextLevel} ${LanguageService.translate('stars_to_go', language)}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
-              LinearProgressIndicator(
-                value: rewards.levelProgress,
-                backgroundColor: Colors.grey[300],
-                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2ECC71)),
-                minHeight: 6,
+            ),
+            const SizedBox(height: 4),
+            LinearProgressIndicator(
+              value: rewards.levelProgress,
+              backgroundColor: Colors.grey[300],
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFF2ECC71),
+              ),
+              minHeight: 6,
+            ),
+          ],
+        ),
+
+        if (showDetailed) ...[
+          const SizedBox(height: 16),
+
+          // Detailed stats
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  'Badges',
+                  rewards.totalBadges.toString(),
+                  '🏅',
+                  Colors.amber,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildStatCard(
+                  'Stickers',
+                  rewards.totalStickers.toString(),
+                  '🎨',
+                  Colors.purple,
+                ),
               ),
             ],
           ),
-          
-          if (showDetailed) ...[
-            const SizedBox(height: 16),
-            
-            // Detailed stats
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    'Badges',
-                    rewards.totalBadges.toString(),
-                    '🏅',
-                    Colors.amber,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildStatCard(
-                    'Stickers',
-                    rewards.totalStickers.toString(),
-                    '🎨',
-                    Colors.purple,
-                  ),
-                ),
-              ],
-            ),
-          ],
         ],
-      ),
-    );
-      },
-    );
-  }
+      ],
+    ),
+  );
 
   Widget _buildStatCard(String label, String value, String emoji, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
-          Text(
-            emoji,
-            style: const TextStyle(fontSize: 20),
-          ),
+          Text(emoji, style: const TextStyle(fontSize: 20)),
           const SizedBox(height: 4),
           Text(
             value,
@@ -168,13 +181,7 @@ class RewardsDisplay extends StatelessWidget {
               color: color,
             ),
           ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.grey[600],
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 10, color: Colors.grey[600])),
         ],
       ),
     );
@@ -201,10 +208,7 @@ class MotivationalMessage extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Colors.green[100]!,
-            Colors.blue[100]!,
-          ],
+          colors: [Colors.green[100]!, Colors.blue[100]!],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -215,14 +219,10 @@ class MotivationalMessage extends StatelessWidget {
         children: [
           // Celebration icon if showing celebration
           if (showCelebration) ...[
-            const Icon(
-              Icons.celebration,
-              size: 32,
-              color: Color(0xFFFFD700),
-            ),
+            const Icon(Icons.celebration, size: 32, color: Color(0xFFFFD700)),
             const SizedBox(height: 8),
           ],
-          
+
           // Motivational message
           Text(
             _generateMessage(),
@@ -233,9 +233,9 @@ class MotivationalMessage extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Current stats
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -249,9 +249,9 @@ class MotivationalMessage extends StatelessWidget {
               ],
             ],
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // Level info
           Text(
             'Level: ${rewards.currentLevel.name} ${rewards.currentLevel.emoji}',
@@ -270,9 +270,9 @@ class MotivationalMessage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Text(
         text,
@@ -294,7 +294,7 @@ class MotivationalMessage extends StatelessWidget {
       'Outstanding, $childName! You\'re a math star! 🌟',
       'Wonderful, $childName! ${rewards.totalStars} stars and counting! 🎯',
     ];
-    
+
     // Add level-specific messages
     if (rewards.levelProgress > 0.8) {
       messages.addAll([
@@ -302,9 +302,9 @@ class MotivationalMessage extends StatelessWidget {
         'So close, $childName! Just ${rewards.starsToNextLevel} more stars! ⭐',
       ]);
     }
-    
+
     // Note: newBadge and newSticker are handled in the RewardResult, not ChildRewards
-    
+
     // Select a random message
     final random = DateTime.now().millisecond % messages.length;
     return messages[random];
@@ -315,10 +315,7 @@ class MotivationalMessage extends StatelessWidget {
 class CompactRewardsDisplay extends StatelessWidget {
   final ChildRewards rewards;
 
-  const CompactRewardsDisplay({
-    super.key,
-    required this.rewards,
-  });
+  const CompactRewardsDisplay({super.key, required this.rewards});
 
   @override
   Widget build(BuildContext context) {
@@ -349,9 +346,9 @@ class CompactRewardsDisplay extends StatelessWidget {
             ],
           ),
         ),
-        
+
         const SizedBox(width: 6),
-        
+
         // Badges
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -376,10 +373,10 @@ class CompactRewardsDisplay extends StatelessWidget {
             ],
           ),
         ),
-        
+
         if (rewards.totalStickers > 0) ...[
           const SizedBox(width: 6),
-          
+
           // Stickers
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

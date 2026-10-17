@@ -1,60 +1,50 @@
+import 'dart:io';
 import 'dart:math';
 
-// Test if subtraction problems cross the next 10
-bool subtractionCrossesNextTen(int firstNumber, int secondNumber) {
-  final firstNumberOnes = firstNumber % 10;
-  final result = firstNumber - secondNumber;
-  final currentTen = firstNumber - firstNumberOnes;
-  return result < currentTen;
-}
+import 'lib/services/answer_validator.dart';
+import 'lib/services/central_problem_generator.dart';
 
-// Test the new generation logic
-void testNewSubtractionLogic() {
-  final random = Random();
-  
-  print('Testing new subtraction generation logic:');
-  for (int i = 0; i < 10; i++) {
-    int firstNumber = random.nextInt(90) + 10; // 10-99
-    final firstNumberOnes = firstNumber % 10;
-    
-    int secondNumber;
-    do {
-      if (firstNumberOnes == 0) {
-        secondNumber = random.nextInt(9) + 1; // 1-9
-      } else {
-        final minSecond = firstNumberOnes + 1;
-        if (minSecond <= 9) {
-          secondNumber = random.nextInt(9 - minSecond + 1) + minSecond;
-        } else {
-          secondNumber = 9;
-        }
-      }
-      
-      // Double-check that this actually crosses the next 10
-      final result = firstNumber - secondNumber;
-      final currentTen = firstNumber - firstNumberOnes;
-      final crossesTen = result < currentTen;
-      
-      if (!crossesTen) {
-        secondNumber = min(9, firstNumberOnes + random.nextInt(3) + 2);
-      }
-    } while (secondNumber == firstNumberOnes);
-    
-    final result = firstNumber - secondNumber;
-    final crosses = subtractionCrossesNextTen(firstNumber, secondNumber);
-    print('$firstNumber - $secondNumber = $result (crosses: $crosses)');
-  }
-}
-
+/// A deterministic CLI check of the app's actual subtraction generator.
 void main() {
-  print('Testing problematic cases that should be avoided:');
-  print('18 - 6 = ${18 - 6}, crosses below 10: ${subtractionCrossesNextTen(18, 6)} ❌');
-  print('89 - 7 = ${89 - 7}, crosses below 80: ${subtractionCrossesNextTen(89, 7)} ❌');
-  print('');
-  print('Testing correct cases:');
-  print('18 - 9 = ${18 - 9}, crosses below 10: ${subtractionCrossesNextTen(18, 9)} ✅');
-  print('67 - 8 = ${67 - 8}, crosses below 60: ${subtractionCrossesNextTen(67, 8)} ✅');
-  print('');
-  
-  testNewSubtractionLogic();
+  CentralProblemGenerator.setRandomForTesting(Random(20261012));
+  var checked = 0;
+  for (var level = 1; level <= 4; level++) {
+    for (var sample = 0; sample < 100; sample++) {
+      final problem = CentralProblemGenerator.generateProblem(
+        action: 'subtraction',
+        level: level,
+      );
+      final first = problem['operand1'] as int;
+      final second = problem['operand2'] as int;
+      final answer = problem['correctAnswer'] as int;
+      final crossesTen = answer < first - first % 10;
+      final supportedStretch =
+          level == 1 && first == 20 && (second == 8 || second == 9);
+      if (answer != first - second ||
+          answer <= 0 ||
+          (first % 10 == 0 ? !supportedStretch : !crossesTen)) {
+        throw StateError('Invalid Level $level subtraction: $problem');
+      }
+      final splits = AnswerValidator.suggestedBreakdowns(
+        number1: first,
+        number2: second,
+        action: 'subtraction',
+      );
+      if (splits.isEmpty ||
+          splits.any(
+            (parts) => !AnswerValidator.validateParts(
+              number1: first,
+              number2: second,
+              action: 'subtraction',
+              userParts: parts,
+            ).success,
+          )) {
+        throw StateError('Rejected subtraction split: $problem; $splits');
+      }
+      checked++;
+    }
+  }
+  stdout.writeln(
+    'Validated $checked generated subtraction problems across all four levels.',
+  );
 }

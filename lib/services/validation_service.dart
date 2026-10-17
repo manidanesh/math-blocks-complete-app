@@ -4,9 +4,9 @@ import 'translation_service.dart';
 /// Validation rule interface
 abstract class ValidationRule<T> {
   final String message;
-  
+
   ValidationRule(this.message);
-  
+
   bool validate(T value);
 }
 
@@ -14,13 +14,13 @@ abstract class ValidationRule<T> {
 class ValidationResult {
   final bool isValid;
   final List<String> errors;
-  
+
   ValidationResult({required this.isValid, this.errors = const []});
-  
+
   factory ValidationResult.valid() => ValidationResult(isValid: true);
-  factory ValidationResult.invalid(List<String> errors) => 
+  factory ValidationResult.invalid(List<String> errors) =>
       ValidationResult(isValid: false, errors: errors);
-  
+
   String get firstError => errors.isNotEmpty ? errors.first : '';
   bool get hasErrors => errors.isNotEmpty;
 }
@@ -28,27 +28,27 @@ class ValidationResult {
 /// Common validation rules
 class RequiredRule extends ValidationRule<String> {
   RequiredRule([String? message]) : super(message ?? 'This field is required');
-  
+
   @override
   bool validate(String value) => value.trim().isNotEmpty;
 }
 
 class MinLengthRule extends ValidationRule<String> {
   final int minLength;
-  
-  MinLengthRule(this.minLength, [String? message]) 
-      : super(message ?? 'Must be at least $minLength characters');
-  
+
+  MinLengthRule(this.minLength, [String? message])
+    : super(message ?? 'Must be at least $minLength characters');
+
   @override
   bool validate(String value) => value.length >= minLength;
 }
 
 class MaxLengthRule extends ValidationRule<String> {
   final int maxLength;
-  
-  MaxLengthRule(this.maxLength, [String? message]) 
-      : super(message ?? 'Must be no more than $maxLength characters');
-  
+
+  MaxLengthRule(this.maxLength, [String? message])
+    : super(message ?? 'Must be no more than $maxLength characters');
+
   @override
   bool validate(String value) => value.length <= maxLength;
 }
@@ -56,17 +56,17 @@ class MaxLengthRule extends ValidationRule<String> {
 class RangeRule extends ValidationRule<num> {
   final num min;
   final num max;
-  
-  RangeRule(this.min, this.max, [String? message]) 
-      : super(message ?? 'Must be between $min and $max');
-  
+
+  RangeRule(this.min, this.max, [String? message])
+    : super(message ?? 'Must be between $min and $max');
+
   @override
   bool validate(num value) => value >= min && value <= max;
 }
 
 class EmailRule extends ValidationRule<String> {
   EmailRule([String? message]) : super(message ?? 'Invalid email format');
-  
+
   @override
   bool validate(String value) {
     return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value);
@@ -75,7 +75,7 @@ class EmailRule extends ValidationRule<String> {
 
 class NumericRule extends ValidationRule<String> {
   NumericRule([String? message]) : super(message ?? 'Must be a number');
-  
+
   @override
   bool validate(String value) {
     return double.tryParse(value) != null;
@@ -84,9 +84,12 @@ class NumericRule extends ValidationRule<String> {
 
 /// Custom validation rules for the app
 class AgeRule extends ValidationRule<int> {
-  AgeRule([String? message]) 
-      : super(message ?? 'Age must be between ${AppConstants.minAge} and ${AppConstants.maxAge}');
-  
+  AgeRule([String? message])
+    : super(
+        message ??
+            'Age must be between ${AppConstants.minAge} and ${AppConstants.maxAge}',
+      );
+
   @override
   bool validate(int value) {
     return value >= AppConstants.minAge && value <= AppConstants.maxAge;
@@ -94,19 +97,22 @@ class AgeRule extends ValidationRule<int> {
 }
 
 class FavoriteNumbersRule extends ValidationRule<List<int>> {
-  FavoriteNumbersRule([String? message]) 
-      : super(message ?? 'Can select up to ${AppConstants.maxFavoriteNumbers} numbers');
-  
+  FavoriteNumbersRule([String? message])
+    : super(
+        message ??
+            'Can select up to ${AppConstants.maxFavoriteNumbers} numbers',
+      );
+
   @override
   bool validate(List<int> value) {
     return value.length <= AppConstants.maxFavoriteNumbers &&
-           value.every((num) => AppConstants.availableNumbers.contains(num));
+        value.every((number) => AppConstants.availableNumbers.contains(number));
   }
 }
 
 class LanguageRule extends ValidationRule<String> {
   LanguageRule([String? message]) : super(message ?? 'Invalid language');
-  
+
   @override
   bool validate(String value) {
     return TranslationService.getAvailableLanguages().contains(value);
@@ -116,12 +122,6 @@ class LanguageRule extends ValidationRule<String> {
 /// Centralized validation service
 class ValidationService {
   static final Map<String, List<ValidationRule>> _fieldRules = {};
-  static String _currentLanguage = AppConstants.defaultLanguage;
-
-  /// Set the current language for error messages
-  static void setLanguage(String language) {
-    _currentLanguage = language;
-  }
 
   /// Add validation rules for a field
   static void addRules(String field, List<ValidationRule> rules) {
@@ -144,7 +144,7 @@ class ValidationService {
     if (rules == null) return ValidationResult.valid();
 
     final errors = <String>[];
-    
+
     for (final rule in rules) {
       try {
         if (!rule.validate(value)) {
@@ -155,19 +155,21 @@ class ValidationService {
       }
     }
 
-    return errors.isEmpty 
-        ? ValidationResult.valid() 
+    return errors.isEmpty
+        ? ValidationResult.valid()
         : ValidationResult.invalid(errors);
   }
 
   /// Validate multiple fields
-  static Map<String, ValidationResult> validateFields(Map<String, dynamic> data) {
+  static Map<String, ValidationResult> validateFields(
+    Map<String, dynamic> data,
+  ) {
     final results = <String, ValidationResult>{};
-    
+
     for (final entry in data.entries) {
       results[entry.key] = validateField(entry.key, entry.value);
     }
-    
+
     return results;
   }
 
@@ -185,7 +187,9 @@ class ValidationService {
   }
 
   /// Validate profile creation data
-  static Map<String, ValidationResult> validateProfileCreation(Map<String, dynamic> data) {
+  static Map<String, ValidationResult> validateProfileCreation(
+    Map<String, dynamic> data,
+  ) {
     return validateFields({
       'name': data['name'],
       'age': data['age'],
@@ -195,15 +199,21 @@ class ValidationService {
   }
 
   /// Validate profile update data
-  static Map<String, ValidationResult> validateProfileUpdate(Map<String, dynamic> data) {
+  static Map<String, ValidationResult> validateProfileUpdate(
+    Map<String, dynamic> data,
+  ) {
     final validationData = <String, dynamic>{};
-    
+
     // Only validate provided fields
     if (data.containsKey('name')) validationData['name'] = data['name'];
     if (data.containsKey('age')) validationData['age'] = data['age'];
-    if (data.containsKey('language')) validationData['language'] = data['language'];
-    if (data.containsKey('favoriteNumbers')) validationData['favoriteNumbers'] = data['favoriteNumbers'];
-    
+    if (data.containsKey('language')) {
+      validationData['language'] = data['language'];
+    }
+    if (data.containsKey('favoriteNumbers')) {
+      validationData['favoriteNumbers'] = data['favoriteNumbers'];
+    }
+
     return validateFields(validationData);
   }
 
@@ -212,15 +222,27 @@ class ValidationService {
     // Profile name validation
     addRules('name', [
       RequiredRule(_translateMessage('Name is required')),
-      MinLengthRule(AppConstants.minNameLength, 
-          _translateMessage('Name must be at least ${AppConstants.minNameLength} character')),
-      MaxLengthRule(AppConstants.maxNameLength, 
-          _translateMessage('Name must be no more than ${AppConstants.maxNameLength} characters')),
+      MinLengthRule(
+        AppConstants.minNameLength,
+        _translateMessage(
+          'Name must be at least ${AppConstants.minNameLength} character',
+        ),
+      ),
+      MaxLengthRule(
+        AppConstants.maxNameLength,
+        _translateMessage(
+          'Name must be no more than ${AppConstants.maxNameLength} characters',
+        ),
+      ),
     ]);
 
     // Age validation
     addRules('age', [
-      AgeRule(_translateMessage('Age must be between ${AppConstants.minAge} and ${AppConstants.maxAge}')),
+      AgeRule(
+        _translateMessage(
+          'Age must be between ${AppConstants.minAge} and ${AppConstants.maxAge}',
+        ),
+      ),
     ]);
 
     // Language validation
@@ -230,7 +252,11 @@ class ValidationService {
 
     // Favorite numbers validation
     addRules('favoriteNumbers', [
-      FavoriteNumbersRule(_translateMessage('Can select up to ${AppConstants.maxFavoriteNumbers} favorite numbers')),
+      FavoriteNumbersRule(
+        _translateMessage(
+          'Can select up to ${AppConstants.maxFavoriteNumbers} favorite numbers',
+        ),
+      ),
     ]);
   }
 
@@ -293,24 +319,24 @@ class Validator<T> {
 
   ValidationResult validate(T value) {
     final errors = <String>[];
-    
+
     for (final rule in _rules) {
       if (!rule.validate(value)) {
         errors.add(rule.message);
       }
     }
 
-    return errors.isEmpty 
-        ? ValidationResult.valid() 
+    return errors.isEmpty
+        ? ValidationResult.valid()
         : ValidationResult.invalid(errors);
   }
 }
 
 class _CustomRule<T> extends ValidationRule<T> {
   final bool Function(T) validator;
-  
+
   _CustomRule(this.validator, String message) : super(message);
-  
+
   @override
   bool validate(T value) => validator(value);
 }
@@ -333,4 +359,3 @@ extension ListValidationExtension<T> on List<T> {
     return ValidationService.validateField(field, this);
   }
 }
-

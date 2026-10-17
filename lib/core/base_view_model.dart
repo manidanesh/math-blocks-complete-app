@@ -24,7 +24,7 @@ abstract class BaseViewModel extends ChangeNotifier {
   /// Set loading state
   void setLoading(bool loading) {
     if (_isDisposed) return;
-    
+
     if (_isLoading != loading) {
       _isLoading = loading;
       notifyListeners();
@@ -34,7 +34,7 @@ abstract class BaseViewModel extends ChangeNotifier {
   /// Set error state
   void setError(AppError? error) {
     if (_isDisposed) return;
-    
+
     if (_error != error) {
       _error = error;
       notifyListeners();
@@ -49,7 +49,7 @@ abstract class BaseViewModel extends ChangeNotifier {
   /// Set language
   void setLanguage(String language) {
     if (_isDisposed) return;
-    
+
     if (_language != language) {
       _language = language;
       notifyListeners();
@@ -80,16 +80,14 @@ abstract class BaseViewModel extends ChangeNotifier {
       }
 
       final result = await operation();
-      
       if (!_isDisposed && showLoading) {
         setLoading(false);
       }
-      
       return result;
     } catch (error, stackTrace) {
       if (!_isDisposed) {
         setLoading(false);
-        
+
         final appError = ErrorHandlerService.handleError(
           error,
           type: errorType,
@@ -97,10 +95,10 @@ abstract class BaseViewModel extends ChangeNotifier {
           stackTrace: stackTrace,
           language: _language,
         );
-        
+
         setError(appError);
       }
-      
+
       return null;
     }
   }
@@ -119,11 +117,6 @@ abstract class BaseViewModel extends ChangeNotifier {
       }
 
       final result = await operation();
-      
-      if (!_isDisposed && showLoading) {
-        setLoading(false);
-      }
-      
       return result;
     } finally {
       if (!_isDisposed && showLoading) {
@@ -197,7 +190,7 @@ mixin PeriodicUpdateMixin on BaseViewModel {
 
   void startPeriodicUpdate() {
     if (_isPeriodicUpdateActive || isDisposed) return;
-    
+
     _isPeriodicUpdateActive = true;
     _scheduleNextUpdate();
   }
@@ -208,7 +201,7 @@ mixin PeriodicUpdateMixin on BaseViewModel {
 
   void _scheduleNextUpdate() {
     if (!_isPeriodicUpdateActive || isDisposed) return;
-    
+
     Future.delayed(_updateInterval, () {
       if (_isPeriodicUpdateActive && !isDisposed) {
         onPeriodicUpdate();
@@ -245,35 +238,35 @@ mixin CollectionMixin<T> on BaseViewModel {
 
   void setItems(List<T> items) {
     if (isDisposed) return;
-    
+
     _items = List.from(items);
     notifyListeners();
   }
 
   void addItems(List<T> items) {
     if (isDisposed) return;
-    
+
     _items.addAll(items);
     notifyListeners();
   }
 
   void addItem(T item) {
     if (isDisposed) return;
-    
+
     _items.add(item);
     notifyListeners();
   }
 
   void removeItem(T item) {
     if (isDisposed) return;
-    
+
     _items.remove(item);
     notifyListeners();
   }
 
   void updateItem(T oldItem, T newItem) {
     if (isDisposed) return;
-    
+
     final index = _items.indexOf(oldItem);
     if (index >= 0) {
       _items[index] = newItem;
@@ -283,7 +276,7 @@ mixin CollectionMixin<T> on BaseViewModel {
 
   void clearItems() {
     if (isDisposed) return;
-    
+
     _items.clear();
     _currentPage = 0;
     _hasMore = true;
@@ -292,7 +285,7 @@ mixin CollectionMixin<T> on BaseViewModel {
 
   void setSearchQuery(String query) {
     if (isDisposed) return;
-    
+
     if (_searchQuery != query) {
       _searchQuery = query;
       _currentPage = 0;
@@ -303,7 +296,7 @@ mixin CollectionMixin<T> on BaseViewModel {
 
   void setHasMore(bool hasMore) {
     if (isDisposed) return;
-    
+
     if (_hasMore != hasMore) {
       _hasMore = hasMore;
       notifyListeners();
@@ -321,4 +314,3 @@ mixin CollectionMixin<T> on BaseViewModel {
     setSearchQuery('');
   }
 }
-

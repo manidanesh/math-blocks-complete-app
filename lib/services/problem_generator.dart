@@ -1,11 +1,14 @@
 import 'dart:math';
 
+import '../core/app_log.dart';
+import 'challenge_generation_rules.dart';
+
 /// Strategy for problem generation
 enum ProblemStrategy {
-  makeTen,      // Focus on making 10 first
-  crossing,     // Problems that cross 10 or 20
-  basic,        // Basic addition without crossing
-  review,       // Mixed review problems
+  makeTen, // Focus on making 10 first
+  crossing, // Problems that cross 10 or 20
+  basic, // Basic arithmetic without a required decomposition
+  review, // Mixed review problems
 }
 
 /// Difficulty levels for math problems
@@ -65,7 +68,7 @@ class MathProblem {
   }
 }
 
-/// Service for generating adaptive math problems
+/// Compatibility addition generator; live challenges use CentralProblemGenerator.
 class ProblemGenerator {
   static final Random _random = Random();
 
@@ -136,33 +139,37 @@ class ProblemGenerator {
       // Clamp level to valid range
       final clampedLevel = level.clamp(1, _levels.length);
       final difficultyLevel = _levels[clampedLevel - 1];
-      
+
       // Use provided strategy or level's preferred strategy
       final problemStrategy = strategy ?? difficultyLevel.preferredStrategy;
-      
+
       // Generate operands based on level and strategy, using favorite numbers
-      final operands = _generateOperands(difficultyLevel, problemStrategy, favoriteNumbers);
+      final operands = _generateOperands(
+        difficultyLevel,
+        problemStrategy,
+        favoriteNumbers,
+      );
       final operand1 = operands['operand1']!;
       final operand2 = operands['operand2']!;
-      
+
       // Calculate answer
       const operator = '+';
       final correctAnswer = operand1 + operand2;
-      
+
       // Create problem text
       final problemText = '$operand1 $operator $operand2 = ?';
-      
+
       // Generate multiple choice options
       final options = _generateOptions(correctAnswer);
-      
+
       // Create explanation based on strategy
       final explanation = _generateExplanation(
-        operand1, 
-        operand2, 
-        correctAnswer, 
+        operand1,
+        operand2,
+        correctAnswer,
         problemStrategy,
       );
-      
+
       final problem = MathProblem(
         operand1: operand1,
         operand2: operand2,
@@ -174,11 +181,11 @@ class ProblemGenerator {
         level: clampedLevel,
         explanation: explanation,
       );
-      
-      print('🧮 Generated problem: $problem');
+
+      debugLog('🧮 Generated problem: $problem');
       return problem;
     } catch (e) {
-      print('❌ Error generating problem: $e');
+      debugLog('❌ Error generating problem: $e');
       // Return safe fallback problem
       return const MathProblem(
         operand1: 3,
@@ -196,14 +203,14 @@ class ProblemGenerator {
 
   /// Generate operands based on difficulty level and strategy
   static Map<String, int> _generateOperands(
-    DifficultyLevel level, 
+    DifficultyLevel level,
     ProblemStrategy strategy,
     List<int> favoriteNumbers,
   ) {
     int operand1, operand2;
     int attempts = 0;
     const maxAttempts = 50;
-    
+
     do {
       // Use favorite numbers if available and appropriate for level
       if (favoriteNumbers.isNotEmpty && _shouldUseFavoriteNumbers(level)) {
@@ -211,38 +218,53 @@ class ProblemGenerator {
         operand2 = _generateComplementaryOperand(operand1, level, strategy);
       } else {
         // Fallback to random generation
-        operand1 = _random.nextInt(level.maxOperand1 - level.minOperand1 + 1) + level.minOperand1;
-        operand2 = _random.nextInt(level.maxOperand2 - level.minOperand2 + 1) + level.minOperand2;
+        operand1 =
+            _random.nextInt(level.maxOperand1 - level.minOperand1 + 1) +
+            level.minOperand1;
+        operand2 = ChallengeGenerationRules.chooseSecondOperand(
+          _random,
+          min: level.minOperand2,
+          max: level.maxOperand2,
+        );
       }
       attempts++;
-      
+
       if (attempts > maxAttempts) {
         // Fallback to prevent infinite loop
         operand1 = level.minOperand1;
-        operand2 = level.minOperand2;
+        operand2 =
+            ChallengeGenerationRules.isAllowedSecondOperand(level.minOperand2)
+            ? level.minOperand2
+            : ChallengeGenerationRules.chooseSecondOperand(
+                _random,
+                min: level.minOperand2,
+                max: level.maxOperand2,
+              );
         break;
       }
     } while (!_meetsStrategyRequirements(operand1, operand2, level, strategy));
-    
+
     return {'operand1': operand1, 'operand2': operand2};
   }
 
   /// Check if operands meet the strategy requirements
   static bool _meetsStrategyRequirements(
-    int operand1, 
-    int operand2, 
+    int operand1,
+    int operand2,
     DifficultyLevel level,
     ProblemStrategy strategy,
   ) {
-    final sum = operand1 + operand2;
-    
-    // CRITICAL: Always ensure sum is greater than 10 (never equal to 10)
-    // This is a core requirement - all math challenges must exceed 10
-    if (sum <= 10) {
-      return false; // Sum must ALWAYS exceed 10 (e.g., 13+8=21, not 12+8=20)
+    if (!ChallengeGenerationRules.isAllowedSecondOperand(operand2)) {
+      return false;
     }
-    
-    // CRITICAL: Ensure the sum crosses the next 10
+    final sum = operand1 + operand2;
+
+    // Generated addition answers must exceed ten.
+    if (sum <= 10) {
+      return false;
+    }
+
+    // The answer must go beyond the next ten, retaining a positive remainder.
     // Example: 31 + 4 = 35 (doesn't cross 40) ❌
     // Example: 34 + 7 = 41 (crosses 40) ✅
     final operand1Ones = operand1 % 10;
@@ -250,17 +272,17 @@ class ProblemGenerator {
     if (sum <= nextTen) {
       return false; // Must cross the next 10
     }
-    
+
     // Always respect level requirements
     if (level.mustCrossTwenty && sum <= 20) {
       return false; // MUST cross 20
     }
-    
+
     switch (strategy) {
       case ProblemStrategy.makeTen:
         // Must cross 10 for make-ten strategy
         return sum > 10 && sum <= 20;
-        
+
       case ProblemStrategy.crossing:
         if (level.mustCrossTwenty) {
           return sum > 20; // Must cross 20
@@ -268,7 +290,7 @@ class ProblemGenerator {
           return sum > 10; // Must cross 10
         }
         return sum > 10;
-        
+
       case ProblemStrategy.basic:
         // For basic strategy, still respect level crossing requirements
         if (level.mustCrossTwenty) {
@@ -277,7 +299,7 @@ class ProblemGenerator {
           return sum > 10;
         }
         return true; // Basic can be any valid combination
-        
+
       case ProblemStrategy.review:
         // Mixed problems, any valid combination that meets level requirements
         return true;
@@ -287,24 +309,24 @@ class ProblemGenerator {
   /// Generate multiple choice options including the correct answer
   static List<int> _generateOptions(int correctAnswer) {
     final options = <int>{correctAnswer}; // Use Set to avoid duplicates
-    
+
     // Generate plausible wrong answers
     final variations = [
-      correctAnswer - 1,  // Off by one (common error)
-      correctAnswer + 1,  // Off by one (common error)
-      correctAnswer - 2,  // Calculation error
-      correctAnswer + 2,  // Calculation error
+      correctAnswer - 1, // Off by one (common error)
+      correctAnswer + 1, // Off by one (common error)
+      correctAnswer - 2, // Calculation error
+      correctAnswer + 2, // Calculation error
       correctAnswer - 10, // Place value error
       correctAnswer + 10, // Place value error
     ];
-    
+
     // Add variations that make sense (positive numbers)
     for (final variation in variations) {
       if (variation > 0 && variation != correctAnswer && options.length < 4) {
         options.add(variation);
       }
     }
-    
+
     // Fill remaining slots with random plausible answers
     while (options.length < 4) {
       final randomOption = correctAnswer + _random.nextInt(10) - 5;
@@ -312,19 +334,19 @@ class ProblemGenerator {
         options.add(randomOption);
       }
     }
-    
+
     // Convert to list and shuffle
     final optionsList = options.toList();
     optionsList.shuffle(_random);
-    
+
     return optionsList;
   }
 
   /// Generate explanation based on strategy
   static String _generateExplanation(
-    int operand1, 
-    int operand2, 
-    int answer, 
+    int operand1,
+    int operand2,
+    int answer,
     ProblemStrategy strategy,
   ) {
     switch (strategy) {
@@ -338,7 +360,7 @@ class ProblemGenerator {
           }
         }
         return "Think: What makes 10? Then add the rest.";
-        
+
       case ProblemStrategy.crossing:
         if (answer > 20) {
           return "Cross 20: Break down the problem step by step";
@@ -346,13 +368,13 @@ class ProblemGenerator {
           return "Cross 10: $operand1 + $operand2. First make 10, then add the rest";
         }
         return "Add step by step: $operand1 + $operand2 = $answer";
-        
+
       case ProblemStrategy.basic:
         if (answer <= 10) {
           return "Count up: Start with $operand1 and count $operand2 more";
         }
         return "Add: $operand1 + $operand2 = $answer";
-        
+
       case ProblemStrategy.review:
         return "Use your preferred strategy: counting, making 10, or breaking numbers apart";
     }
@@ -374,11 +396,11 @@ class ProblemGenerator {
     ProblemStrategy? strategy,
   }) {
     final problems = <MathProblem>[];
-    
+
     for (int i = 0; i < count; i++) {
       problems.add(generateProblem(level: level, strategy: strategy));
     }
-    
+
     return problems;
   }
 
@@ -388,21 +410,21 @@ class ProblemGenerator {
     int count = 3,
   }) {
     final problems = <MathProblem>[];
-    
+
     for (final concept in strugglingConcepts) {
       final strategy = _getStrategyForConcept(concept);
       final level = _getLevelForConcept(concept);
-      
+
       problems.add(generateProblem(level: level, strategy: strategy));
-      
+
       if (problems.length >= count) break;
     }
-    
+
     // Fill remaining with basic problems if needed
     while (problems.length < count) {
       problems.add(generateProblem(level: 1, strategy: ProblemStrategy.basic));
     }
-    
+
     return problems;
   }
 
@@ -441,28 +463,38 @@ class ProblemGenerator {
   }
 
   /// Select a favorite number appropriate for the level
-  static int _selectFavoriteNumber(List<int> favoriteNumbers, DifficultyLevel level) {
+  static int _selectFavoriteNumber(
+    List<int> favoriteNumbers,
+    DifficultyLevel level,
+  ) {
     // Filter favorite numbers that fit within the level constraints
-    final validFavorites = favoriteNumbers.where((num) => 
-      num >= level.minOperand1 && num <= level.maxOperand1
-    ).toList();
-    
+    final validFavorites = favoriteNumbers
+        .where(
+          (number) =>
+              number >= level.minOperand1 && number <= level.maxOperand1,
+        )
+        .toList();
+
     if (validFavorites.isNotEmpty) {
       return validFavorites[_random.nextInt(validFavorites.length)];
     }
-    
+
     // Fallback to any favorite number if none fit perfectly
     return favoriteNumbers[_random.nextInt(favoriteNumbers.length)];
   }
 
   /// Generate a complementary operand that works with the favorite number
-  static int _generateComplementaryOperand(int favoriteNumber, DifficultyLevel level, ProblemStrategy strategy) {
+  static int _generateComplementaryOperand(
+    int favoriteNumber,
+    DifficultyLevel level,
+    ProblemStrategy strategy,
+  ) {
     switch (strategy) {
       case ProblemStrategy.makeTen:
         // For make ten, ensure sum is ALWAYS greater than 10
         final targetSum = 11 + _random.nextInt(9); // 11-19 (always > 10)
         return targetSum - favoriteNumber;
-        
+
       case ProblemStrategy.crossing:
         // For crossing, ensure we cross the appropriate boundary
         if (level.mustCrossTwenty) {
@@ -472,14 +504,22 @@ class ProblemGenerator {
           final targetSum = 11 + _random.nextInt(10); // 11-20 (always > 10)
           return targetSum - favoriteNumber;
         }
-        
+
       case ProblemStrategy.basic:
         // For basic, keep it simple
-        return _random.nextInt(level.maxOperand2 - level.minOperand2 + 1) + level.minOperand2;
-        
+        return ChallengeGenerationRules.chooseSecondOperand(
+          _random,
+          min: level.minOperand2,
+          max: level.maxOperand2,
+        );
+
       case ProblemStrategy.review:
         // For review, use a mix
-        return _random.nextInt(level.maxOperand2 - level.minOperand2 + 1) + level.minOperand2;
+        return ChallengeGenerationRules.chooseSecondOperand(
+          _random,
+          min: level.minOperand2,
+          max: level.maxOperand2,
+        );
     }
   }
 }

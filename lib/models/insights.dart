@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 class ProblemLog {
   final String id;
   final String childId;
-  final String problemType; // 'addition', 'subtraction', 'make_ten', 'crossing', etc.
-  final List<int> numbersUsed; // [operand1, operand2] or [operand1, operand2, operand3]
+  // 'addition', 'subtraction', 'make_ten', 'crossing', etc.
+  final String problemType;
+  // [operand1, operand2] or [operand1, operand2, operand3]
+  final List<int> numbersUsed;
   final bool correct;
-  final int timeTaken; // in seconds
+  final double timeTaken; // in seconds
   final bool hintUsed;
   final DateTime timestamp;
   final String level; // 'Level 1', 'Level 2', etc.
@@ -48,7 +50,7 @@ class ProblemLog {
       problemType: json['problemType'],
       numbersUsed: List<int>.from(json['numbersUsed']),
       correct: json['correct'],
-      timeTaken: json['timeTaken'],
+      timeTaken: (json['timeTaken'] as num).toDouble(),
       hintUsed: json['hintUsed'],
       timestamp: DateTime.parse(json['timestamp']),
       level: json['level'],
@@ -204,9 +206,12 @@ class InsightsAnalysis {
   final double averageTime;
   final List<LearningPattern> patterns;
   final List<Insight> insights;
-  final Map<String, double> problemTypeAccuracy; // 'addition': 0.85, 'subtraction': 0.70
-  final Map<String, double> strategyAccuracy; // 'make_ten': 0.90, 'crossing': 0.75
-  final Map<String, double> numberRangeAccuracy; // 'single_digit': 0.88, 'two_digit': 0.72
+  final Map<String, double>
+  problemTypeAccuracy; // 'addition': 0.85, 'subtraction': 0.70
+  final Map<String, double>
+  strategyAccuracy; // 'make_ten': 0.90, 'crossing': 0.75
+  final Map<String, double>
+  numberRangeAccuracy; // 'single_digit': 0.88, 'two_digit': 0.72
 
   InsightsAnalysis({
     required this.childId,
@@ -249,9 +254,13 @@ class InsightsAnalysis {
       insights: (json['insights'] as List)
           .map((i) => Insight.fromJson(i))
           .toList(),
-      problemTypeAccuracy: Map<String, double>.from(json['problemTypeAccuracy']),
+      problemTypeAccuracy: Map<String, double>.from(
+        json['problemTypeAccuracy'],
+      ),
       strategyAccuracy: Map<String, double>.from(json['strategyAccuracy']),
-      numberRangeAccuracy: Map<String, double>.from(json['numberRangeAccuracy']),
+      numberRangeAccuracy: Map<String, double>.from(
+        json['numberRangeAccuracy'],
+      ),
     );
   }
 }

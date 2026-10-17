@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../core/app_log.dart';
 import '../models/rewards_model.dart';
 
 /// Service for managing rewards, stars, badges, and levels
@@ -8,19 +12,58 @@ class RewardsService {
   static const String _rewardsKeyPrefix = 'rewards_';
   static const String _badgesKeyPrefix = 'badges_';
   static const String _stickersKeyPrefix = 'stickers_';
-  
+
   static const int _starsPerBadge = 10;
   static const int _maxRecentRewards = 20;
 
+  static Future<void>? _pendingAwards;
+
+  static Future<T> _serialize<T>(Future<T> Function() operation) async {
+    final previous = _pendingAwards;
+    final completed = Completer<void>();
+    _pendingAwards = completed.future;
+    try {
+      if (previous != null) await previous;
+      return await operation();
+    } finally {
+      if (identical(_pendingAwards, completed.future)) _pendingAwards = null;
+      completed.complete();
+    }
+  }
+
   /// Award a star to a child and check for badge/level progress
-  static Future<RewardResult> addStar(String childId, {
+  static Future<RewardResult> addStar(
+    String childId, {
+    String? description,
+    Map<String, dynamic>? metadata,
+  }) async {
+    return _serialize(
+      () => _addStar(childId, description: description, metadata: metadata),
+    );
+  }
+
+  static Future<RewardResult> _addStar(
+    String childId, {
     String? description,
     Map<String, dynamic>? metadata,
   }) async {
     try {
       final rewards = await getRewards(childId);
+      final prefs = await SharedPreferences.getInstance();
+      final stored = prefs.getString('$_rewardsKeyPrefix$childId');
+      final receiptIds = stored == null
+          ? <String>{}
+          : ((jsonDecode(stored) as Map<String, dynamic>)['rewardedEventIds']
+                        as List? ??
+                    [])
+                .cast<String>()
+                .toSet();
+      final eventId = metadata?['eventId'] as String?;
+      if (eventId != null && receiptIds.contains(eventId)) {
+        return RewardResult(success: true, rewards: rewards);
+      }
       final newStars = rewards.totalStars + 1;
-      
+
       // Create star reward
       final starReward = Reward(
         id: _generateId(),
@@ -39,10 +82,12 @@ class RewardsService {
 
       // Check for new badge
       final newBadge = _checkForNewBadge(newStars, rewards.totalStars);
-      
+
       // Check for level up
       final newLevel = _checkForNewLevel(newStars, rewards.currentLevel);
-      final newSticker = newLevel != null ? _createStickerForLevel(newLevel, childId) : null;
+      final newSticker = newLevel != null
+          ? _createStickerForLevel(newLevel)
+          : null;
 
       // Update rewards
       final updatedRewards = rewards.copyWith(
@@ -51,23 +96,14 @@ class RewardsService {
         totalStickers: rewards.totalStickers + (newSticker != null ? 1 : 0),
         currentLevel: newLevel ?? rewards.currentLevel,
         recentRewards: updatedRecentRewards,
+        badges: [...rewards.badges, if (newBadge != null) newBadge],
+        stickers: [...rewards.stickers, if (newSticker != null) newSticker],
         lastUpdated: DateTime.now(),
       );
 
-      // Save rewards
-      await _saveRewards(childId, updatedRewards);
-      
-      // Save new badge if earned
-      if (newBadge != null) {
-        await _saveBadge(childId, newBadge);
-        updatedRewards.badges.add(newBadge);
-      }
-      
-      // Save new sticker if earned
-      if (newSticker != null) {
-        await _saveSticker(childId, newSticker);
-        updatedRewards.stickers.add(newSticker);
-      }
+      // One persisted document keeps stars, badges, stickers and event receipts together.
+      if (eventId != null) receiptIds.add(eventId);
+      await _saveRewards(childId, updatedRewards, receiptIds);
 
       return RewardResult(
         success: true,
@@ -77,11 +113,8 @@ class RewardsService {
         levelUp: newLevel != null,
       );
     } catch (e) {
-      print('Error adding star: $e');
-      return RewardResult(
-        success: false,
-        error: e.toString(),
-      );
+      debugLog('Error adding star: $e');
+      return RewardResult(success: false, error: e.toString());
     }
   }
 
@@ -91,80 +124,75 @@ class RewardsService {
       final prefs = await SharedPreferences.getInstance();
       final rewardsKey = '$_rewardsKeyPrefix$childId';
       final rewardsJson = prefs.getString(rewardsKey);
-      
+
       if (rewardsJson != null) {
         final rewardsData = jsonDecode(rewardsJson) as Map<String, dynamic>;
-        return ChildRewards.fromJson(rewardsData);
+        final rewards = ChildRewards.fromJson(rewardsData);
+        // Recover badges and stickers written separately by older releases.
+        final legacyBadges = prefs.getString('$_badgesKeyPrefix$childId');
+        final legacyStickers = prefs.getString('$_stickersKeyPrefix$childId');
+        final badges = {for (final badge in rewards.badges) badge.id: badge};
+        final stickers = {
+          for (final sticker in rewards.stickers) sticker.id: sticker,
+        };
+        if (legacyBadges != null) {
+          for (final json in jsonDecode(legacyBadges) as List) {
+            final badge = Badge.fromJson(Map<String, dynamic>.from(json));
+            badges[badge.id] = badge;
+          }
+        }
+        if (legacyStickers != null) {
+          for (final json in jsonDecode(legacyStickers) as List) {
+            final sticker = Sticker.fromJson(Map<String, dynamic>.from(json));
+            stickers[sticker.id] = sticker;
+          }
+        }
+        return rewards.copyWith(
+          badges: badges.values.toList(),
+          stickers: stickers.values.toList(),
+        );
       }
-      
+
       // Return default rewards for new child
       return _getDefaultRewards(childId);
     } catch (e) {
-      print('Error getting rewards: $e');
-      return _getDefaultRewards(childId);
+      debugLog('Error getting rewards: $e');
+      rethrow;
     }
   }
 
   /// Reset all rewards for a child
   static Future<void> resetRewards(String childId) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      // Remove all reward data for this child
-      await prefs.remove('$_rewardsKeyPrefix$childId');
-      await prefs.remove('$_badgesKeyPrefix$childId');
-      await prefs.remove('$_stickersKeyPrefix$childId');
-      
-      print('Rewards reset for child: $childId');
-    } catch (e) {
-      print('Error resetting rewards: $e');
+    await _serialize(() => _resetRewards(childId));
+  }
+
+  static Future<void> _resetRewards(String childId) async {
+    final prefs = await SharedPreferences.getInstance();
+    for (final prefix in [
+      _rewardsKeyPrefix,
+      _badgesKeyPrefix,
+      _stickersKeyPrefix,
+    ]) {
+      if (!await prefs.remove('$prefix$childId')) {
+        throw StateError('Could not reset rewards for $childId.');
+      }
     }
+    debugLog('Rewards reset for child: $childId');
   }
 
   /// Get badges for a child
-  static Future<List<Badge>> getBadges(String childId) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final badgesKey = '$_badgesKeyPrefix$childId';
-      final badgesJson = prefs.getString(badgesKey);
-      
-      if (badgesJson != null) {
-        final badgesList = jsonDecode(badgesJson) as List<dynamic>;
-        return badgesList
-            .map((b) => Badge.fromJson(b as Map<String, dynamic>))
-            .toList();
-      }
-      
-      return [];
-    } catch (e) {
-      print('Error getting badges: $e');
-      return [];
-    }
-  }
+  static Future<List<Badge>> getBadges(String childId) async =>
+      (await getRewards(childId)).badges;
 
   /// Get stickers for a child
-  static Future<List<Sticker>> getStickers(String childId) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final stickersKey = '$_stickersKeyPrefix$childId';
-      final stickersJson = prefs.getString(stickersKey);
-      
-      if (stickersJson != null) {
-        final stickersList = jsonDecode(stickersJson) as List<dynamic>;
-        return stickersList
-            .map((s) => Sticker.fromJson(s as Map<String, dynamic>))
-            .toList();
-      }
-      
-      return [];
-    } catch (e) {
-      print('Error getting stickers: $e');
-      return [];
-    }
-  }
+  static Future<List<Sticker>> getStickers(String childId) async =>
+      (await getRewards(childId)).stickers;
 
   /// Generate motivational message for a child
-  static String generateMotivationalMessage(String childName, ChildRewards rewards) {
+  static String generateMotivationalMessage(
+    String childName,
+    ChildRewards rewards,
+  ) {
     final messages = [
       'Great job, $childName! You now have ${rewards.totalStars} stars ⭐',
       'Amazing work, $childName! ${rewards.totalStars} stars and ${rewards.totalBadges} badges 🏅',
@@ -172,7 +200,7 @@ class RewardsService {
       'Incredible, $childName! ${rewards.totalStars} stars earned! 🌟',
       'Outstanding, $childName! You have ${rewards.totalBadges} badges! 🏆',
     ];
-    
+
     final random = Random();
     return messages[random.nextInt(messages.length)];
   }
@@ -181,26 +209,27 @@ class RewardsService {
   static Badge? _checkForNewBadge(int newStars, int oldStars) {
     final oldBadges = oldStars ~/ _starsPerBadge;
     final newBadges = newStars ~/ _starsPerBadge;
-    
+
     if (newBadges > oldBadges) {
       final badgeNumber = newBadges;
       return Badge(
         id: _generateId(),
         name: 'Star Collector #$badgeNumber',
         emoji: '🏅',
-        description: 'Earned $badgeNumber badges by collecting ${badgeNumber * _starsPerBadge} stars!',
+        description:
+            'Earned $badgeNumber badges by collecting ${badgeNumber * _starsPerBadge} stars!',
         requiredStars: badgeNumber * _starsPerBadge,
         earnedAt: DateTime.now(),
       );
     }
-    
+
     return null;
   }
 
   /// Check if child leveled up
   static ChildLevel? _checkForNewLevel(int newStars, ChildLevel currentLevel) {
-    for (final level in ChildLevel.values) {
-      if (newStars >= level.minStars && 
+    for (final level in ChildLevel.values.reversed) {
+      if (newStars >= level.minStars &&
           currentLevel.minStars < level.minStars) {
         return level;
       }
@@ -209,7 +238,7 @@ class RewardsService {
   }
 
   /// Create sticker for level completion
-  static Sticker _createStickerForLevel(ChildLevel level, String childId) {
+  static Sticker _createStickerForLevel(ChildLevel level) {
     return Sticker(
       id: _generateId(),
       name: '${level.name} Sticker',
@@ -236,39 +265,31 @@ class RewardsService {
   }
 
   /// Save rewards to local storage
-  static Future<void> _saveRewards(String childId, ChildRewards rewards) async {
+  static Future<void> _saveRewards(
+    String childId,
+    ChildRewards rewards,
+    Set<String> receiptIds,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
-    final rewardsKey = '$_rewardsKeyPrefix$childId';
-    final rewardsJson = jsonEncode(rewards.toJson());
-    await prefs.setString(rewardsKey, rewardsJson);
-  }
-
-  /// Save badge to local storage
-  static Future<void> _saveBadge(String childId, Badge badge) async {
-    final badges = await getBadges(childId);
-    badges.add(badge);
-    
-    final prefs = await SharedPreferences.getInstance();
-    final badgesKey = '$_badgesKeyPrefix$childId';
-    final badgesJson = jsonEncode(badges.map((b) => b.toJson()).toList());
-    await prefs.setString(badgesKey, badgesJson);
-  }
-
-  /// Save sticker to local storage
-  static Future<void> _saveSticker(String childId, Sticker sticker) async {
-    final stickers = await getStickers(childId);
-    stickers.add(sticker);
-    
-    final prefs = await SharedPreferences.getInstance();
-    final stickersKey = '$_stickersKeyPrefix$childId';
-    final stickersJson = jsonEncode(stickers.map((s) => s.toJson()).toList());
-    await prefs.setString(stickersKey, stickersJson);
+    try {
+      final saved = await prefs.setString(
+        '$_rewardsKeyPrefix$childId',
+        jsonEncode({
+          ...rewards.toJson(),
+          'rewardedEventIds': receiptIds.toList(),
+        }),
+      );
+      if (!saved) throw StateError('Could not save rewards.');
+    } catch (_) {
+      await prefs.reload();
+      rethrow;
+    }
   }
 
   /// Generate unique ID
   static String _generateId() {
-    return DateTime.now().millisecondsSinceEpoch.toString() + 
-           Random().nextInt(1000).toString();
+    return DateTime.now().millisecondsSinceEpoch.toString() +
+        Random().nextInt(1000).toString();
   }
 }
 

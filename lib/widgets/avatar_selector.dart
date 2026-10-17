@@ -19,7 +19,12 @@ class Avatar {
     Avatar(id: 'avatar_3', emoji: '🐻', name: 'Bear', color: Color(0xFF8B4513)),
     Avatar(id: 'avatar_4', emoji: '🦊', name: 'Fox', color: Color(0xFFFF8C00)),
     Avatar(id: 'avatar_5', emoji: '🐸', name: 'Frog', color: Color(0xFF2ECC71)),
-    Avatar(id: 'avatar_6', emoji: '🐧', name: 'Penguin', color: Color(0xFF34495E)),
+    Avatar(
+      id: 'avatar_6',
+      emoji: '🐧',
+      name: 'Penguin',
+      color: Color(0xFF34495E),
+    ),
   ];
 }
 
@@ -48,7 +53,7 @@ class AvatarSelector extends StatelessWidget {
       itemBuilder: (context, index) {
         final avatar = Avatar.availableAvatars[index];
         final isSelected = selectedAvatarId == avatar.id;
-        
+
         return GestureDetector(
           onTap: () => onAvatarSelected(avatar.id),
           child: AnimatedContainer(
@@ -63,7 +68,7 @@ class AvatarSelector extends StatelessWidget {
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: avatar.color.withOpacity(0.3),
+                        color: avatar.color.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
@@ -73,10 +78,7 @@ class AvatarSelector extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  avatar.emoji,
-                  style: const TextStyle(fontSize: 40),
-                ),
+                Text(avatar.emoji, style: const TextStyle(fontSize: 40)),
                 const SizedBox(height: 4),
                 Text(
                   avatar.name,
@@ -94,4 +96,3 @@ class AvatarSelector extends StatelessWidget {
     );
   }
 }
-

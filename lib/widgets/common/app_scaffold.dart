@@ -153,4 +153,3 @@ class AppErrorWidget extends StatelessWidget {
     );
   }
 }
-

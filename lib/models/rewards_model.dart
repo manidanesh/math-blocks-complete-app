@@ -1,9 +1,5 @@
 /// Enum for different types of rewards
-enum RewardType {
-  star,
-  badge,
-  sticker,
-}
+enum RewardType { star, badge, sticker }
 
 /// Enum for different levels a child can achieve
 enum ChildLevel {
@@ -13,7 +9,7 @@ enum ChildLevel {
   thousandsChampion('Thousands Champion', '🏆', 200, 500);
 
   const ChildLevel(this.name, this.emoji, this.minStars, this.maxStars);
-  
+
   final String name;
   final String emoji;
   final int minStars;
@@ -169,17 +165,19 @@ class ChildRewards {
 
   /// Calculate progress towards next level (0.0 to 1.0)
   double get levelProgress {
+    if (nextLevel == null) return 1.0;
     final currentLevelStars = currentLevel.minStars;
     final nextLevelStars = _getNextLevelStars();
     final progressStars = totalStars - currentLevelStars;
     final neededStars = nextLevelStars - currentLevelStars;
-    
+
     if (neededStars <= 0) return 1.0;
     return (progressStars / neededStars).clamp(0.0, 1.0);
   }
 
   /// Get stars needed for next level
   int get starsToNextLevel {
+    if (nextLevel == null) return 0;
     final nextLevelStars = _getNextLevelStars();
     return (nextLevelStars - totalStars).clamp(0, 999);
   }
@@ -219,7 +217,9 @@ class ChildRewards {
       totalStars: json['totalStars'] as int,
       totalBadges: json['totalBadges'] as int,
       totalStickers: json['totalStickers'] as int,
-      currentLevel: ChildLevel.values.firstWhere((e) => e.name == json['currentLevel']),
+      currentLevel: ChildLevel.values.firstWhere(
+        (e) => e.name == json['currentLevel'],
+      ),
       recentRewards: (json['recentRewards'] as List<dynamic>)
           .map((r) => Reward.fromJson(r as Map<String, dynamic>))
           .toList(),

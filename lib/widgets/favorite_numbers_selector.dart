@@ -15,7 +15,8 @@ class FavoriteNumbersSelector extends StatefulWidget {
   });
 
   @override
-  State<FavoriteNumbersSelector> createState() => _FavoriteNumbersSelectorState();
+  State<FavoriteNumbersSelector> createState() =>
+      _FavoriteNumbersSelectorState();
 }
 
 class _FavoriteNumbersSelectorState extends State<FavoriteNumbersSelector> {
@@ -31,31 +32,40 @@ class _FavoriteNumbersSelectorState extends State<FavoriteNumbersSelector> {
     final translations = {
       'en': {
         'favorite_numbers_subtitle': 'Choose your favorite numbers (0-9):',
-        'favorite_numbers_instruction': 'Select up to {count} numbers you like!',
+        'favorite_numbers_instruction':
+            'Select up to {count} numbers you like!',
         'no_numbers_selected': 'No numbers selected yet',
         'numbers_selected': 'Selected {current} of {max} numbers',
-        'perfect_selection': 'Perfect! You\'ve selected {count} favorite numbers',
+        'perfect_selection':
+            'Perfect! You\'ve selected {count} favorite numbers',
       },
       'es': {
         'favorite_numbers_subtitle': 'Elige tus números favoritos (0-9):',
-        'favorite_numbers_instruction': '¡Selecciona hasta {count} números que te gusten!',
+        'favorite_numbers_instruction':
+            '¡Selecciona hasta {count} números que te gusten!',
         'no_numbers_selected': 'Aún no hay números seleccionados',
         'numbers_selected': 'Seleccionados {current} de {max} números',
-        'perfect_selection': '¡Perfecto! Has seleccionado {count} números favoritos',
+        'perfect_selection':
+            '¡Perfecto! Has seleccionado {count} números favoritos',
       },
       'fr': {
         'favorite_numbers_subtitle': 'Choisissez vos numéros favoris (0-9):',
-        'favorite_numbers_instruction': 'Sélectionnez jusqu\'à {count} numéros que vous aimez!',
+        'favorite_numbers_instruction':
+            'Sélectionnez jusqu\'à {count} numéros que vous aimez!',
         'no_numbers_selected': 'Aucun numéro sélectionné pour le moment',
         'numbers_selected': 'Sélectionnés {current} de {max} numéros',
-        'perfect_selection': 'Parfait! Vous avez sélectionné {count} numéros favoris',
-      }
+        'perfect_selection':
+            'Parfait! Vous avez sélectionné {count} numéros favoris',
+      },
     };
-    
+
     return translations[widget.language]?[key] ?? translations['en']![key]!;
   }
 
-  String _getTextWithPlaceholders(String key, Map<String, dynamic> placeholders) {
+  String _getTextWithPlaceholders(
+    String key,
+    Map<String, dynamic> placeholders,
+  ) {
     String text = _getText(key);
     placeholders.forEach((placeholder, value) {
       text = text.replaceAll('{$placeholder}', value.toString());
@@ -81,19 +91,21 @@ class _FavoriteNumbersSelectorState extends State<FavoriteNumbersSelector> {
       children: [
         Text(
           _getText('favorite_numbers_subtitle'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(
-          _getTextWithPlaceholders('favorite_numbers_instruction', {'count': widget.maxSelections}),
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.grey[600],
-          ),
+          _getTextWithPlaceholders('favorite_numbers_instruction', {
+            'count': widget.maxSelections,
+          }),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
         ),
         const SizedBox(height: 16),
-        
+
         // Numbers grid
         GridView.builder(
           shrinkWrap: true,
@@ -108,8 +120,9 @@ class _FavoriteNumbersSelectorState extends State<FavoriteNumbersSelector> {
           itemBuilder: (context, index) {
             final number = index;
             final isSelected = _selectedNumbers.contains(number);
-            final canSelect = _selectedNumbers.length < widget.maxSelections || isSelected;
-            
+            final canSelect =
+                _selectedNumbers.length < widget.maxSelections || isSelected;
+
             return GestureDetector(
               onTap: canSelect ? () => _toggleNumber(number) : null,
               child: AnimatedContainer(
@@ -124,14 +137,14 @@ class _FavoriteNumbersSelectorState extends State<FavoriteNumbersSelector> {
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: Colors.blue.withOpacity(0.3),
+                            color: Colors.blue.withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 4),
                           ),
                         ]
                       : [
                           BoxShadow(
-                            color: Colors.grey.withOpacity(0.2),
+                            color: Colors.grey.withValues(alpha: 0.2),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -151,40 +164,40 @@ class _FavoriteNumbersSelectorState extends State<FavoriteNumbersSelector> {
             );
           },
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Selection status
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: _selectedNumbers.isEmpty 
-                ? Colors.grey[50] 
+            color: _selectedNumbers.isEmpty
+                ? Colors.grey[50]
                 : _selectedNumbers.length == widget.maxSelections
-                    ? Colors.green[50]
-                    : Colors.blue[50],
+                ? Colors.green[50]
+                : Colors.blue[50],
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: _selectedNumbers.isEmpty 
-                  ? Colors.grey[300]! 
+              color: _selectedNumbers.isEmpty
+                  ? Colors.grey[300]!
                   : _selectedNumbers.length == widget.maxSelections
-                      ? Colors.green[300]!
-                      : Colors.blue[300]!,
+                  ? Colors.green[300]!
+                  : Colors.blue[300]!,
             ),
           ),
           child: Row(
             children: [
               Icon(
-                _selectedNumbers.isEmpty 
+                _selectedNumbers.isEmpty
                     ? Icons.info_outline
                     : _selectedNumbers.length == widget.maxSelections
-                        ? Icons.check_circle
-                        : Icons.favorite,
-                color: _selectedNumbers.isEmpty 
+                    ? Icons.check_circle
+                    : Icons.favorite,
+                color: _selectedNumbers.isEmpty
                     ? Colors.grey[600]
                     : _selectedNumbers.length == widget.maxSelections
-                        ? Colors.green[600]
-                        : Colors.blue[600],
+                    ? Colors.green[600]
+                    : Colors.blue[600],
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -193,15 +206,20 @@ class _FavoriteNumbersSelectorState extends State<FavoriteNumbersSelector> {
                   _selectedNumbers.isEmpty
                       ? _getText('no_numbers_selected')
                       : _selectedNumbers.length == widget.maxSelections
-                          ? _getTextWithPlaceholders('perfect_selection', {'count': _selectedNumbers.length})
-                          : _getTextWithPlaceholders('numbers_selected', {'current': _selectedNumbers.length, 'max': widget.maxSelections}),
+                      ? _getTextWithPlaceholders('perfect_selection', {
+                          'count': _selectedNumbers.length,
+                        })
+                      : _getTextWithPlaceholders('numbers_selected', {
+                          'current': _selectedNumbers.length,
+                          'max': widget.maxSelections,
+                        }),
                   style: TextStyle(
                     fontSize: 14,
-                    color: _selectedNumbers.isEmpty 
+                    color: _selectedNumbers.isEmpty
                         ? Colors.grey[600]
                         : _selectedNumbers.length == widget.maxSelections
-                            ? Colors.green[600]
-                            : Colors.blue[600],
+                        ? Colors.green[600]
+                        : Colors.blue[600],
                   ),
                 ),
               ),

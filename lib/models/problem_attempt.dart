@@ -127,7 +127,8 @@ class ProblemSession {
   bool get wasSolved => attempts.any((attempt) => attempt.isCorrect);
 
   /// Get the final attempt (successful or last failed attempt)
-  ProblemAttempt? get finalAttempt => attempts.isNotEmpty ? attempts.last : null;
+  ProblemAttempt? get finalAttempt =>
+      attempts.isNotEmpty ? attempts.last : null;
 
   /// Calculate total time spent on this problem
   double get totalTimeSpent {
@@ -159,16 +160,20 @@ class ProblemSession {
       childId: json['childId'] as String,
       problemText: json['problemText'] as String,
       attempts: (json['attempts'] as List<dynamic>)
-          .map((attemptJson) => ProblemAttempt.fromJson(attemptJson as Map<String, dynamic>))
+          .map(
+            (attemptJson) =>
+                ProblemAttempt.fromJson(attemptJson as Map<String, dynamic>),
+          )
           .toList(),
       wasCompleted: json['wasCompleted'] as bool,
       needsReview: json['needsReview'] as bool,
       startTime: DateTime.parse(json['startTime'] as String),
-      endTime: json['endTime'] != null ? DateTime.parse(json['endTime'] as String) : null,
+      endTime: json['endTime'] != null
+          ? DateTime.parse(json['endTime'] as String)
+          : null,
       skillArea: json['skillArea'] as String,
       difficultyLevel: json['difficultyLevel'] as int,
       finalExplanation: json['finalExplanation'] as String?,
     );
   }
 }
-

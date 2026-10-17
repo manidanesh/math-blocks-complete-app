@@ -3,13 +3,7 @@ import 'package:flutter/material.dart';
 import 'translation_service.dart';
 import '../core/constants.dart';
 
-enum ErrorType {
-  network,
-  storage,
-  validation,
-  authentication,
-  unknown,
-}
+enum ErrorType { network, storage, validation, authentication, unknown }
 
 class AppError {
   final String message;
@@ -22,9 +16,8 @@ class AppError {
     required this.message,
     required this.type,
     this.details,
-    StackTrace? stackTrace,
-  }) : timestamp = DateTime.now(),
-        stackTrace = stackTrace;
+    this.stackTrace,
+  }) : timestamp = DateTime.now();
 
   @override
   String toString() {
@@ -46,8 +39,9 @@ class ErrorHandlerService {
     String language = 'en',
   }) {
     final errorType = type ?? _determineErrorType(error);
-    final message = customMessage ?? _getErrorMessage(error, errorType, language);
-    
+    final message =
+        customMessage ?? _getErrorMessage(error, errorType, language);
+
     final appError = AppError(
       message: message,
       type: errorType,
@@ -86,10 +80,7 @@ class ErrorHandlerService {
             ),
           ],
         ),
-        content: Text(
-          error.message,
-          style: AppTheme.bodyMedium,
-        ),
+        content: Text(error.message, style: AppTheme.bodyMedium),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -168,35 +159,39 @@ class ErrorHandlerService {
 
   static ErrorType _determineErrorType(dynamic error) {
     final errorString = error.toString().toLowerCase();
-    
-    if (errorString.contains('network') || 
-        errorString.contains('connection') || 
+
+    if (errorString.contains('network') ||
+        errorString.contains('connection') ||
         errorString.contains('timeout')) {
       return ErrorType.network;
     }
-    
-    if (errorString.contains('storage') || 
-        errorString.contains('database') || 
+
+    if (errorString.contains('storage') ||
+        errorString.contains('database') ||
         errorString.contains('file')) {
       return ErrorType.storage;
     }
-    
-    if (errorString.contains('validation') || 
-        errorString.contains('invalid') || 
+
+    if (errorString.contains('validation') ||
+        errorString.contains('invalid') ||
         errorString.contains('format')) {
       return ErrorType.validation;
     }
-    
-    if (errorString.contains('unauthorized') || 
-        errorString.contains('permission') || 
+
+    if (errorString.contains('unauthorized') ||
+        errorString.contains('permission') ||
         errorString.contains('auth')) {
       return ErrorType.authentication;
     }
-    
+
     return ErrorType.unknown;
   }
 
-  static String _getErrorMessage(dynamic error, ErrorType type, String language) {
+  static String _getErrorMessage(
+    dynamic error,
+    ErrorType type,
+    String language,
+  ) {
     switch (type) {
       case ErrorType.network:
         return TranslationService.getText('network_error', language);
@@ -214,12 +209,12 @@ class ErrorHandlerService {
   static void _logError(AppError error) {
     // Add to internal log
     _errorLog.add(error);
-    
+
     // Keep log size manageable
     if (_errorLog.length > maxLogSize) {
       _errorLog.removeAt(0);
     }
-    
+
     // Log to console in debug mode
     if (kDebugMode) {
       debugPrint('🔴 Error logged: $error');
@@ -227,7 +222,7 @@ class ErrorHandlerService {
         debugPrint('Stack trace: ${error.stackTrace}');
       }
     }
-    
+
     // TODO: In production, send critical errors to crash reporting service
     // Example: Firebase Crashlytics, Sentry, etc.
   }
@@ -284,7 +279,7 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
       if (widget.errorBuilder != null) {
         return widget.errorBuilder!(error!);
       }
-      
+
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -320,12 +315,11 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
       stackTrace: stackTrace,
       language: widget.language,
     );
-    
+
     setState(() {
       this.error = appError;
     });
-    
+
     widget.onError?.call(appError);
   }
 }
-

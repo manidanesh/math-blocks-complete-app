@@ -29,11 +29,12 @@ class AppCard extends StatelessWidget {
       margin: margin,
       decoration: BoxDecoration(
         color: backgroundColor ?? Colors.white,
-        borderRadius: borderRadius ?? 
+        borderRadius:
+            borderRadius ??
             BorderRadius.circular(AppConstants.borderRadiusMedium),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
             spreadRadius: 1,
             blurRadius: elevation ?? AppConstants.cardElevation,
             offset: const Offset(0, 2),
@@ -46,7 +47,8 @@ class AppCard extends StatelessWidget {
     if (onTap != null) {
       return InkWell(
         onTap: onTap,
-        borderRadius: borderRadius ?? 
+        borderRadius:
+            borderRadius ??
             BorderRadius.circular(AppConstants.borderRadiusMedium),
         child: card,
       );
@@ -90,7 +92,9 @@ class ProfileCard extends StatelessWidget {
             height: 60,
             decoration: BoxDecoration(
               color: AppConstants.primaryBlue,
-              borderRadius: BorderRadius.circular(AppConstants.borderRadiusCircular),
+              borderRadius: BorderRadius.circular(
+                AppConstants.borderRadiusCircular,
+              ),
             ),
             child: Center(
               child: Text(
@@ -104,10 +108,7 @@ class ProfileCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  style: AppTheme.headingMedium,
-                ),
+                Text(name, style: AppTheme.headingMedium),
                 Text(
                   'Age: $age • Language: $languageFlag $language',
                   style: AppTheme.bodyMedium,
@@ -151,11 +152,7 @@ class MetricCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                icon,
-                color: color,
-                size: AppConstants.iconSizeMedium,
-              ),
+              Icon(icon, color: color, size: AppConstants.iconSizeMedium),
               const SizedBox(width: AppConstants.spacingSmall),
               Expanded(
                 child: Text(
@@ -174,8 +171,10 @@ class MetricCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(AppConstants.spacingSmall),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(AppConstants.borderRadiusSmall),
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(
+                AppConstants.borderRadiusSmall,
+              ),
             ),
             child: Text(
               value,
@@ -223,9 +222,13 @@ class GameModeCard extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: AppConstants.spacingSmall),
+          padding: const EdgeInsets.symmetric(
+            vertical: AppConstants.spacingSmall,
+          ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
+            borderRadius: BorderRadius.circular(
+              AppConstants.borderRadiusMedium,
+            ),
           ),
         ),
         child: Column(
@@ -246,7 +249,7 @@ class GameModeCard extends StatelessWidget {
             Text(
               subtitle,
               style: AppTheme.bodySmall.copyWith(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
               ),
               textAlign: TextAlign.center,
             ),
@@ -256,4 +259,3 @@ class GameModeCard extends StatelessWidget {
     );
   }
 }
-

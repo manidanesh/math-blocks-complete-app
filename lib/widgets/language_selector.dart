@@ -5,11 +5,7 @@ class Language {
   final String name;
   final String flag;
 
-  const Language({
-    required this.code,
-    required this.name,
-    required this.flag,
-  });
+  const Language({required this.code, required this.name, required this.flag});
 
   static const List<Language> availableLanguages = [
     Language(code: 'en', name: 'English', flag: '🇺🇸'),
@@ -37,7 +33,7 @@ class LanguageSelector extends StatelessWidget {
         Row(
           children: Language.availableLanguages.map((language) {
             final isSelected = selectedLanguageCode == language.code;
-            
+
             return Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -47,12 +43,12 @@ class LanguageSelector extends StatelessWidget {
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
-                      color: isSelected 
+                      color: isSelected
                           ? const Color(0xFF3498DB)
                           : Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected 
+                        color: isSelected
                             ? const Color(0xFF3498DB)
                             : Colors.grey.shade300,
                         width: 2,
@@ -60,7 +56,9 @@ class LanguageSelector extends StatelessWidget {
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: const Color(0xFF3498DB).withOpacity(0.3),
+                                color: const Color(
+                                  0xFF3498DB,
+                                ).withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -79,7 +77,7 @@ class LanguageSelector extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: isSelected 
+                            color: isSelected
                                 ? Colors.white
                                 : const Color(0xFF2C3E50),
                           ),
@@ -93,14 +91,14 @@ class LanguageSelector extends StatelessWidget {
             );
           }).toList(),
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Selected language info
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF3498DB).withOpacity(0.1),
+            color: const Color(0xFF3498DB).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -127,7 +125,7 @@ class LanguageSelector extends StatelessWidget {
                       _getWelcomeMessage(),
                       style: TextStyle(
                         fontSize: 14,
-                        color: const Color(0xFF3498DB).withOpacity(0.8),
+                        color: const Color(0xFF3498DB).withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -158,4 +156,3 @@ class LanguageSelector extends StatelessWidget {
     }
   }
 }
-

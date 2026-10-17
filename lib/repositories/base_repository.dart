@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/entity.dart';
 import '../services/error_handler_service.dart';
+
+export '../models/entity.dart';
 
 /// Abstract base repository with common storage operations
 abstract class BaseRepository<T> {
@@ -14,12 +17,33 @@ abstract class BaseRepository<T> {
   /// Deserialize JSON string to object
   T deserialize(String json);
 
+  Future<void> _writePreference(
+    Future<bool> Function(SharedPreferences prefs) operation,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      if (!await operation(prefs)) {
+        throw StateError('Could not update $storageKey.');
+      }
+    } catch (_) {
+      // Plugin writes update the memory cache before platform confirmation.
+      // Reload after both rejections and exceptions so failed changes stay failed.
+      try {
+        await prefs.reload();
+      } catch (_) {
+        // Preserve the original storage error if reloading also fails.
+      }
+      rethrow;
+    }
+  }
+
   /// Save a single item
   Future<void> save(T item) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
       final jsonString = serialize(item);
-      await prefs.setString(storageKey, jsonString);
+      await _writePreference(
+        (prefs) => prefs.setString(storageKey, jsonString),
+      );
     } catch (error, stackTrace) {
       throw ErrorHandlerService.handleError(
         error,
@@ -34,9 +58,9 @@ abstract class BaseRepository<T> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonString = prefs.getString(storageKey);
-      
+
       if (jsonString == null) return null;
-      
+
       return deserialize(jsonString);
     } catch (error, stackTrace) {
       throw ErrorHandlerService.handleError(
@@ -50,10 +74,11 @@ abstract class BaseRepository<T> {
   /// Save a list of items
   Future<void> saveList(List<T> items) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
       final jsonList = items.map((item) => serialize(item)).toList();
       final jsonString = jsonEncode(jsonList);
-      await prefs.setString(storageKey, jsonString);
+      await _writePreference(
+        (prefs) => prefs.setString(storageKey, jsonString),
+      );
     } catch (error, stackTrace) {
       throw ErrorHandlerService.handleError(
         error,
@@ -68,9 +93,9 @@ abstract class BaseRepository<T> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonString = prefs.getString(storageKey);
-      
+
       if (jsonString == null) return [];
-      
+
       final jsonList = jsonDecode(jsonString) as List;
       return jsonList.map((json) => deserialize(json)).toList();
     } catch (error, stackTrace) {
@@ -85,8 +110,7 @@ abstract class BaseRepository<T> {
   /// Delete stored data
   Future<void> delete() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(storageKey);
+      await _writePreference((prefs) => prefs.remove(storageKey));
     } catch (error, stackTrace) {
       throw ErrorHandlerService.handleError(
         error,
@@ -133,14 +157,16 @@ abstract class EntityRepository<T extends Entity> extends BaseRepository<T> {
   /// Save or update an item in the list
   Future<void> saveItem(T item) async {
     final items = await loadList();
-    final existingIndex = items.indexWhere((existing) => existing.id == item.id);
-    
+    final existingIndex = items.indexWhere(
+      (existing) => existing.id == item.id,
+    );
+
     if (existingIndex >= 0) {
       items[existingIndex] = item;
     } else {
       items.add(item);
     }
-    
+
     await saveList(items);
   }
 
@@ -149,12 +175,12 @@ abstract class EntityRepository<T extends Entity> extends BaseRepository<T> {
     final items = await loadList();
     final originalLength = items.length;
     items.removeWhere((item) => item.id == id);
-    
+
     if (items.length < originalLength) {
       await saveList(items);
       return true;
     }
-    
+
     return false;
   }
 
@@ -167,13 +193,13 @@ abstract class EntityRepository<T extends Entity> extends BaseRepository<T> {
   Future<bool> update(T item) async {
     final items = await loadList();
     final index = items.indexWhere((existing) => existing.id == item.id);
-    
+
     if (index >= 0) {
       items[index] = item;
       await saveList(items);
       return true;
     }
-    
+
     return false;
   }
 
@@ -184,26 +210,16 @@ abstract class EntityRepository<T extends Entity> extends BaseRepository<T> {
   }
 }
 
-/// Base entity interface
-abstract class Entity {
-  String get id;
-}
-
 /// Repository result wrapper
 class RepositoryResult<T> {
   final T? data;
   final bool success;
   final String? error;
 
-  RepositoryResult.success(this.data) 
-      : success = true, 
-        error = null;
+  RepositoryResult.success(this.data) : success = true, error = null;
 
-  RepositoryResult.error(this.error) 
-      : success = false, 
-        data = null;
+  RepositoryResult.error(this.error) : success = false, data = null;
 
   bool get hasData => data != null;
   bool get hasError => error != null;
 }
-

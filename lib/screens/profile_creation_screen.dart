@@ -2,22 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/app_log.dart';
 import '../models/kid_profile.dart';
 import '../providers/profile_provider.dart';
 import '../widgets/language_selector.dart';
-import '../widgets/age_selector.dart';
+import '../widgets/birth_year_selector.dart';
 import '../widgets/favorite_numbers_selector.dart';
 
 class ProfileCreationScreen extends ConsumerStatefulWidget {
   const ProfileCreationScreen({super.key});
 
   @override
-  ConsumerState<ProfileCreationScreen> createState() => _ProfileCreationScreenState();
+  ConsumerState<ProfileCreationScreen> createState() =>
+      _ProfileCreationScreenState();
 }
 
 class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
   final TextEditingController _nameController = TextEditingController();
-  int? selectedAge;
+  int? selectedBirthYear;
   String selectedLanguageCode = 'en';
   List<int> favoriteNumbers = [];
   bool isLoading = false;
@@ -29,40 +31,41 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
   }
 
   bool get _canCreateProfile {
-    return _nameController.text.trim().isNotEmpty &&
-           selectedAge != null;
+    return _nameController.text.trim().isNotEmpty && selectedBirthYear != null;
   }
 
   Future<void> _createProfile() async {
-    if (!_canCreateProfile) return;
+    if (isLoading || !_canCreateProfile) return;
 
     setState(() {
       isLoading = true;
     });
 
     try {
+      final now = ref.read(profileNowProvider)();
       final profile = KidProfile(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        id: now.millisecondsSinceEpoch.toString(),
         name: _nameController.text.trim(),
-        age: selectedAge!,
+        birthYear: selectedBirthYear!,
         avatarId: 'default',
         language: selectedLanguageCode,
         isCurrent: true,
-        createdAt: DateTime.now(),
-        lastPlayed: DateTime.now(),
+        createdAt: now,
+        lastPlayed: now,
         favoriteNumbers: favoriteNumbers,
       );
 
       await ref.read(profileProvider.notifier).createProfile(profile);
-      
+
       if (mounted) {
         context.go('/mode-select');
       }
     } catch (e) {
+      debugLog('Could not create profile: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error creating profile: $e'),
+            content: Text(_getText('error_creating')),
             backgroundColor: Colors.red,
           ),
         );
@@ -79,29 +82,33 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
   String _getText(String key) {
     final translations = {
       'en': {
-        'welcome_message': 'Welcome to Math Blocks!\nLet\'s create your profile!',
+        'welcome_message':
+            'Welcome to Math Blocks!\nLet\'s create your profile!',
         'welcome_title': 'Welcome to Math Blocks!',
         'name_label': 'Name',
         'enter_name': 'Enter your name',
         'name_entered': 'Name entered',
         'age_label': 'Age',
-        'age_selected': 'Age selected', 
+        'age_selected': 'Age selected',
         'language_label': 'Language',
         'language_selected': 'Language selected',
         'favorite_numbers': 'Favorite Numbers',
         'optional': '(Optional)',
-        'select_favorites': 'Select your favorite numbers to use in problems',
+        'select_favorites': 'Save your favorite numbers in your profile',
         'favorite_numbers_subtitle': 'Choose your favorite numbers (0-9):',
-        'favorite_numbers_instruction': 'Select up to {count} numbers you like!',
+        'favorite_numbers_instruction':
+            'Select up to {count} numbers you like!',
         'no_numbers_selected': 'No numbers selected yet',
         'numbers_selected': 'Selected {current} of {max} numbers',
-        'perfect_selection': 'Perfect! You\'ve selected {count} favorite numbers',
+        'perfect_selection':
+            'Perfect! You\'ve selected {count} favorite numbers',
         'create_profile_button': 'Create Profile',
         'creating_profile': 'Creating Profile...',
         'error_creating': 'Error creating profile',
       },
       'es': {
-        'welcome_message': '¡Bienvenido a Math Blocks!\n¡Vamos a crear tu perfil!',
+        'welcome_message':
+            '¡Bienvenido a Math Blocks!\n¡Vamos a crear tu perfil!',
         'welcome_title': '¡Bienvenido a Math Blocks!',
         'name_label': 'Nombre',
         'enter_name': 'Escribe tu nombre',
@@ -112,12 +119,14 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
         'language_selected': 'Idioma seleccionado',
         'favorite_numbers': 'Números Favoritos',
         'optional': '(Opcional)',
-        'select_favorites': 'Selecciona tus números favoritos para usar en problemas',
+        'select_favorites': 'Guarda tus números favoritos en tu perfil',
         'favorite_numbers_subtitle': 'Elige tus números favoritos (0-9):',
-        'favorite_numbers_instruction': '¡Selecciona hasta {count} números que te gusten!',
+        'favorite_numbers_instruction':
+            '¡Selecciona hasta {count} números que te gusten!',
         'no_numbers_selected': 'Aún no hay números seleccionados',
         'numbers_selected': 'Seleccionados {current} de {max} números',
-        'perfect_selection': '¡Perfecto! Has seleccionado {count} números favoritos',
+        'perfect_selection':
+            '¡Perfecto! Has seleccionado {count} números favoritos',
         'create_profile_button': 'Crear Perfil',
         'creating_profile': 'Creando Perfil...',
         'error_creating': 'Error al crear perfil',
@@ -134,19 +143,22 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
         'language_selected': 'Langue sélectionnée',
         'favorite_numbers': 'Nombres Favoris',
         'optional': '(Optionnel)',
-        'select_favorites': 'Sélectionnez vos nombres favoris à utiliser dans les problèmes',
+        'select_favorites': 'Enregistre tes nombres favoris dans ton profil',
         'favorite_numbers_subtitle': 'Choisissez vos numéros favoris (0-9):',
-        'favorite_numbers_instruction': 'Sélectionnez jusqu\'à {count} numéros que vous aimez!',
+        'favorite_numbers_instruction':
+            'Sélectionnez jusqu\'à {count} numéros que vous aimez!',
         'no_numbers_selected': 'Aucun numéro sélectionné pour le moment',
         'numbers_selected': 'Sélectionnés {current} de {max} numéros',
-        'perfect_selection': 'Parfait! Vous avez sélectionné {count} numéros favoris',
+        'perfect_selection':
+            'Parfait! Vous avez sélectionné {count} numéros favoris',
         'create_profile_button': 'Créer le Profil',
         'creating_profile': 'Création du Profil...',
         'error_creating': 'Erreur lors de la création du profil',
       },
     };
-    
-    return translations[selectedLanguageCode]?[key] ?? translations['en']![key]!;
+
+    return translations[selectedLanguageCode]?[key] ??
+        translations['en']![key]!;
   }
 
   String _getWelcomeMessage() {
@@ -187,7 +199,7 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3498DB).withOpacity(0.1),
+                  color: const Color(0xFF3498DB).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
@@ -200,9 +212,9 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                   textAlign: TextAlign.center,
                 ),
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Name input
               Card(
                 child: Padding(
@@ -235,31 +247,24 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
-              // Age selection
+
+              // Birth year selection
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        '🎂 ${_getText('age_label')}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2C3E50),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      AgeSelector(
-                        selectedAge: selectedAge,
+                      BirthYearSelector(
+                        selectedBirthYear: selectedBirthYear,
+                        showAgeOptions: true,
+                        currentDate: ref.read(profileNowProvider)(),
                         language: selectedLanguageCode,
-                        onAgeSelected: (age) {
+                        onBirthYearSelected: (birthYear) {
                           setState(() {
-                            selectedAge = age;
+                            selectedBirthYear = birthYear;
                           });
                         },
                       ),
@@ -267,9 +272,9 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Language selection
               Card(
                 child: Padding(
@@ -298,9 +303,9 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Favorite numbers selection
               Card(
                 child: Padding(
@@ -330,16 +335,20 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Create profile button
               SizedBox(
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _canCreateProfile && !isLoading ? _createProfile : null,
+                  onPressed: _canCreateProfile && !isLoading
+                      ? _createProfile
+                      : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _canCreateProfile ? const Color(0xFF2ECC71) : Colors.grey,
+                    backgroundColor: _canCreateProfile
+                        ? const Color(0xFF2ECC71)
+                        : Colors.grey,
                     foregroundColor: Colors.white,
                     textStyle: const TextStyle(
                       fontSize: 20,
@@ -351,9 +360,9 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                       : Text(_getCreateButtonText()),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Profile requirements
               Container(
                 padding: const EdgeInsets.all(16),
@@ -363,9 +372,18 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                 ),
                 child: Column(
                   children: [
-                    _buildRequirement(_getText('name_entered'), _nameController.text.trim().isNotEmpty),
-                    _buildRequirement(_getText('age_selected'), selectedAge != null),
-                    _buildRequirement(_getText('language_selected'), true), // Always true
+                    _buildRequirement(
+                      _getText('name_entered'),
+                      _nameController.text.trim().isNotEmpty,
+                    ),
+                    _buildRequirement(
+                      _getText('age_selected'),
+                      selectedBirthYear != null,
+                    ),
+                    _buildRequirement(
+                      _getText('language_selected'),
+                      true,
+                    ), // Always true
                   ],
                 ),
               ),
@@ -387,11 +405,13 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
             size: 20,
           ),
           const SizedBox(width: 8),
-          Text(
-            text,
-            style: TextStyle(
-              color: isComplete ? Colors.green : Colors.grey,
-              fontWeight: isComplete ? FontWeight.bold : FontWeight.normal,
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: isComplete ? Colors.green : Colors.grey,
+                fontWeight: isComplete ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
           ),
         ],

@@ -8,6 +8,7 @@ class ProblemResult {
   final DateTime timestamp;
   final String problemText;
   final String childId;
+  final bool isReviewProblem;
 
   const ProblemResult({
     required this.problemId,
@@ -18,6 +19,7 @@ class ProblemResult {
     required this.timestamp,
     required this.problemText,
     required this.childId,
+    this.isReviewProblem = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -30,6 +32,7 @@ class ProblemResult {
       'timestamp': timestamp.toIso8601String(),
       'problemText': problemText,
       'childId': childId,
+      'isReviewProblem': isReviewProblem,
     };
   }
 
@@ -43,6 +46,9 @@ class ProblemResult {
       timestamp: DateTime.parse(json['timestamp'] as String),
       problemText: json['problemText'] as String,
       childId: json['childId'] as String,
+      isReviewProblem:
+          json['isReviewProblem'] as bool? ??
+          (json['problemId'] as String).startsWith('review_'),
     );
   }
 }
@@ -126,9 +132,21 @@ enum ChallengeLevel {
   level1('Single-digit addition (make-a-ten)', 1, 1, 9, 'addition'),
   level2('2-digit + 1-digit addition/subtraction', 2, 10, 99, 'mixed'),
   level3('2-digit + 2-digit with regrouping', 3, 10, 99, 'mixed'),
-  level4('Up to 3-digit problems (≤1000)', 4, 100, 999, 'mixed');
+  level4(
+    'Addition/subtraction with up to 3-digit operands',
+    4,
+    100,
+    999,
+    'mixed',
+  );
 
-  const ChallengeLevel(this.description, this.level, this.minValue, this.maxValue, this.operation);
+  const ChallengeLevel(
+    this.description,
+    this.level,
+    this.minValue,
+    this.maxValue,
+    this.operation,
+  );
 
   final String description;
   final int level;

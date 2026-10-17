@@ -1,7 +1,6 @@
-/// SIMPLE, CLEAN NUMBER BOND CHECKER
-/// Single responsibility: Check if user's breakdown is mathematically correct
+/// Checks arithmetic for two-part bonds without enforcing a teaching strategy.
+/// Live challenge validation uses AnswerValidator's flexible decomposition rules.
 class SimpleNumberBondChecker {
-  
   /// Checks if the user's breakdown is correct
   /// For subtraction: user breaks secondNumber into two parts that add up
   /// Example: 12 - 5, user says 5 = 2 + 3, we check if 2 + 3 = 5
@@ -12,7 +11,7 @@ class SimpleNumberBondChecker {
   }) {
     return userPart1 + userPart2 == secondNumber;
   }
-  
+
   /// Gets the correct answer for the problem
   static int getCorrectAnswer({
     required int firstNumber,
@@ -20,7 +19,7 @@ class SimpleNumberBondChecker {
   }) {
     return firstNumber - secondNumber;
   }
-  
+
   /// Simple explanation for the user
   static String getExplanation({
     required int firstNumber,
@@ -33,9 +32,12 @@ class SimpleNumberBondChecker {
       userPart1: userPart1,
       userPart2: userPart2,
     );
-    
+
     if (isCorrect) {
-      final answer = getCorrectAnswer(firstNumber: firstNumber, secondNumber: secondNumber);
+      final answer = getCorrectAnswer(
+        firstNumber: firstNumber,
+        secondNumber: secondNumber,
+      );
       return '''
 ✅ Correct! 
 $secondNumber = $userPart1 + $userPart2
@@ -50,5 +52,3 @@ But $userPart1 + $userPart2 should equal $secondNumber
     }
   }
 }
-
-

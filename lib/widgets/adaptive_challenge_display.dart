@@ -1,3 +1,4 @@
+import '../core/app_log.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/adaptive_challenge.dart';
@@ -8,10 +9,7 @@ import '../services/language_service.dart';
 class AdaptiveChallengeDisplay extends StatelessWidget {
   final AdaptiveChallenge challenge;
 
-  const AdaptiveChallengeDisplay({
-    super.key,
-    required this.challenge,
-  });
+  const AdaptiveChallengeDisplay({super.key, required this.challenge});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +27,10 @@ class AdaptiveChallengeDisplay extends StatelessWidget {
               children: [
                 // Level button on top
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: _getLevelColor(challenge.level),
                     borderRadius: BorderRadius.circular(16),
@@ -38,7 +39,7 @@ class AdaptiveChallengeDisplay extends StatelessWidget {
                     builder: (context, ref, child) {
                       final profile = ref.watch(profileProvider).value;
                       final language = profile?.language ?? 'en';
-                      
+
                       return Text(
                         '${LanguageService.translate('level', language)} ${challenge.level}',
                         style: const TextStyle(
@@ -55,7 +56,7 @@ class AdaptiveChallengeDisplay extends StatelessWidget {
                 _NumberBondFormat(challenge: challenge),
               ],
             ),
-            
+
             // Motivational message - REMOVED TO ELIMINATE DUPLICATE
           ],
         ),
@@ -75,21 +76,6 @@ class AdaptiveChallengeDisplay extends StatelessWidget {
         return Colors.red;
       default:
         return Colors.grey;
-    }
-  }
-
-  IconData _getLevelIcon(int level) {
-    switch (level) {
-      case 1:
-        return Icons.star;
-      case 2:
-        return Icons.star_half;
-      case 3:
-        return Icons.stars;
-      case 4:
-        return Icons.diamond;
-      default:
-        return Icons.help_outline;
     }
   }
 }
@@ -114,11 +100,11 @@ class PerformanceMetricsDisplay extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isLandscape = screenWidth > screenHeight;
-    
+
     return Card(
       elevation: 4,
       margin: const EdgeInsets.all(8),
-      child: Container(
+      child: SizedBox(
         width: double.infinity,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(12),
@@ -135,12 +121,12 @@ class PerformanceMetricsDisplay extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              
+
               // Metrics in simple responsive grid
               _buildSimpleMetricsGrid(isLandscape),
-              
+
               const SizedBox(height: 16),
-              
+
               // Level performance
               if (metrics.levelAccuracy.isNotEmpty)
                 _buildSimpleLevelPerformance(isLandscape),
@@ -150,7 +136,6 @@ class PerformanceMetricsDisplay extends StatelessWidget {
       ),
     );
   }
-
 
   Color _getAccuracyColor(double accuracy) {
     if (accuracy >= 0.8) return Colors.green;
@@ -175,7 +160,9 @@ class PerformanceMetricsDisplay extends StatelessWidget {
       {
         'label': _getText('consecutive_incorrect'),
         'value': this.metrics.consecutiveIncorrect.toString(),
-        'color': this.metrics.consecutiveIncorrect > 1 ? Colors.red : Colors.green,
+        'color': this.metrics.consecutiveIncorrect > 1
+            ? Colors.red
+            : Colors.green,
         'icon': Icons.warning,
       },
     ];
@@ -198,12 +185,14 @@ class PerformanceMetricsDisplay extends StatelessWidget {
     } else {
       // In portrait, stack vertically
       return Column(
-        children: metrics.map((metric) => 
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _buildSimpleMetricCard(metric, isLandscape),
-          )
-        ).toList(),
+        children: metrics
+            .map(
+              (metric) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildSimpleMetricCard(metric, isLandscape),
+              ),
+            )
+            .toList(),
       );
     }
   }
@@ -223,8 +212,8 @@ class PerformanceMetricsDisplay extends StatelessWidget {
           Row(
             children: [
               Icon(
-                metric['icon'], 
-                color: metric['color'], 
+                metric['icon'],
+                color: metric['color'],
                 size: isLandscape ? 14 : 16,
               ),
               const SizedBox(width: 8),
@@ -242,13 +231,13 @@ class PerformanceMetricsDisplay extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          
+
           // Value
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (metric['color'] as Color).withOpacity(0.1),
+              color: (metric['color'] as Color).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
@@ -325,52 +314,34 @@ class PerformanceMetricsDisplay extends StatelessWidget {
                 ],
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
   }
-
 }
 
 /// Separate widget for displaying number bond decomposition format
 class _NumberBondFormat extends StatelessWidget {
   final AdaptiveChallenge challenge;
 
-  const _NumberBondFormat({
-    required this.challenge,
-  });
-
-  Color _getLevelColor(int level) {
-    switch (level) {
-      case 1:
-        return Colors.green;
-      case 2:
-        return Colors.blue;
-      case 3:
-        return Colors.orange;
-      case 4:
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
-  }
+  const _NumberBondFormat({required this.challenge});
 
   @override
   Widget build(BuildContext context) {
     // Parse the problem text to extract operands and operator
     final problemText = challenge.problemText;
-    print('🔍 _NumberBondFormat - problemText: $problemText');
-    
+    debugLog('🔍 _NumberBondFormat - problemText: $problemText');
+
     // Handle different formats: "11 - 9 = ?" or "8 + 9 = ?"
     final RegExp regex = RegExp(r'(\d+)\s*([+\-])\s*(\d+)\s*=\s*\?');
     final match = regex.firstMatch(problemText);
-    
+
     if (match != null) {
       final int operand1 = int.parse(match.group(1)!);
       final String operator = match.group(2)!;
       final int operand2 = int.parse(match.group(3)!);
-      
+
       if (operator == '-') {
         // Subtraction: A - B = A - [__] - [__]
         return Container(
@@ -384,19 +355,49 @@ class _NumberBondFormat extends StatelessWidget {
                   children: [
                     Text(
                       '$operand1',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
-                    const Text(' - ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text(
+                      ' - ',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Text(
                       '$operand2',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
-                    const Text(' = ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text(
+                      ' = ',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Text(
                       '$operand1',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
-                    const Text(' - ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text(
+                      ' - ',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Container(
                       height: 40,
                       margin: const EdgeInsets.symmetric(horizontal: 2),
@@ -411,7 +412,13 @@ class _NumberBondFormat extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const Text(' - ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text(
+                      ' - ',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Container(
                       height: 40,
                       margin: const EdgeInsets.symmetric(horizontal: 2),
@@ -445,19 +452,49 @@ class _NumberBondFormat extends StatelessWidget {
                   children: [
                     Text(
                       '$operand1',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
-                    const Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text(
+                      ' + ',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Text(
                       '$operand2',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
-                    const Text(' = ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text(
+                      ' = ',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Text(
                       '$operand1',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
-                    const Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text(
+                      ' + ',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Container(
                       height: 40,
                       margin: const EdgeInsets.symmetric(horizontal: 2),
@@ -472,7 +509,13 @@ class _NumberBondFormat extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const Text(' + ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text(
+                      ' + ',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Container(
                       height: 40,
                       margin: const EdgeInsets.symmetric(horizontal: 2),
@@ -495,7 +538,7 @@ class _NumberBondFormat extends StatelessWidget {
         );
       }
     }
-    
+
     // Fallback to original text if parsing fails
     return Text(
       problemText,

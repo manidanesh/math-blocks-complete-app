@@ -38,17 +38,17 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
   @override
   void initState() {
     super.initState();
-    
+
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
+
     _confettiController = AnimationController(
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
-    
+
     _badgeController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -57,34 +57,22 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
     _scaleAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.elasticOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.elasticOut));
 
-    _opacityAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
-    ));
+    _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+      ),
+    );
 
-    _confettiAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _confettiController,
-      curve: Curves.easeOut,
-    ));
+    _confettiAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _confettiController, curve: Curves.easeOut),
+    );
 
-    _badgeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _badgeController,
-      curve: Curves.elasticOut,
-    ));
+    _badgeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _badgeController, curve: Curves.elasticOut),
+    );
 
     if (widget.showCelebration) {
       _startCelebration();
@@ -94,7 +82,7 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
   void _startCelebration() {
     _controller.forward();
     _confettiController.forward();
-    
+
     if (widget.newBadge != null || widget.newSticker != null) {
       Future.delayed(const Duration(milliseconds: 500), () {
         _badgeController.forward();
@@ -134,7 +122,7 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
               );
             },
           ),
-          
+
           // Celebration overlay
           AnimatedBuilder(
             animation: _controller,
@@ -142,7 +130,7 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
               return Opacity(
                 opacity: _opacityAnimation.value,
                 child: Container(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   child: Center(
                     child: Transform.scale(
                       scale: _scaleAnimation.value,
@@ -167,7 +155,7 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -186,9 +174,9 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
             ),
             textAlign: TextAlign.center,
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Message
           Text(
             widget.message,
@@ -199,9 +187,9 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
             ),
             textAlign: TextAlign.center,
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Badge or Sticker animation
           if (widget.newBadge != null || widget.newSticker != null)
             AnimatedBuilder(
@@ -213,9 +201,9 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
                 );
               },
             ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Continue button
           ElevatedButton(
             onPressed: () {
@@ -233,10 +221,7 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
             ),
             child: const Text(
               'Continue',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -263,10 +248,7 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
       ),
       child: Column(
         children: [
-          Text(
-            badge.emoji,
-            style: const TextStyle(fontSize: 48),
-          ),
+          Text(badge.emoji, style: const TextStyle(fontSize: 48)),
           const SizedBox(height: 8),
           Text(
             badge.name,
@@ -280,10 +262,7 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
           const SizedBox(height: 4),
           Text(
             badge.description,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF7F8C8D),
-            ),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF7F8C8D)),
             textAlign: TextAlign.center,
           ),
         ],
@@ -301,10 +280,7 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
       ),
       child: Column(
         children: [
-          Text(
-            sticker.emoji,
-            style: const TextStyle(fontSize: 48),
-          ),
+          Text(sticker.emoji, style: const TextStyle(fontSize: 48)),
           const SizedBox(height: 8),
           Text(
             sticker.name,
@@ -318,10 +294,7 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
           const SizedBox(height: 4),
           Text(
             sticker.description,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF7F8C8D),
-            ),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF7F8C8D)),
             textAlign: TextAlign.center,
           ),
         ],
@@ -375,11 +348,11 @@ class ConfettiPainter extends CustomPainter {
 
       final x = particle.x * size.width;
       final y = particle.y * size.height + (animationValue * size.height);
-      
+
       canvas.save();
       canvas.translate(x, y);
       canvas.rotate(particle.angle + (animationValue * particle.rotationSpeed));
-      
+
       canvas.drawRect(
         Rect.fromCenter(
           center: Offset.zero,
@@ -388,7 +361,7 @@ class ConfettiPainter extends CustomPainter {
         ),
         paint,
       );
-      
+
       canvas.restore();
     }
   }
@@ -443,17 +416,11 @@ class _StarBurstAnimationState extends State<StarBurstAnimation>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
+    _controller = AnimationController(duration: widget.duration, vsync: this);
     _animation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     if (widget.showAnimation) {
       _controller.forward();
@@ -504,7 +471,7 @@ class StarBurstPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final paint = Paint()
-      ..color = Colors.yellow.withOpacity(1 - animationValue)
+      ..color = Colors.yellow.withValues(alpha: 1 - animationValue)
       ..style = PaintingStyle.fill;
 
     // Draw multiple stars radiating from center
@@ -515,7 +482,7 @@ class StarBurstPainter extends CustomPainter {
         center.dx + cos(angle) * distance,
         center.dy + sin(angle) * distance,
       );
-      
+
       _drawStar(canvas, starCenter, 15 * (1 - animationValue), paint);
     }
   }
@@ -523,13 +490,13 @@ class StarBurstPainter extends CustomPainter {
   void _drawStar(Canvas canvas, Offset center, double radius, Paint paint) {
     final path = Path();
     final innerRadius = radius * 0.4;
-    
+
     for (int i = 0; i < 10; i++) {
       final angle = (i * pi) / 5;
       final r = i.isEven ? radius : innerRadius;
       final x = center.dx + cos(angle) * r;
       final y = center.dy + sin(angle) * r;
-      
+
       if (i == 0) {
         path.moveTo(x, y);
       } else {
@@ -537,7 +504,7 @@ class StarBurstPainter extends CustomPainter {
       }
     }
     path.close();
-    
+
     canvas.drawPath(path, paint);
   }
 

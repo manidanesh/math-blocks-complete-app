@@ -1,18 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/constants.dart';
 
-enum AppButtonType {
-  primary,
-  secondary,
-  outline,
-  text,
-}
+enum AppButtonType { primary, secondary, outline, text }
 
-enum AppButtonSize {
-  small,
-  medium,
-  large,
-}
+enum AppButtonSize { small, medium, large }
 
 /// Reusable button component with consistent styling
 class AppButton extends StatelessWidget {
@@ -56,16 +47,12 @@ class AppButton extends StatelessWidget {
         onPressed: onPressed,
         icon: Icon(icon, size: _getIconSize()),
         label: _buildButtonContent(textStyle),
-        style: buttonStyle.copyWith(
-          padding: WidgetStateProperty.all(padding),
-        ),
+        style: buttonStyle.copyWith(padding: WidgetStateProperty.all(padding)),
       );
     } else {
       return ElevatedButton(
         onPressed: onPressed,
-        style: buttonStyle.copyWith(
-          padding: WidgetStateProperty.all(padding),
-        ),
+        style: buttonStyle.copyWith(padding: WidgetStateProperty.all(padding)),
         child: buttonChild,
       );
     }
@@ -101,14 +88,18 @@ class AppButton extends StatelessWidget {
           foregroundColor: AppConstants.primaryBlue,
           side: const BorderSide(color: AppConstants.primaryBlue),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
+            borderRadius: BorderRadius.circular(
+              AppConstants.borderRadiusMedium,
+            ),
           ),
         );
       case AppButtonType.text:
         return TextButton.styleFrom(
           foregroundColor: AppConstants.primaryBlue,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
+            borderRadius: BorderRadius.circular(
+              AppConstants.borderRadiusMedium,
+            ),
           ),
         );
     }
@@ -218,4 +209,3 @@ class AppTextButton extends AppButton {
     super.isFullWidth,
   }) : super(type: AppButtonType.text);
 }
-

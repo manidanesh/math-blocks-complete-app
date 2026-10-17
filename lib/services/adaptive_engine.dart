@@ -1,12 +1,13 @@
 import 'dart:math';
+
 import '../models/problem_attempt.dart';
 
 /// Enum for learning actions that the adaptive engine can recommend
 enum LearningAction {
-  advance,    // Move to harder problems
-  maintain,   // Stay at current level
-  remediate,  // Move to easier problems or review
-  reviewMode  // Enter focused review of struggling concepts
+  advance, // Move to harder problems
+  maintain, // Stay at current level
+  remediate, // Move to easier problems or review
+  reviewMode, // Enter focused review of struggling concepts
 }
 
 /// Recommendation from the adaptive learning engine
@@ -34,9 +35,9 @@ class AdaptiveRecommendation {
   @override
   String toString() {
     return 'AdaptiveRecommendation(level: $recommendedLevel, action: $action, '
-           'accuracy: ${(accuracy * 100).toStringAsFixed(1)}%, '
-           'avgTime: ${averageTime.toStringAsFixed(1)}s, '
-           'hintRate: ${(hintRate * 100).toStringAsFixed(1)}%)';
+        'accuracy: ${(accuracy * 100).toStringAsFixed(1)}%, '
+        'avgTime: ${averageTime.toStringAsFixed(1)}s, '
+        'hintRate: ${(hintRate * 100).toStringAsFixed(1)}%)';
   }
 }
 
@@ -46,7 +47,6 @@ class AdaptiveEngine {
   static const double _advanceAccuracyThreshold = 0.80; // 80%
   static const double _advanceTimeThreshold = 15.0; // 15 seconds
   static const double _maintainAccuracyMin = 0.60; // 60%
-  static const double _maintainAccuracyMax = 0.79; // 79%
   static const double _remediateHintThreshold = 0.40; // 40% hint rate
   static const int _reviewModeErrorThreshold = 3; // 3 errors in same skill
   static const double _reviewModeSessionAccuracy = 0.60; // 60% session accuracy
@@ -73,16 +73,16 @@ class AdaptiveEngine {
 
     // Get last 20 attempts for analysis window
     final analysisAttempts = recentAttempts.take(_analysisWindowSize).toList();
-    
+
     // Calculate metrics
     final metrics = _calculateMetrics(analysisAttempts);
-    
+
     // Check for review mode triggers
     final reviewAnalysis = _analyzeReviewModeNeeds(
-      recentAttempts, 
+      recentAttempts,
       currentSession ?? '',
     );
-    
+
     // Determine action and level recommendation
     final recommendation = _determineRecommendation(
       metrics: metrics,
@@ -109,7 +109,10 @@ class AdaptiveEngine {
     final accuracy = correctCount / attempts.length;
 
     // Calculate average time
-    final totalTime = attempts.fold<double>(0.0, (sum, a) => sum + a.timeSpentSeconds);
+    final totalTime = attempts.fold<double>(
+      0.0,
+      (sum, a) => sum + a.timeSpentSeconds,
+    );
     final averageTime = totalTime / attempts.length;
 
     // Calculate hint usage rate
@@ -139,12 +142,13 @@ class AdaptiveEngine {
     // Check for 3 errors in same skill type
     final skillErrors = <String, int>{};
     final strugglingConcepts = <String>[];
-    
-    for (final attempt in allAttempts.take(10)) { // Last 10 attempts
+
+    for (final attempt in allAttempts.take(10)) {
+      // Last 10 attempts
       if (!attempt.isCorrect) {
         final skill = _identifySkillFromProblem(attempt);
         skillErrors[skill] = (skillErrors[skill] ?? 0) + 1;
-        
+
         if (skillErrors[skill]! >= _reviewModeErrorThreshold) {
           strugglingConcepts.add(skill);
         }
@@ -157,15 +161,16 @@ class AdaptiveEngine {
       final sessionAttempts = allAttempts
           .where((a) => a.timestamp.toString().contains(currentSession))
           .toList();
-      
+
       if (sessionAttempts.isNotEmpty) {
         final sessionCorrect = sessionAttempts.where((a) => a.isCorrect).length;
         sessionAccuracy = sessionCorrect / sessionAttempts.length;
       }
     }
 
-    final shouldEnterReviewMode = strugglingConcepts.isNotEmpty || 
-                                  sessionAccuracy < _reviewModeSessionAccuracy;
+    final shouldEnterReviewMode =
+        strugglingConcepts.isNotEmpty ||
+        sessionAccuracy < _reviewModeSessionAccuracy;
 
     return {
       'shouldEnterReviewMode': shouldEnterReviewMode,
@@ -199,15 +204,18 @@ class AdaptiveEngine {
     final averageTime = metrics['averageTime']!;
     final hintRate = metrics['hintRate']!;
     final averageScore = metrics['averageScore']!;
-    final shouldEnterReviewMode = reviewAnalysis['shouldEnterReviewMode'] as bool;
-    final strugglingConcepts = reviewAnalysis['strugglingConcepts'] as List<String>;
+    final shouldEnterReviewMode =
+        reviewAnalysis['shouldEnterReviewMode'] as bool;
+    final strugglingConcepts =
+        reviewAnalysis['strugglingConcepts'] as List<String>;
 
     // Priority 1: Review Mode
     if (shouldEnterReviewMode) {
       return AdaptiveRecommendation(
         recommendedLevel: max(1, currentLevel - 1),
         action: LearningAction.reviewMode,
-        reasoning: "Review needed: ${strugglingConcepts.join(', ')} or low session accuracy",
+        reasoning:
+            "Review needed: ${strugglingConcepts.join(', ')} or low session accuracy",
         accuracy: accuracy,
         averageTime: averageTime,
         hintRate: hintRate,
@@ -221,9 +229,9 @@ class AdaptiveEngine {
       return AdaptiveRecommendation(
         recommendedLevel: max(1, currentLevel - 1),
         action: LearningAction.remediate,
-        reasoning: accuracy < _maintainAccuracyMin 
-          ? "Low accuracy: ${(accuracy * 100).toStringAsFixed(1)}%"
-          : "High hint usage: ${(hintRate * 100).toStringAsFixed(1)}%",
+        reasoning: accuracy < _maintainAccuracyMin
+            ? "Low accuracy: ${(accuracy * 100).toStringAsFixed(1)}%"
+            : "High hint usage: ${(hintRate * 100).toStringAsFixed(1)}%",
         accuracy: accuracy,
         averageTime: averageTime,
         hintRate: hintRate,
@@ -233,14 +241,15 @@ class AdaptiveEngine {
     }
 
     // Priority 3: Advance
-    if (accuracy >= _advanceAccuracyThreshold && 
-        averageScore >= 0.70 && 
+    if (accuracy >= _advanceAccuracyThreshold &&
+        averageScore >= 0.70 &&
         averageTime <= _advanceTimeThreshold) {
       return AdaptiveRecommendation(
         recommendedLevel: currentLevel + 1,
         action: LearningAction.advance,
-        reasoning: "Excellent performance: ${(accuracy * 100).toStringAsFixed(1)}% accuracy, "
-                  "${averageTime.toStringAsFixed(1)}s avg time",
+        reasoning:
+            "Excellent performance: ${(accuracy * 100).toStringAsFixed(1)}% accuracy, "
+            "${averageTime.toStringAsFixed(1)}s avg time",
         accuracy: accuracy,
         averageTime: averageTime,
         hintRate: hintRate,
@@ -253,8 +262,9 @@ class AdaptiveEngine {
     return AdaptiveRecommendation(
       recommendedLevel: currentLevel,
       action: LearningAction.maintain,
-      reasoning: "Steady progress: ${(accuracy * 100).toStringAsFixed(1)}% accuracy, "
-                "continue at current level",
+      reasoning:
+          "Steady progress: ${(accuracy * 100).toStringAsFixed(1)}% accuracy, "
+          "continue at current level",
       accuracy: accuracy,
       averageTime: averageTime,
       hintRate: hintRate,
@@ -264,7 +274,9 @@ class AdaptiveEngine {
   }
 
   /// Generate a detailed progress report
-  static Map<String, dynamic> generateProgressReport(List<ProblemAttempt> attempts) {
+  static Map<String, dynamic> generateProgressReport(
+    List<ProblemAttempt> attempts,
+  ) {
     if (attempts.isEmpty) {
       return {
         'totalAttempts': 0,
@@ -278,14 +290,17 @@ class AdaptiveEngine {
     }
 
     final recentMetrics = _calculateMetrics(attempts.take(10).toList());
-    final olderMetrics = attempts.length > 10 
+    final olderMetrics = attempts.length > 10
         ? _calculateMetrics(attempts.skip(10).take(10).toList())
         : recentMetrics;
 
     // Calculate improvement trend
-    final accuracyTrend = recentMetrics['accuracy']! - olderMetrics['accuracy']!;
-    final timeTrend = olderMetrics['averageTime']! - recentMetrics['averageTime']!; // Positive = improvement
-    
+    final accuracyTrend =
+        recentMetrics['accuracy']! - olderMetrics['accuracy']!;
+    final timeTrend =
+        olderMetrics['averageTime']! -
+        recentMetrics['averageTime']!; // Positive = improvement
+
     String improvementTrend;
     if (accuracyTrend > 0.1 || timeTrend > 2.0) {
       improvementTrend = 'Improving';

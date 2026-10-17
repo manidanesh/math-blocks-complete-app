@@ -47,7 +47,7 @@ class AppConstants {
   static const int maxFavoriteNumbers = 5;
   static const int maxAttempts = 3;
   static const int minAge = 4;
-  static const int maxAge = 12;
+  static const int maxAge = 9;
   static const List<int> availableNumbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
   // Level Configuration
@@ -125,7 +125,7 @@ class AppTheme {
     borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
     boxShadow: [
       BoxShadow(
-        color: Colors.grey.withOpacity(0.2),
+        color: Colors.grey.withValues(alpha: 0.2),
         spreadRadius: 1,
         blurRadius: AppConstants.cardElevation,
         offset: const Offset(0, 2),
@@ -185,4 +185,3 @@ class ErrorMessages {
   static const String profileNotFound = 'Profile not found';
   static const String invalidInput = 'Invalid input provided';
 }
-
