@@ -7,6 +7,8 @@ import '../models/kid_profile.dart';
 import '../models/rewards_model.dart';
 import '../providers/profile_provider.dart';
 import '../services/adaptive_problem_service.dart';
+import '../services/answer_validator.dart';
+import '../services/central_problem_generator.dart';
 import '../services/language_service.dart';
 import '../services/pending_completion_service.dart';
 import '../services/problem_generator.dart';
@@ -140,6 +142,7 @@ class _AdaptiveChallengeScreenState
   NumberBondAttempt? _latestAttempt;
   NumberBondAttempt? _restoredAttempt;
   bool _attemptInProgress = false;
+  bool _isForeground = true;
   bool _completionRecorded = false;
   _PendingCompletion? _pendingCompletion;
   bool _isSavingCompletion = false;
@@ -151,6 +154,8 @@ class _AdaptiveChallengeScreenState
   @override
   void initState() {
     super.initState();
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    _isForeground = lifecycle == null || lifecycle == AppLifecycleState.resumed;
     WidgetsBinding.instance.addObserver(this);
 
     // Initialize animations
@@ -177,7 +182,8 @@ class _AdaptiveChallengeScreenState
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _attemptInProgress) {
+    _isForeground = state == AppLifecycleState.resumed;
+    if (_isForeground && _attemptInProgress) {
       _attemptTimer.start();
     } else {
       _attemptTimer.stop();
@@ -194,8 +200,9 @@ class _AdaptiveChallengeScreenState
     _showAnswer = false;
     _attemptInProgress = true;
     _attemptTimer
-      ..reset()
-      ..start();
+      ..stop()
+      ..reset();
+    if (_isForeground) _attemptTimer.start();
   }
 
   Future<void> _loadNextChallenge({bool useInitialProblem = false}) async {
@@ -551,6 +558,42 @@ class _AdaptiveChallengeScreenState
     if (pending != null) {
       await _saveCompletion(pending);
       return;
+    }
+    final original = _currentProblem;
+    if (original != null) {
+      final action = original.operator == '-' ? 'subtraction' : 'addition';
+      final supported =
+          AnswerValidator.suggestedBreakdowns(
+            number1: original.operand1,
+            number2: original.operand2,
+            action: action,
+          ).any(
+            (parts) => AnswerValidator.validateParts(
+              number1: original.operand1,
+              number2: original.operand2,
+              action: action,
+              userParts: parts,
+            ).success,
+          );
+      if (!supported) {
+        final generated = CentralProblemGenerator.generateProblem(
+          action: action,
+          level: original.level,
+        );
+        final review = AdaptiveChallenge(
+          problemId: 'review_${DateTime.now().microsecondsSinceEpoch}',
+          problemText: generated['problemText'] as String,
+          level: original.level,
+          bondSteps: generated['bondSteps'] as String,
+          operand1: generated['operand1'] as int,
+          operand2: generated['operand2'] as int,
+          operator: generated['operator'] as String,
+          correctAnswer: generated['correctAnswer'] as int,
+          isReviewProblem: true,
+        );
+        _currentChallenge = review;
+        _currentProblem = AdaptiveProblemService.convertToMathProblem(review);
+      }
     }
     setState(() {
       _showRetryChallenge = false;

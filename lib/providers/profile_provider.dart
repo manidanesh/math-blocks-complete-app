@@ -8,6 +8,7 @@ import '../core/app_log.dart';
 import '../models/kid_profile.dart';
 import '../services/adaptive_challenge_engine.dart';
 import '../services/insights_engine.dart';
+import '../services/insight_delivery_service.dart';
 import '../services/pending_completion_service.dart';
 import '../services/problem_attempt_service.dart';
 import '../services/rewards_service.dart';
@@ -345,6 +346,7 @@ class ProfileNotifier extends AsyncNotifier<KidProfile?> {
       await AdaptiveChallengeEngine.clearChildData(currentProfile.id);
 
       // Clear insights data
+      await InsightDeliveryService.clear(currentProfile.id);
       await InsightsEngine.clearInsights(currentProfile.id);
 
       // Clear rewards data

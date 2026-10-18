@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:number_bond_math/models/insights.dart';
 import 'package:number_bond_math/services/insights_engine.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,6 +12,7 @@ class _Preferences {
   final Map<String, Object> disk = {};
   final Set<String> rejected = {};
   final Set<String> throwing = {};
+  final List<({String key, Map<String, Object> disk})> checkpoints = [];
 
   Future<Object?> handle(MethodCall call) async {
     if (call.method == 'getAll') return Map<String, Object>.from(disk);
@@ -23,13 +27,14 @@ class _Preferences {
       if (rejected.contains(key)) return false;
       final value = args['value']!;
       disk[key] = value is List ? value.cast<String>().toList() : value;
+      checkpoints.add((key: key, disk: Map<String, Object>.from(disk)));
       return true;
     }
     throw StateError('Unexpected preference method: ${call.method}');
   }
 }
 
-Future<void> _log(int index, {String child = 'child'}) =>
+Future<void> _log(int index, {String child = 'child', DateTime? timestamp}) =>
     InsightsEngine.logProblem(
       childId: child,
       eventId: 'event-$index',
@@ -40,6 +45,7 @@ Future<void> _log(int index, {String child = 'child'}) =>
       hintUsed: false,
       level: 'Level 1',
       strategy: 'makeTen',
+      timestamp: timestamp,
     );
 
 void main() {
@@ -114,7 +120,12 @@ void main() {
     () async {
       store.rejected.add('flutter.insights_problem_count_child');
       await expectLater(_log(0), throwsStateError);
-      expect(store.disk, isEmpty);
+      expect(store.disk.keys, ['flutter.insights_state_child']);
+      expect(
+        (jsonDecode(store.disk['flutter.insights_state_child']! as String)
+            as Map)['count'],
+        0,
+      );
       expect(await InsightsEngine.getProblemLogs('child'), isEmpty);
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getInt('insights_problem_count_child'), isNull);
@@ -124,6 +135,150 @@ void main() {
       expect(prefs.getInt('insights_problem_count_child'), 1);
     },
   );
+
+  test(
+    'restart at every capped-log save prefix replays the twentieth batch once',
+    () async {
+      await _log(0, child: 'other');
+      for (var i = 0; i < 119; i++) {
+        await _log(i);
+      }
+      store.checkpoints.clear();
+      await _log(119);
+      final checkpoints = store.checkpoints.take(3).toList();
+      expect(checkpoints.map((entry) => entry.key), [
+        'flutter.insights_problem_logs',
+        'flutter.insights_problem_count_child',
+        'flutter.insights_state_child',
+      ]);
+      for (var prefix = 0; prefix < checkpoints.length; prefix++) {
+        SharedPreferences.resetStatic();
+        store.disk
+          ..clear()
+          ..addAll(checkpoints[prefix].disk);
+        final committed = prefix == checkpoints.length - 1;
+        final before = await InsightsEngine.getProblemLogs('child');
+        expect(before.length, 100);
+        expect(
+          before.any((log) => log.id == 'event-119'),
+          committed,
+          reason: 'prefix $prefix',
+        );
+        // A different child may save first after restarting. Its compatibility
+        // mirror must not publish this child's uncommitted log as committed.
+        await _log(1, child: 'other');
+        expect(
+          (await InsightsEngine.getProblemLogs(
+            'child',
+          )).any((log) => log.id == 'event-119'),
+          committed,
+        );
+        await _log(119);
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getInt('insights_problem_count_child'), 120);
+        expect(prefs.getInt('insights_last_analysis_count_child'), 120);
+        expect(
+          (await InsightsEngine.getLatestAnalysis('child'))!.totalProblems,
+          100,
+        );
+        expect(
+          (await InsightsEngine.getProblemLogs(
+            'child',
+          )).where((log) => log.id == 'event-119').length,
+          1,
+        );
+        expect((await InsightsEngine.getProblemLogs('other')).length, 2);
+        final cards = (await InsightsEngine.getInsights(
+          'child',
+        )).map((card) => card.id).toList();
+        await _log(119);
+        expect(
+          (await InsightsEngine.getInsights('child')).map((card) => card.id),
+          cards,
+        );
+      }
+    },
+  );
+
+  test(
+    'legacy twentieth log saved before its counter repairs and analyzes on replay',
+    () async {
+      store.disk['flutter.insights_problem_logs'] = [
+        for (var i = 0; i < 20; i++)
+          jsonEncode(
+            ProblemLog(
+              id: 'event-$i',
+              childId: 'child',
+              problemType: 'addition',
+              numbersUsed: [14, 7],
+              correct: true,
+              timeTaken: 5.5,
+              hintUsed: false,
+              timestamp: DateTime.now(),
+              level: 'Level 1',
+              strategy: 'makeTen',
+            ).toJson(),
+          ),
+      ];
+      store.disk['flutter.insights_problem_count_child'] = 19;
+      await _log(19);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getInt('insights_problem_count_child'), 20);
+      expect(prefs.getInt('insights_last_analysis_count_child'), 20);
+      expect(
+        (await InsightsEngine.getLatestAnalysis('child'))!.totalProblems,
+        20,
+      );
+      expect((await InsightsEngine.getProblemLogs('child')).length, 20);
+    },
+  );
+
+  test(
+    'replayed events preserve their original time and reset removes the snapshot',
+    () async {
+      final timestamp = DateTime.now().subtract(const Duration(days: 9));
+      await _log(0, timestamp: timestamp);
+      await _log(0, child: 'other');
+      SharedPreferences.resetStatic();
+      await _log(0);
+      expect(
+        (await InsightsEngine.getProblemLogs('child')).single.timestamp,
+        timestamp,
+      );
+      await InsightsEngine.forceAnalysis('child');
+      expect(await InsightsEngine.getLatestAnalysis('child'), isNull);
+      await InsightsEngine.clearInsights('child');
+      expect(store.disk.containsKey('flutter.insights_state_child'), isFalse);
+      expect(await InsightsEngine.getProblemLogs('child'), isEmpty);
+      expect((await InsightsEngine.getProblemLogs('other')).length, 1);
+    },
+  );
+
+  for (final throws in [false, true]) {
+    test(
+      'a ${throws ? 'throwing' : 'rejected'} insights snapshot commit leaves the event retryable',
+      () async {
+        await _log(0);
+        (throws ? store.throwing : store.rejected).add(
+          'flutter.insights_state_child',
+        );
+        await expectLater(
+          _log(1),
+          throws ? throwsA(isA<PlatformException>()) : throwsStateError,
+        );
+        SharedPreferences.resetStatic();
+        expect(
+          (await InsightsEngine.getProblemLogs('child')).single.id,
+          'event-0',
+        );
+        store.throwing.clear();
+        store.rejected.clear();
+        await _log(1);
+        expect((await InsightsEngine.getProblemLogs('child')).length, 2);
+        expect(store.disk['flutter.insights_problem_count_child'], 2);
+      },
+    );
+  }
 
   test(
     'a failed capped-history count write restores retained logs before retry',

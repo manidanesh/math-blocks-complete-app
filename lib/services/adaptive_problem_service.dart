@@ -1,10 +1,9 @@
 import 'dart:math';
 
-import '../core/app_log.dart';
 import '../models/adaptive_challenge.dart';
 import '../models/problem_attempt.dart';
 import 'adaptive_challenge_engine.dart';
-import 'insights_engine.dart';
+import 'insight_delivery_service.dart';
 import 'problem_attempt_service.dart';
 import 'problem_generator.dart';
 
@@ -30,6 +29,7 @@ class AdaptiveProblemService {
     String? explanation,
     bool isReviewProblem = false,
   }) async {
+    final timestamp = DateTime.now();
     // Create problem result for adaptive engine
     final problemResult = ProblemResult(
       problemId: problemId,
@@ -37,7 +37,7 @@ class AdaptiveProblemService {
       correct: correct,
       timeTaken: timeTaken,
       bondCorrect: bondCorrect,
-      timestamp: DateTime.now(),
+      timestamp: timestamp,
       problemText: problemText,
       childId: childId,
       isReviewProblem: isReviewProblem,
@@ -57,7 +57,7 @@ class AdaptiveProblemService {
       correctAnswer: correctAnswer,
       userAnswer: correct ? correctAnswer : null,
       isCorrect: correct,
-      timestamp: DateTime.now(),
+      timestamp: timestamp,
       attemptNumber: attemptNumber,
       timeSpentSeconds: timeTaken,
       strategy: strategy ?? _getStrategyForLevel(level).name,
@@ -71,23 +71,19 @@ class AdaptiveProblemService {
     // Store in existing problem attempt service
     await ProblemAttemptService.recordAttempt(attempt);
 
-    // Insights are secondary analytics. A failure here must not make the
-    // already persisted terminal event look unrecorded to the challenge UI.
-    try {
-      await InsightsEngine.logProblem(
-        childId: childId,
-        eventId: '$problemId:$correct',
-        problemType: operator == '-' ? 'subtraction' : 'addition',
-        numbersUsed: [operand1, operand2],
-        correct: correct,
-        timeTaken: timeTaken,
-        hintUsed: usedHint,
-        level: 'Level $level',
-        strategy: attempt.strategy,
-      );
-    } catch (error) {
-      debugLog('Could not update learning insights: $error');
-    }
+    // Confirm durable retention before allowing the completion journal to clear.
+    await InsightDeliveryService.enqueue(childId, {
+      'eventId': '$problemId:$correct',
+      'problemType': operator == '-' ? 'subtraction' : 'addition',
+      'numbersUsed': [operand1, operand2],
+      'correct': correct,
+      'timeTaken': timeTaken,
+      'hintUsed': usedHint,
+      'level': 'Level $level',
+      'strategy': attempt.strategy,
+      'timestamp': timestamp.toIso8601String(),
+    });
+    await InsightDeliveryService.flush(childId);
   }
 
   /// Get the next adaptive challenge
@@ -97,6 +93,7 @@ class AdaptiveProblemService {
     List<int> favoriteNumbers = const [],
     String preferredOperation = 'both',
   }) async {
+    await InsightDeliveryService.flush(childId);
     return await AdaptiveChallengeEngine.getNextProblem(
       childId,
       childName,

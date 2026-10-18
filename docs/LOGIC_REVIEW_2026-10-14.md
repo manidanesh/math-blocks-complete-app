@@ -1,5 +1,7 @@
 # Logic review — October 14, 2026
 
+Update October 17: the five findings below are addressed in the `1.0.2 (10)` release candidate. The complete suite passes 447 tests, and the original persistence audits now pass. Unsupported history retries now offer a valid replacement review while preserving the original record. See [release preparation and remaining distribution steps](APP_STORE_RELEASE.md). The findings and reproductions below describe the earlier reviewed version.
+
 Reviewed generation and answer validation, challenge/retry/reveal flow, foreground timing, adaptive progression, completion recovery, rewards/profile updates, and learning-history semantics. This is a review: application code and learning policy were not changed.
 
 ## Verification

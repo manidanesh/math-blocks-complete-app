@@ -328,6 +328,32 @@ void main() {
     expect(await AdaptiveChallengeEngine.getCurrentLevel('child'), 3);
   });
 
+  test(
+    'an already interrupted legacy demotion repairs its stale baseline',
+    () async {
+      final failed = result(level: 2, correct: false);
+      SharedPreferences.setMockInitialValues({
+        'adaptive_challenge_results_child': jsonEncode([
+          failed.toJson(),
+          for (var i = 0; i < 4; i++) result(level: 2, correct: false).toJson(),
+          for (var i = 0; i < 5; i++) result(level: 1).toJson(),
+        ]),
+        'challenge_count_child': 10,
+        'adaptive_current_level_child': 1,
+        'adaptive_level_decision_child':
+            '${failed.problemId}:false:${failed.timestamp.toIso8601String()}',
+        'adaptive_level_start_count_child': 0,
+      });
+      expect(await AdaptiveChallengeEngine.determineNextLevel('child', 1), 1);
+      await outcomes(1, [true]);
+      expect(await AdaptiveChallengeEngine.determineNextLevel('child', 1), 1);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getInt('adaptive_level_start_count_child'), 10);
+      await outcomes(1, [true, true, true, true]);
+      expect(await AdaptiveChallengeEngine.determineNextLevel('child', 1), 2);
+    },
+  );
+
   test('reset removes level and history only for the chosen child', () async {
     await outcomes(2, [true, true, true, true, true]);
     await AdaptiveChallengeEngine.determineNextLevel('child', 2);
@@ -342,5 +368,8 @@ void main() {
     );
     expect(await AdaptiveChallengeEngine.getCurrentLevel('other'), 3);
     expect(await AdaptiveChallengeEngine.getChallengeCount('other'), 1);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('adaptive_state_child'), isNull);
+    expect(prefs.getString('adaptive_state_other'), isNotNull);
   });
 }

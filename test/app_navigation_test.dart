@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +14,8 @@ import 'package:number_bond_math/screens/adaptive_challenge_screen.dart';
 import 'package:number_bond_math/screens/mode_select_screen.dart';
 import 'package:number_bond_math/screens/profile_creation_screen.dart';
 import 'package:number_bond_math/screens/profile_screen.dart';
+import 'package:number_bond_math/services/answer_validator.dart';
+import 'package:number_bond_math/services/central_problem_generator.dart';
 import 'package:number_bond_math/widgets/interactive_number_bond_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -36,14 +39,18 @@ KidProfile _profile({String language = 'en', String name = 'Maya'}) =>
       favoriteNumbers: const [3, 8],
     );
 
-ProblemAttempt _failedAttempt({int level = 3}) => ProblemAttempt(
+ProblemAttempt _failedAttempt({
+  int level = 3,
+  int first = 129,
+  int second = 89,
+}) => ProblemAttempt(
   id: 'failed-history-problem',
   childId: 'navigation-child',
-  problemText: '129 - 89 = ?',
-  operand1: 129,
-  operand2: 89,
+  problemText: '$first - $second = ?',
+  operand1: first,
+  operand2: second,
   operator: '-',
-  correctAnswer: 40,
+  correctAnswer: first - second,
   userAnswer: null,
   isCorrect: false,
   timestamp: DateTime(2026, 10, 10),
@@ -413,6 +420,130 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  for (final legacy in [
+    (first: 19, second: 7, level: 1),
+    (first: 19, second: 8, level: 1),
+    (first: 18, second: 7, level: 1),
+    (first: 99, second: 8, level: 3),
+    (first: 999, second: 8, level: 4),
+  ]) {
+    testWidgets(
+      'unsupported ${legacy.first} - ${legacy.second} history retries a solvable level ${legacy.level} review',
+      (tester) async {
+        CentralProblemGenerator.setRandomForTesting(Random(20261017));
+        addTearDown(
+          () => CentralProblemGenerator.setRandomForTesting(Random()),
+        );
+        final history = _failedAttempt(
+          level: legacy.level,
+          first: legacy.first,
+          second: legacy.second,
+        );
+        final container = await _pumpRealApp(
+          tester,
+          // Reviewing a subtraction mistake must retain that operation.
+          profile: _profile().copyWith(preferredOperation: 'addition'),
+          attempts: [history],
+        );
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('adaptive_current_level_navigation-child', 2);
+        await _tapVisible(tester, _key('home-profile'));
+        await _tapVisible(tester, find.text(history.problemText));
+
+        // The old equation and its arithmetic remain readable until Retry.
+        expect(
+          tester.widget<Text>(_key('challenge-question')).data,
+          history.problemText,
+        );
+        final half = legacy.second ~/ 2;
+        final firstStep = '${legacy.first} - $half = ${legacy.first - half}';
+        expect(find.text(firstStep), findsOneWidget);
+        await tester.ensureVisible(find.text(firstStep));
+        await tester.pumpAndSettle();
+        expect(find.text(firstStep).hitTestable(), findsOneWidget);
+        expect(jsonDecode(prefs.getString('problem_attempts')!), hasLength(1));
+
+        await _tapVisible(tester, _key('challenge-retry'));
+        final retryBond = tester.widget<InteractiveNumberBondWidget>(
+          find.byType(InteractiveNumberBondWidget),
+        );
+        expect(retryBond.operation, 'subtraction');
+        expect(retryBond.showSolution, isFalse);
+        expect(retryBond.enabled, isTrue);
+        expect((
+          retryBond.operand1,
+          retryBond.operand2,
+        ), isNot((legacy.first, legacy.second)));
+        expect(retryBond.operand2, isNot(isIn([10, 100, 1000])));
+        final suggestions = AnswerValidator.suggestedBreakdowns(
+          number1: retryBond.operand1,
+          number2: retryBond.operand2,
+          action: 'subtraction',
+        );
+        expect(
+          suggestions,
+          isNotEmpty,
+          reason: 'Learning Retry must offer a supported number-bond problem.',
+        );
+        final parts = suggestions.firstWhere(
+          (parts) =>
+              parts.length == 2 &&
+              AnswerValidator.validateParts(
+                number1: retryBond.operand1,
+                number2: retryBond.operand2,
+                action: 'subtraction',
+                userParts: parts,
+              ).success,
+        );
+        expect(jsonDecode(prefs.getString('problem_attempts')!), hasLength(1));
+        for (var index = 0; index < parts.length; index++) {
+          await _tapVisible(tester, _key('bond-part-$index'));
+          await _tapVisible(tester, _key('bond-picker-number-${parts[index]}'));
+        }
+        await tester.pump(const Duration(milliseconds: 700));
+        await tester.pumpAndSettle();
+        expect(
+          tester.widget<Text>(_key('challenge-question')).data,
+          '${retryBond.operand1} - ${retryBond.operand2} = ${retryBond.operand1 - retryBond.operand2}',
+        );
+
+        final attempts =
+            (jsonDecode(prefs.getString('problem_attempts')!) as List)
+                .map(
+                  (entry) =>
+                      ProblemAttempt.fromJson(entry as Map<String, dynamic>),
+                )
+                .toList();
+        expect(attempts, hasLength(2));
+        expect(
+          attempts.singleWhere((entry) => entry.id == history.id).toJson(),
+          history.toJson(),
+        );
+        final retry = attempts.singleWhere((entry) => entry.id != history.id);
+        expect(retry.isCorrect, isTrue);
+        expect(retry.operator, '-');
+        expect(retry.difficultyLevel, legacy.level);
+        expect(retry.operand1, retryBond.operand1);
+        expect(retry.operand2, retryBond.operand2);
+        final results =
+            jsonDecode(
+                  prefs.getString(
+                    'adaptive_challenge_results_navigation-child',
+                  )!,
+                )
+                as List<dynamic>;
+        expect(results, hasLength(1));
+        expect(results.single['level'], legacy.level);
+        expect(results.single['isReviewProblem'], isTrue);
+        expect(prefs.getInt('adaptive_current_level_navigation-child'), 2);
+        expect(container.read(profileProvider).value!.totalStars, 1);
+        await tester.pump(const Duration(seconds: 3));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 
   for (final level in [3, 4]) {
     testWidgets(

@@ -29,7 +29,8 @@ For a signed iPhone build, configure the development team in Xcode, then run `fl
 - [Arithmetic and interaction verification](docs/NUMBER_BOND_TEST_REPORT.md)
 - [Birth-year age behavior](docs/BIRTH_YEAR_AGE.md)
 - [Code and usability review](docs/CODE_REVIEW_REPORT.md)
-- [Known logic gaps and recommended fixes](docs/LOGIC_REVIEW_2026-10-14.md)
+- [October 14 logic review](docs/LOGIC_REVIEW_2026-10-14.md)
 - [Installed-version verification](docs/VERIFICATION_2026-10-16.md)
+- [App Store release candidate and review notes](docs/APP_STORE_RELEASE.md)
 
 Multiple-profile selection, the separate practice mode, favorite-number weighting and generated insight cards are planned. The active learning flow is the adaptive challenge.

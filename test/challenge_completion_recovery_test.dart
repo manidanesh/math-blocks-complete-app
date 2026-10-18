@@ -159,6 +159,7 @@ void main() {
     'adaptive_challenge_results_child',
     'challenge_count_child',
     'problem_attempts',
+    'pending_insight_events_child',
     'rewards_child',
     'current_profile',
   ]) {
@@ -357,12 +358,13 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('adaptive_challenge_results_child', '{unreadable');
+    final savedState = prefs.getString('adaptive_state_child')!;
+    await prefs.setString('adaptive_state_child', '{unreadable');
     await _tap(tester, _key('challenge-next'));
     expect(find.byType(InteractiveNumberBondWidget), findsNothing);
     expect(find.text('Try Again'), findsOneWidget);
 
-    await prefs.setString('adaptive_challenge_results_child', '[]');
+    await prefs.setString('adaptive_state_child', savedState);
     await _tap(tester, find.text('Try Again'));
     expect(find.byType(InteractiveNumberBondWidget), findsOneWidget);
     expect(_question(tester), endsWith(' = ?'));

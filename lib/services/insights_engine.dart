@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/insights.dart';
 
@@ -11,6 +12,7 @@ class InsightsEngine {
 
   static const String _logCountKey = 'insights_problem_count';
   static const String _lastAnalysisCountKey = 'insights_last_analysis_count';
+  static const String _stateKey = 'insights_state';
   static Future<void>? _pendingWrite;
 
   static Future<void> _write(Future<void> Function() operation) {
@@ -44,6 +46,36 @@ class InsightsEngine {
     if (!saved) throw StateError('Could not save learning insights.');
   }
 
+  static _InsightsState _readState(SharedPreferences prefs, String childId) {
+    final snapshot = prefs.getString('${_stateKey}_$childId');
+    if (snapshot != null) {
+      return _InsightsState.fromJson(jsonDecode(snapshot), childId);
+    }
+    final logs = (prefs.getStringList(_logsKey) ?? [])
+        .map((json) => ProblemLog.fromJson(jsonDecode(json)))
+        .where((log) => log.childId == childId)
+        .toList();
+    return _InsightsState(
+      logs,
+      max(prefs.getInt('${_logCountKey}_$childId') ?? 0, logs.length),
+    );
+  }
+
+  static List<ProblemLog> _allLogs(SharedPreferences prefs) {
+    final logs = (prefs.getStringList(_logsKey) ?? [])
+        .map((json) => ProblemLog.fromJson(jsonDecode(json)))
+        .toList();
+    for (final key in prefs.getKeys().where(
+      (key) => key.startsWith('${_stateKey}_'),
+    )) {
+      final childId = key.substring(_stateKey.length + 1);
+      final state = _readState(prefs, childId);
+      logs.removeWhere((log) => log.childId == childId);
+      logs.addAll(state.logs);
+    }
+    return logs;
+  }
+
   /// Logs a unique terminal event. A saved per-child count keeps the analysis
   /// cadence stable after the recent history reaches its 100-event limit.
   static Future<void> logProblem({
@@ -56,16 +88,15 @@ class InsightsEngine {
     required String level,
     required String strategy,
     String? eventId,
+    DateTime? timestamp,
   }) => _write(() async {
     final prefs = await SharedPreferences.getInstance();
-    final logs = (prefs.getStringList(_logsKey) ?? [])
-        .map((json) => ProblemLog.fromJson(jsonDecode(json)))
-        .toList();
-    final childLogs = logs.where((log) => log.childId == childId).toList();
+    final logs = _allLogs(prefs);
+    final before = _readState(prefs, childId);
+    final childLogs = List<ProblemLog>.of(before.logs);
     final id = eventId ?? DateTime.now().microsecondsSinceEpoch.toString();
-    var count = prefs.getInt('${_logCountKey}_$childId') ?? childLogs.length;
+    var count = before.count;
     if (!childLogs.any((log) => log.id == id && log.correct == correct)) {
-      final now = DateTime.now();
       childLogs.insert(
         0,
         ProblemLog(
@@ -76,7 +107,7 @@ class InsightsEngine {
           correct: correct,
           timeTaken: timeTaken.toDouble(),
           hintUsed: hintUsed,
-          timestamp: now,
+          timestamp: timestamp ?? DateTime.now(),
           level: level,
           strategy: strategy,
         ),
@@ -85,7 +116,10 @@ class InsightsEngine {
       logs.removeWhere((log) => log.childId == childId);
       logs.addAll(childLogs.take(100));
       count++;
-      await _saveProblemLogs(prefs, logs, childId, count);
+      await _saveProblemLogs(prefs, logs, childId, before, count);
+    } else if (prefs.getString('${_stateKey}_$childId') == null) {
+      // Repair a legacy counter interrupted after its log had been saved.
+      await _saveProblemLogs(prefs, logs, childId, before, count);
     }
     final lastAnalysis = prefs.getInt('${_lastAnalysisCountKey}_$childId') ?? 0;
     if (count ~/ _analysisInterval > lastAnalysis ~/ _analysisInterval) {
@@ -112,8 +146,15 @@ class InsightsEngine {
     SharedPreferences prefs,
     List<ProblemLog> logs,
     String childId,
+    _InsightsState before,
     int count,
   ) async {
+    final stateKey = '${_stateKey}_$childId';
+    if (prefs.getString(stateKey) == null) {
+      _requireSaved(
+        await prefs.setString(stateKey, jsonEncode(before.toJson(childId))),
+      );
+    }
     final countKey = '${_logCountKey}_$childId';
     final savedLogs = prefs.getStringList(_logsKey);
     final savedCount = prefs.getInt(countKey);
@@ -125,6 +166,17 @@ class InsightsEngine {
         ),
       );
       _requireSaved(await prefs.setInt(countKey, count));
+      _requireSaved(
+        await prefs.setString(
+          stateKey,
+          jsonEncode(
+            _InsightsState(
+              logs.where((log) => log.childId == childId).toList(),
+              count,
+            ).toJson(childId),
+          ),
+        ),
+      );
     } catch (_) {
       // Restore both snapshots so a partially committed event remains retryable
       // and the per-child analysis cadence stays aligned with its history.
@@ -134,13 +186,17 @@ class InsightsEngine {
               ? await prefs.remove(_logsKey)
               : await prefs.setStringList(_logsKey, savedLogs),
         );
+      } catch (_) {
+        // Readers continue using the committed per-child snapshot.
+      }
+      try {
         _requireSaved(
           savedCount == null
               ? await prefs.remove(countKey)
               : await prefs.setInt(countKey, savedCount),
         );
       } catch (_) {
-        // The outer serialized write reloads the authoritative disk state.
+        // A failed mirror rollback cannot expose an uncommitted count.
       }
       rethrow;
     }
@@ -148,10 +204,7 @@ class InsightsEngine {
 
   static Future<List<ProblemLog>> getProblemLogs(String childId) async {
     final prefs = await SharedPreferences.getInstance();
-    return (prefs.getStringList(_logsKey) ?? [])
-        .map((json) => ProblemLog.fromJson(jsonDecode(json)))
-        .where((log) => log.childId == childId)
-        .toList()
+    return List<ProblemLog>.of(_readState(prefs, childId).logs)
       ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
   }
 
@@ -772,10 +825,7 @@ class InsightsEngine {
   /// Force analysis for a child (useful for manual refresh)
   static Future<void> forceAnalysis(String childId) => _write(() async {
     final prefs = await SharedPreferences.getInstance();
-    final logsJson = prefs.getStringList(_logsKey) ?? [];
-    final logs = logsJson
-        .map((json) => ProblemLog.fromJson(jsonDecode(json)))
-        .where((log) => log.childId == childId)
+    final logs = _readState(prefs, childId).logs
         .where(
           (log) => log.timestamp.isAfter(
             DateTime.now().subtract(const Duration(days: 7)),
@@ -806,6 +856,7 @@ class InsightsEngine {
       _analysisKey,
       _logCountKey,
       _lastAnalysisCountKey,
+      _stateKey,
     ]) {
       if (!await prefs.remove('${prefix}_$childId')) {
         throw StateError('Could not clear insights for $childId.');
@@ -828,4 +879,30 @@ class InsightsEngine {
 
     return actions;
   }
+}
+
+class _InsightsState {
+  final List<ProblemLog> logs;
+  final int count;
+
+  const _InsightsState(this.logs, this.count);
+
+  factory _InsightsState.fromJson(Map<String, dynamic> json, String childId) {
+    if (json['version'] != 1 || json['childId'] != childId) {
+      throw const FormatException('Invalid insights state snapshot.');
+    }
+    return _InsightsState(
+      (json['logs'] as List)
+          .map((value) => ProblemLog.fromJson(value as Map<String, dynamic>))
+          .toList(),
+      json['count'] as int,
+    );
+  }
+
+  Map<String, dynamic> toJson(String childId) => {
+    'version': 1,
+    'childId': childId,
+    'logs': logs.map((log) => log.toJson()).toList(),
+    'count': count,
+  };
 }
